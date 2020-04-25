@@ -23,9 +23,14 @@ applyMiddleware(middleware, router);
 applyRoutes(router);
 applyMiddleware(errorHandlers, router);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
+const NODE_ENV = process.env.NODE_ENV ;
+
 const server = http.createServer(router);
 
 server.listen(PORT, () =>
-  console.log(`Server is running http://localhost:${PORT}...`)
+  {
+    console.log(`Server is running on port ${PORT}...`);
+    console.log(`Env: ${NODE_ENV}`);
+  }
 );
