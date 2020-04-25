@@ -5,8 +5,6 @@
   "main": "index.js",
   "scripts": {
     "postinstall": "npx tsc",
-    "dev": "tsc-watch --onSuccess \"node ./dist/server.js\"",
-    "start": "npx pm2 start pm2.yaml",
     "test": "jest --coverage --verbose",
     "debug": "tsc-watch --onSuccess \"node --nolazy --inspect-brk=3000  ./dist/server.js\"",
     "debug2": "node --nolazy --inspect-brk=3000 ./dist/server.js"
