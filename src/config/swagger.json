@@ -1,0 +1,421 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "swagger",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api/v1"
+    }
+  ],
+  "paths": {
+    "/person": {
+      "put": {
+        "tags": [
+          "Person"
+        ],
+        "summary": "Creates a new person",
+        "requestBody": {
+          "description": "The user to create",
+          "required": false,
+          "content": {
+            "application/json": {
+              "example": {
+                "FirstName": "Daniel",
+                "LastName": "Manuelpillai",
+                "Gender": "Male"
+              },
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created person id",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "5e6556427af677179baf2e5a"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {}
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {}
+          },
+          "500": {
+            "description": "Service Unavailable",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/person/{id}": {
+      "get": {
+        "tags": [
+          "Person"
+        ],
+        "summary": "Get person info by Id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Specifies the query string",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {}
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {}
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Person"
+        ],
+        "summary": "Deletes person by id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Specifies the query string",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {}
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {}
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Person"
+        ],
+        "summary": "Updates person by id and patch",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Specifies the query string",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "patch to update",
+          "required": false,
+          "content": {
+            "application/json": {
+              "example": {
+                "Email": "test@test.com"
+              },
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {}
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/person/{id}/full": {
+      "get": {
+        "tags": [
+          "Relation"
+        ],
+        "summary": "Get person by id full",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Specifies the query string",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {}
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/person/{id}/relations": {
+      "get": {
+        "tags": [
+          "Relation"
+        ],
+        "summary": "Get relations for a person id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Specifies the query string",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {}
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/person/{id}/parent/{parentid}": {
+      "put": {
+        "tags": [
+          "Relation"
+        ],
+        "summary": "Links a person and his parent (by ids)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Specifies the query string",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "parentid",
+            "in": "path",
+            "description": "Specifies the query string",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {}
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/person/{id}/child/{childid}": {
+      "put": {
+        "tags": [
+          "Relation"
+        ],
+        "summary": "Links a person and his child (by ids)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Specifies the query string",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "childid",
+            "in": "path",
+            "description": "Specifies the query string",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {}
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/person/{id}/spouse/id2}": {
+      "put": {
+        "tags": [
+          "Relation"
+        ],
+        "summary": "Links a person and his spouse (by ids)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Specifies the query string",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id2",
+            "in": "path",
+            "description": "Specifies the query string",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {}
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/person/{id}/relation/{id2}": {
+      "delete": {
+        "tags": [
+          "Relation"
+        ],
+        "summary": "Unlink 2 ids",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Specifies the query string",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id2",
+            "in": "path",
+            "description": "Specifies the query string",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {}
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {}
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Relation"
+        ],
+        "summary": "Updates person by id and patch",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Specifies the query string",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id2",
+            "in": "path",
+            "description": "Specifies the query string",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "patch to update",
+          "required": false,
+          "content": {
+            "application/json": {
+              "example": {
+                "Email": "test@test.com"
+              },
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {}
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {}
+          }
+        }
+      }
+    }
+  },
+  "components": {}
+}
