@@ -7,7 +7,7 @@ const connectionString = process.env.MONGODB;
 const MongoClient = require('mongodb').MongoClient;
 const ObjectId = require('mongodb').ObjectID;
 
-const mongoDbDatabase = "genealogy";
+const mongoDbDatabase = process.env.MONGODB_DATABASE;
 const memberCollection = "members";
 const auditCollection = "audit";
 const relationCollection = "relations";

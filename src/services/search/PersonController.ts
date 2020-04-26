@@ -139,7 +139,8 @@ export const deletePersonById = async (id: string) => {
 
   return deletePerson(id)
 }
-const mongoDbDatabase = "genealogy";
+const mongoDbDatabase = process.env.MONGODB_DATABASE;
+
 const memberCollection = "members";
 const auditCollection = "audit";
 const relationCollection = "relations";
