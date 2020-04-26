@@ -78,6 +78,6 @@ export const applyRoutes = (router: Router) => {
 
   router
     .route(`${root}search`)
-    .put(searchPersonHandler)
+    .get(searchPersonHandler)
 
 };

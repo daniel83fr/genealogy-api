@@ -309,7 +309,7 @@ async function searchPersonsFromCollection(client: any, query:string, page:numbe
   const db = client.db(mongoDbDatabase);
   let collection = db.collection("members");
 
-  var regex = new RegExp(["^", query, "$"].join(""), "i");
+  var regex = new RegExp(query, "i");
   let res = await collection.find(
     { $or:[ 
       { 
