@@ -7,7 +7,7 @@ const connectionString = process.env.MONGODB;
 const MongoClient = require('mongodb').MongoClient;
 const ObjectId = require('mongodb').ObjectID;
 
-const mongoDbDatabase = "genealogy";
+const mongoDbDatabase = process.env.MONGODB_DATABASE;
 const memberCollection = "members";
 const auditCollection = "audit";
 const relationCollection = "relations";
@@ -309,7 +309,11 @@ async function searchPersonsFromCollection(client: any, query:string, page:numbe
   const db = client.db(mongoDbDatabase);
   let collection = db.collection("members");
 
-  var regex = new RegExp(["^", query, "$"].join(""), "i");
+  
+  if(query == null || query == "" ){
+    return collection.aggregate([{$sample: {size: limit}}]).toArray(); 
+  }
+  var regex = new RegExp(query, "i");
   let res = await collection.find(
     { $or:[ 
       { 
@@ -319,7 +323,7 @@ async function searchPersonsFromCollection(client: any, query:string, page:numbe
         LastName: {$regex : regex}
       },
     ] }, { FirstName: 1, LastName: 1 }
- ).limit(5).toArray()
+ ).limit(limit).toArray()
 /*
 .sort( { score: { $meta: "textScore" } } )
  .limit(10)
