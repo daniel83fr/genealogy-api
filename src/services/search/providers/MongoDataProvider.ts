@@ -309,25 +309,7 @@ async function searchPersonsFromCollection(client: any, query:string, page:numbe
   const db = client.db(mongoDbDatabase);
   let collection = db.collection("members");
 
-  
-  if(query == null || query == "" ){
-    return collection.aggregate([{$sample: {size: limit}}]).toArray(); 
-  }
-  var regex = new RegExp(query, "i");
-  let res = await collection.find(
-    { $or:[ 
-      { 
-        FirstName: {$regex : regex} 
-      },
-      { 
-        LastName: {$regex : regex}
-      },
-    ] }, { FirstName: 1, LastName: 1 }
- ).limit(limit).toArray()
-/*
-.sort( { score: { $meta: "textScore" } } )
- .limit(10)
- */
+  let res = await collection.find({}, { FirstName: 1, LastName: 1 } ).toArray()
   return res;
 }
 
