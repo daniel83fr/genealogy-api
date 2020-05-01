@@ -60,9 +60,9 @@ export async function addParentRelation(id:string, id2: string){
   return  ObjectId(id);
 }
 
-export async function searchPerson1(query:string, page:number, limit:number){
+export async function searchPerson1(){
   const client = await initClient();
-  var res =  await runQuery(client, searchPersonsFromCollection(client, query, page, limit));
+  var res =  await runQuery(client, searchPersonsFromCollection(client));
   return  res;
 }
 
@@ -305,7 +305,7 @@ async function getUnusedPersonsFromCollection(client: any) {
   return res;
 }
 
-async function searchPersonsFromCollection(client: any, query:string, page:number, limit:number) {
+async function searchPersonsFromCollection(client: any) {
   const db = client.db(mongoDbDatabase);
   let collection = db.collection("members");
 

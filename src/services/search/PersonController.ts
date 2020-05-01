@@ -97,9 +97,8 @@ export const createPerson = async (user: User, r: string) => {
 }
 
 export const searchPerson = async (query: string, page: number, limit: number) => {
-  return searchPerson1(query, page, limit);
+  return searchPerson1();
 }
-
 export const updatePerson = async (id: string, r: object) => {
 
   return updatePerson1(id, r)
