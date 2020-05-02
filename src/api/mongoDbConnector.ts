@@ -136,7 +136,7 @@ export async function deleteRelationFromMongoDb( id: string, id2: string) {
     let query = { $or: [{ "Person1": ObjectId(id), "Person2": ObjectId(id2) }, { "Person1": ObjectId(id2), "Person2": ObjectId(id) }] }
     var res = await links.findOne(query);
   
-    await links.deleteOne(query);
+    await links.deleteMany(query);
   
     let audit = db.collection(auditCollection);
     await audit.insertOne({ "timestamp": new Date().toISOString(), "Action": "Remove link", "Payload": res, "Id": ObjectId(id) })
