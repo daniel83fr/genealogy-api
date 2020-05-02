@@ -28,6 +28,15 @@ var schema = buildSchema(`
 
     getSpousesById(_id: String!): [User]
   }
+
+  type Mutation {
+
+    removeLink(_id1: String!, _id2: String!): String
+
+    addParentLink(_id: String!, _parentId: String!): String
+
+    addChildLink(_id: String!, _ChildId: String!): String
+  }
 `);
 
 export default schema

@@ -8,8 +8,6 @@ import {
   getPersonFullHandler, 
   getPersonRelationsHandler,
   deleteRelationHandler,
-  linkParentHandler, 
-  linkChildHandler, 
   linkSpouseHandler, 
   getUnlinkedPersonsHandler,
   patchRelationHandler } from "../routes/apiRoutes";
@@ -57,15 +55,6 @@ export const applyRoutes = (router: Router) => {
     .route(`${root}person/:personId/relation/:personId2`)
     .delete(deleteRelationHandler)
     .patch(patchRelationHandler)
-
-  router
-    .route(`${root}person/:personId/parent/:personId2`)
-    .put(linkParentHandler)
-
-
-  router
-    .route(`${root}person/:personId/child/:personId2`)
-    .put(linkChildHandler)
 
   router
     .route(`${root}person/:personId/spouse/:personId2`)

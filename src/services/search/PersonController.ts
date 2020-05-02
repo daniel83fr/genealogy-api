@@ -1,6 +1,6 @@
 import {
   createPerson1, deletePerson, updatePerson1, getRelation, removeRelation,
-  addParentRelation, addSpouseRelation, updateRelation1, getPersonFull, getUnusedPerson, initClient, runQuery
+  addSpouseRelation, updateRelation1, getPersonFull, getUnusedPerson, initClient, runQuery
 } from "./providers/MongoDataProvider";
 import { userInfo } from "os";
 import { link } from "fs";
@@ -117,10 +117,6 @@ export const unlinkRelations = async (id: string, id2: string) => {
   return await removeRelation(id, id2);
 }
 
-export const linkParentRelations = async (id: string, id2: string) => {
-
-  return await addParentRelation(id, id2);
-}
 
 export const getUnusedPersons = async () => {
 

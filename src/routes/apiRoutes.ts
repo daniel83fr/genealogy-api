@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 
 import {
   getPersonById, createPerson, deletePersonById, updatePerson, getPersonRelations,
-  unlinkRelations, linkParentRelations, linkSpouseRelations, updateRelation, getPersonByIdFull,
+  unlinkRelations, linkSpouseRelations, updateRelation, getPersonByIdFull,
   getUnusedPersons
 } from "../services/search/PersonController";
 
@@ -79,15 +79,6 @@ export function patchRelationHandler(req: Request, res: Response) {
   
 }
 
-export function linkParentHandler(req: Request, res: Response) {
-  linkParentRelations(req.params.personId, req.params.personId2)
-  .then(result=> res.status(200).send(result));
-}
-
-export function linkChildHandler(req: Request, res: Response) {
-  linkParentRelations(req.params.personId2, req.params.personId)
-  .then(result=>  res.status(200).send(result));
-}
 
 export function linkSpouseHandler(req: Request, res: Response) {
   linkSpouseRelations(req.params.personId, req.params.personId2)

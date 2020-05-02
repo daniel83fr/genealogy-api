@@ -127,3 +127,32 @@ export async function getSpousesByIdFromMongoDb(id: string) {
     return spouses
 }
 
+export async function deleteRelationFromMongoDb( id: string, id2: string) {
+    const client = await initClient();
+    const db = client.db(mongoDbDatabase);
+
+    let links = db.collection(relationCollection);
+  
+    let query = { $or: [{ "Person1": ObjectId(id), "Person2": ObjectId(id2) }, { "Person1": ObjectId(id2), "Person2": ObjectId(id) }] }
+    var res = await links.findOne(query);
+  
+    await links.deleteOne(query);
+  
+    let audit = db.collection(auditCollection);
+    await audit.insertOne({ "timestamp": new Date().toISOString(), "Action": "Remove link", "Payload": res, "Id": ObjectId(id) })
+    await audit.insertOne({ "timestamp": new Date().toISOString(), "Action": "Remove link", "Payload": res, "Id": ObjectId(id2) })
+    return `Deleted link between ${id} and ${id2}`;
+  }
+
+ export async function addParentRelationFromMongoDb(id: string, parentId: string) {
+    const client = await initClient();
+    const db = client.db(mongoDbDatabase);
+    let collection = db.collection(relationCollection);
+  
+    var res = await collection.insertOne({ "Person1": ObjectId(parentId), "Person2": ObjectId(id), "Type": "Parent" });
+    let audit = db.collection(auditCollection);
+    await audit.insertOne({ "timestamp": new Date().toISOString(), "Action": "Add parent link", "Payload": res, "Id": ObjectId(parentId) })
+    await audit.insertOne({ "timestamp": new Date().toISOString(), "Action": "Add parent link", "Payload": res, "Id": ObjectId(id) })
+    return `Added link between ${parentId} and ${id}`;
+  }
+

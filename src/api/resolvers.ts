@@ -4,7 +4,10 @@ import {
     getParentByIdFromMongoDb,
     getChildrenByIdFromMongoDb,
     getSiblingsByIdFromMongoDb,
-    getSpousesByIdFromMongoDb
+    getSpousesByIdFromMongoDb,
+
+    deleteRelationFromMongoDb,
+    addParentRelationFromMongoDb
 } from "../api/mongoDbConnector";
 
 var resolver = {
@@ -21,7 +24,14 @@ var resolver = {
 
     getSpousesById: (args: any) => getSpousesById(args),
 
-    getSiblingsById: (args: any) => getSiblingsById(args)
+    getSiblingsById: (args: any) => getSiblingsById(args),
+
+    removeLink: (args: any)=> removeLink(args._id1, args._id2),
+    
+    addParentLink: (args:any)=> addParentLink(  args._id, args._parentId),
+
+    addChildLink: (args:any)=> addParentLink(args._id, args._childId)
+
 };
 
 export default resolver;
@@ -164,5 +174,27 @@ function getSiblingsById(args: any) {
                 })
             });
             return items;
+        });
+}
+
+function removeLink(id1: string, id2: string) {
+    console.debug("Remove link")
+    return deleteRelationFromMongoDb(id1, id2)
+        .catch(err => {
+            throw err;
+        })
+        .then(res => {
+            return res;
+        });
+}
+
+function addParentLink(id: string, parentId: string) {
+    console.debug("Add parent link")
+    return addParentRelationFromMongoDb(id, parentId)
+        .catch(err => {
+            throw err;
+        })
+        .then(res => {
+            return res;
         });
 }

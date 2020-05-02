@@ -1,4 +1,3 @@
-import request from "request-promise";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -89,12 +88,6 @@ export async function removeRelation(id: string, id2: string) {
   return ObjectId(id);
 }
 
-export async function addParentRelation(id: string, id2: string) {
-  console.log("Add Parent Relation betwen" + id + " and " + id2)
-  const client = await initClient();
-  var res = await runQuery(client, addParentRelationFromCollection(client, id, id2));
-  return ObjectId(id);
-}
 
 
 
@@ -309,17 +302,7 @@ async function deleteRelationFromCollection(client: any, id: string, id2: string
   return res;
 }
 
-async function addParentRelationFromCollection(client: any, id: string, id2: string) {
-  const db = client.db(mongoDbDatabase);
-  let collection = db.collection(relationCollection);
 
-  var res = await collection.insertOne({ "Person1": ObjectId(id), "Person2": ObjectId(id2), "Type": "Parent" });
-
-  let audit = db.collection(auditCollection);
-  await audit.insertOne({ "timestamp": new Date().toISOString(), "Action": "Add parent link", "Payload": res, "Id": ObjectId(id) })
-  await audit.insertOne({ "timestamp": new Date().toISOString(), "Action": "Add parent link", "Payload": res, "Id": ObjectId(id2) })
-  return res;
-}
 
 async function getUnusedPersonsFromCollection(client: any) {
   const db = client.db(mongoDbDatabase);
