@@ -11,7 +11,6 @@ import {
   linkParentHandler, 
   linkChildHandler, 
   linkSpouseHandler, 
-  searchPersonHandler, 
   getUnlinkedPersonsHandler,
   patchRelationHandler } from "../routes/apiRoutes";
 
@@ -75,9 +74,5 @@ export const applyRoutes = (router: Router) => {
   router
     .route(`${root}admin/person/unused`)
     .put(getUnlinkedPersonsHandler)
-
-  router
-    .route(`${root}search`)
-    .get(searchPersonHandler)
 
 };

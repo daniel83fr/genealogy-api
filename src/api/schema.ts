@@ -1,59 +1,33 @@
-import { GraphQLList, GraphQLString } from "graphql";
+import { GraphQLList, GraphQLString, buildSchema } from "graphql";
 
 var graphql = require('graphql');
 
-var fakeDatabase = {
-    'a': {
-      _id: 'a',
-      FirstName: 'alice',
-      LastName: 'aaa'
-    },
-    'b': {
-      _id: 'b',
-      FirstName: 'bob',
-      LastName: 'bbb'
-    },
-  };
+var schema = buildSchema(`
+  type User {
+    _id: String
+    FirstName: String
+    LastName: String
+    MaidenName: String
+    Gender: String
+    BirthDate : String
+  }
 
-// Define the User type
-var userType = new graphql.GraphQLObjectType({
-    name: 'User',
-    fields: {
-      _id: { type: graphql.GraphQLString },
-    FirstName: { type: graphql.GraphQLString },
-    LastName: { type: graphql.GraphQLString },
-    }
-  });
-  
-  // Define the Query type
-  var queryType = new graphql.GraphQLObjectType({
-    name: 'Query',
-    fields: {
+  type Query {
 
-      hello: {
-        type: graphql.GraphQLString
-      },
+    getPersons: [User]
 
-      getPersons:{
-        type:  new GraphQLList(userType)
-      },
+    getPersonById(_id: String!): User
 
-      getPerson: {
-        type:  new GraphQLList(userType),
-        // `args` describes the arguments that the `user` query accepts
-        args: {
-          _id: { type: graphql.GraphQLString }
-        },
-        resolve: (_: any, id: { id: string}) => {
-          
-          let items = []
-          items.push(fakeDatabase.a)
-          items.push(fakeDatabase.b)
-          return items;
-        }
-      }
-    }
-  });
-  
-  var schema = new graphql.GraphQLSchema({query: queryType});
+    getFatherById(_id: String!): User
+
+    getMotherById(_id: String!): User
+
+    getChildrenById(_id: String!): [User]
+
+    getSiblingsById(_id: String!): [User]
+
+    getSpousesById(_id: String!): [User]
+  }
+`);
+
 export default schema

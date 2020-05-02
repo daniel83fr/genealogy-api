@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import {
   getPersonById, createPerson, deletePersonById, updatePerson, getPersonRelations,
   unlinkRelations, linkParentRelations, linkSpouseRelations, updateRelation, getPersonByIdFull,
-  getUnusedPersons, searchPerson
+  getUnusedPersons
 } from "../services/search/PersonController";
 
 const querystring = require('querystring');
@@ -97,10 +97,5 @@ export function linkSpouseHandler(req: Request, res: Response) {
 
 export function getUnlinkedPersonsHandler(req: Request, res: Response) {
   getUnusedPersons().then(result=>
-  res.status(200).send(result));
-}
-export function searchPersonHandler(req: Request, res: Response) {
-  let parsedQuery = querystring.parse(req.query);
-  searchPerson(req.query.query, 1, 10).then(result=>
   res.status(200).send(result));
 }

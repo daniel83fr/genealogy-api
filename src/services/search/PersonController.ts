@@ -1,6 +1,6 @@
 import {
   createPerson1, deletePerson, updatePerson1, getRelation, removeRelation,
-  addParentRelation, addSpouseRelation, updateRelation1, getPersonFull, getUnusedPerson, searchPerson1, initClient, runQuery
+  addParentRelation, addSpouseRelation, updateRelation1, getPersonFull, getUnusedPerson, initClient, runQuery
 } from "./providers/MongoDataProvider";
 import { userInfo } from "os";
 import { link } from "fs";
@@ -96,9 +96,7 @@ export const createPerson = async (user: User, r: string) => {
   return createPerson1(user)
 }
 
-export const searchPerson = async (query: string, page: number, limit: number) => {
-  return searchPerson1();
-}
+
 export const updatePerson = async (id: string, r: object) => {
 
   return updatePerson1(id, r)
@@ -158,14 +156,11 @@ export const getPersonById = async (id: string) => {
   );
 }
 
-
-
 export const getPersonRelations1 = async (id: string) => {
 
   var main = await getRelation(id);
   return main;
 };
-
 
 export const getPersonByIdFull = async (q: string) => {
   var response = await getPersonFull(q);
