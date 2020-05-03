@@ -60,12 +60,6 @@ export async function createPerson1(user: any) {
   return res.insertedId;
 }
 
-export async function updatePerson1(id: string, patch: object) {
-  console.log("Update Person")
-  const client = await initClient();
-  var res = await runQuery(client, updatePersonIntoCollection(client, id, patch));
-  return res.insertedId;
-}
 
 export async function updateRelation1(id: string, id2: string, patch: object) {
   console.log("Update Relation")
@@ -89,14 +83,6 @@ export async function removeRelation(id: string, id2: string) {
 }
 
 
-
-
-export async function getUnusedPerson() {
-  console.log("Get unused persons")
-  const client = await initClient();
-  var res = await runQuery(client, getUnusedPersonsFromCollection(client));
-  return res;
-}
 
 export async function addSpouseRelation(id: string, id2: string) {
   console.log("Add Spouse Relation betwen" + id + " and " + id2)
@@ -247,16 +233,7 @@ async function insertPersonIntoCollection(client: any, user: any) {
   return res;
 }
 
-async function updatePersonIntoCollection(client: any, id: string, patch: any) {
-  const db = client.db(mongoDbDatabase);
-  let collection = db.collection(memberCollection);
-  patch.UpdatedAt = new Date().toISOString()
-  var res = await collection.updateOne({ "_id": ObjectId(id) }, { $set: patch });
 
-  let audit = db.collection(auditCollection);
-  await audit.insertOne({ "timestamp": new Date().toISOString(), "Action": "Person updated", "Payload": patch, "Id": ObjectId(id) })
-  return res;
-}
 
 async function updateRelationIntoCollection(client: any, id: string, id2: string, patch: object) {
   const db = client.db(mongoDbDatabase);
@@ -304,12 +281,7 @@ async function deleteRelationFromCollection(client: any, id: string, id2: string
 
 
 
-async function getUnusedPersonsFromCollection(client: any) {
-  const db = client.db(mongoDbDatabase);
-  let collection = db.collection("membersUnused");
-  let res = await collection.find({}).toArray();
-  return res;
-}
+
 
 
 

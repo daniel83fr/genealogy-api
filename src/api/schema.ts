@@ -12,6 +12,14 @@ var schema = buildSchema(`
     BirthDate : String
   }
 
+  input UserChanges {
+    FirstName: String
+    LastName: String
+    MaidenName: String
+    Gender: String
+    BirthDate : String
+  }
+
   type Query {
 
     getPersons: [User]
@@ -36,6 +44,8 @@ var schema = buildSchema(`
     addParentLink(_id: String!, _parentId: String!): String
 
     addChildLink(_id: String!, _ChildId: String!): String
+
+    updatePerson(_id:String!, patch: UserChanges): User
   }
 `);
 

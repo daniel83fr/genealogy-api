@@ -1,8 +1,5 @@
 import express from 'express';
 import http from "http";
-import { applyMiddleware, applyRoutes } from "./utils";
-import middleware from "./middleware";
-import errorHandlers from "./middleware/errorHandlers";;
 
 import graphqlHTTP from 'express-graphql';
 import cors from 'cors'
@@ -21,9 +18,6 @@ router.use(
   }),
 );
 
-applyMiddleware(middleware, router);
-applyRoutes(router);
-applyMiddleware(errorHandlers, router);
 
 const PORT = process.env.PORT;
 const NODE_ENV = process.env.NODE_ENV;

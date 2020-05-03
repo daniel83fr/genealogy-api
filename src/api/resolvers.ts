@@ -5,32 +5,39 @@ import {
     getChildrenByIdFromMongoDb,
     getSiblingsByIdFromMongoDb,
     getSpousesByIdFromMongoDb,
-
     deleteRelationFromMongoDb,
-    addParentRelationFromMongoDb
+    addParentRelationFromMongoDb,
+
+    getUnusedPersonsFromMongoDb,
+    updatePersonFromMongoDb
 } from "../api/mongoDbConnector";
+
 
 var resolver = {
 
     getPersons: getPersons(),
 
-    getPersonById: (args: any) => getPersonById(args),
+    getUnusedPersons: getUnusedPersons(),
 
-    getFatherById: (args: any) => getParentById(args, "Male"),
+    getPersonById: (args: any) => getPersonById(args._id),
 
-    getMotherById: (args: any) => getParentById(args, "Female"),
+    getFatherById: (args: any) => getParentById(args._id, "Male"),
 
-    getChildrenById: (args: any) => getChildrenById(args),
+    getMotherById: (args: any) => getParentById(args._id, "Female"),
 
-    getSpousesById: (args: any) => getSpousesById(args),
+    getChildrenById: (args: any) => getChildrenById(args._id),
 
-    getSiblingsById: (args: any) => getSiblingsById(args),
+    getSpousesById: (args: any) => getSpousesById(args._id),
 
-    removeLink: (args: any)=> removeLink(args._id1, args._id2),
-    
-    addParentLink: (args:any)=> addParentLink(  args._id, args._parentId),
+    getSiblingsById: (args: any) => getSiblingsById(args._id),
 
-    addChildLink: (args:any)=> addParentLink(args._id, args._childId)
+    removeLink: (args: any) => removeLink(args._id1, args._id2),
+
+    addParentLink: (args: any) => addParentLink(args._id, args._parentId),
+
+    addChildLink: (args: any) => addParentLink(args._id, args._childId),
+
+    updatePerson: (args: any) => updatePerson(args._id, args.patch),
 
 };
 
@@ -61,16 +68,41 @@ function getPersons() {
     };
 }
 
-function getPersonById(args: any) {
+function getUnusedPersons() {
+
+    console.debug("GetPersons")
+    return () => {
+        return getUnusedPersonsFromMongoDb()
+            .then(res => {
+                let items: any[] = [];
+                res = Object.assign(res);
+                res.forEach((element: {
+                    _id: any;
+                    FirstName: any;
+                    LastName: any;
+                }) => {
+                    items.push({
+                        "_id": element._id,
+                        "FirstName": element.FirstName,
+                        "LastName": element.LastName
+                    });
+                });
+                console.debug(JSON.stringify(items))
+                return items;
+            });
+    };
+}
+
+function getPersonById(_id: string) {
     console.debug("GetPersonById")
-    return getPersonByIdFromMongoDb(args._id)
+    return getPersonByIdFromMongoDb(_id)
         .catch(err => {
             throw err;
         })
         .then(res => {
             res = Object.assign(res);
             return {
-                "_id": res._id,
+                "_id": _id,
                 "FirstName": res.FirstName,
                 "LastName": res.LastName,
                 "MaidenName": res.MaidenName,
@@ -80,34 +112,34 @@ function getPersonById(args: any) {
         });
 }
 
-function getParentById(args: any, gender: string) {
+function getParentById(_id: string, gender: string) {
     console.debug("GetParentById")
-    return getParentByIdFromMongoDb(args._id, gender)
+    return getParentByIdFromMongoDb(_id, gender)
         .catch(err => {
             throw err;
         })
         .then(res => {
 
-           
-                res = Object.assign(res);
-                return {
-                    "_id": res._id,
-                    "FirstName": res.FirstName,
-                    "LastName": res.LastName,
-                    "MaidenName": res.MaidenName,
-                    "BirthDate": res.BirthDate,
-                    "Gender": res.Gender
-                }
-            
-           
+
+            res = Object.assign(res);
+            return {
+                "_id": _id,
+                "FirstName": res.FirstName,
+                "LastName": res.LastName,
+                "MaidenName": res.MaidenName,
+                "BirthDate": res.BirthDate,
+                "Gender": res.Gender
+            }
+
+
         }
 
         );
 }
 
-function getChildrenById(args: any) {
+function getChildrenById(_id: string) {
     console.debug("GeChildrenById")
-    return getChildrenByIdFromMongoDb(args._id)
+    return getChildrenByIdFromMongoDb(_id)
         .catch(err => {
             throw err;
         })
@@ -129,9 +161,9 @@ function getChildrenById(args: any) {
         });
 }
 
-function getSpousesById(args: any) {
+function getSpousesById(_id: string) {
     console.debug("GetSpousesById")
-    return getSpousesByIdFromMongoDb(args._id)
+    return getSpousesByIdFromMongoDb(_id)
         .catch(err => {
             throw err;
         })
@@ -153,9 +185,9 @@ function getSpousesById(args: any) {
         });
 }
 
-function getSiblingsById(args: any) {
+function getSiblingsById(_id: string) {
     console.debug("GetSiblingsById")
-    return getSiblingsByIdFromMongoDb(args._id)
+    return getSiblingsByIdFromMongoDb(_id)
         .catch(err => {
             throw err;
         })
@@ -197,4 +229,21 @@ function addParentLink(id: string, parentId: string) {
         .then(res => {
             return res;
         });
+}
+
+function updatePerson(_id: string, patch: any) {
+
+    console.debug("UpdatePersons")
+
+    console.debug(_id)
+    console.debug(JSON.stringify(patch))
+
+    return updatePersonFromMongoDb(_id, patch)
+        .catch(err => {
+            throw err;
+        })
+        .then((res: any) => {
+            return res
+        });
+
 }
