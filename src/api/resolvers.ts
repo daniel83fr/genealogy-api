@@ -7,9 +7,12 @@ import {
     getSpousesByIdFromMongoDb,
     deleteRelationFromMongoDb,
     addParentRelationFromMongoDb,
-
+    addSpouseRelationFromMongoDb,
+    addSiblingRelationFromMongoDb,
     getUnusedPersonsFromMongoDb,
-    updatePersonFromMongoDb
+    updatePersonFromMongoDb,
+    deleteSiblingRelationFromMongoDb,
+    createPersonFromMongoDb
 } from "../api/mongoDbConnector";
 
 
@@ -32,11 +35,15 @@ var resolver = {
     getSiblingsById: (args: any) => getSiblingsById(args._id),
 
     removeLink: (args: any) => removeLink(args._id1, args._id2),
-
+    removeSiblingLink: (args: any) => removeSiblingLink(args._id1, args._id2),
     addParentLink: (args: any) => addParentLink(args._id, args._parentId),
 
-    addChildLink: (args: any) => addParentLink(args._id, args._childId),
+    addChildLink: (args: any) => addParentLink( args._childId, args._id),
 
+    addSpouseLink: (args: any) => addSpouseLink( args._id1, args._id2),
+    addSiblingLink: (args: any) => addSiblingLink( args._id1, args._id2),
+
+    createPerson: (args: any) => createPerson(args.person),
     updatePerson: (args: any) => updatePerson(args._id, args.patch),
 
 };
@@ -220,9 +227,42 @@ function removeLink(id1: string, id2: string) {
         });
 }
 
+function removeSiblingLink(id1: string, id2: string) {
+    console.debug("Remove sibling link")
+    return deleteSiblingRelationFromMongoDb(id1, id2)
+        .catch(err => {
+            throw err;
+        })
+        .then(res => {
+            return res;
+        });
+}
+
 function addParentLink(id: string, parentId: string) {
     console.debug("Add parent link")
     return addParentRelationFromMongoDb(id, parentId)
+        .catch(err => {
+            throw err;
+        })
+        .then(res => {
+            return res;
+        });
+}
+
+function addSpouseLink(id1: string, id2: string) {
+    console.debug("Add spouse link")
+    return addSpouseRelationFromMongoDb(id1, id2)
+        .catch(err => {
+            throw err;
+        })
+        .then(res => {
+            return res;
+        });
+}
+
+function addSiblingLink(id1: string, id2: string) {
+    console.debug("Add spouse link")
+    return addSiblingRelationFromMongoDb(id1, id2)
         .catch(err => {
             throw err;
         })
@@ -239,6 +279,20 @@ function updatePerson(_id: string, patch: any) {
     console.debug(JSON.stringify(patch))
 
     return updatePersonFromMongoDb(_id, patch)
+        .catch(err => {
+            throw err;
+        })
+        .then((res: any) => {
+            return res
+        });
+
+}
+
+function createPerson(person: any) {
+
+    console.debug("Create Person")
+
+    return createPersonFromMongoDb(person)
         .catch(err => {
             throw err;
         })

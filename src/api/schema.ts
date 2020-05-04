@@ -41,9 +41,17 @@ var schema = buildSchema(`
 
     removeLink(_id1: String!, _id2: String!): String
 
+    removeSiblingLink(_id1: String!, _id2: String!): String
+
     addParentLink(_id: String!, _parentId: String!): String
 
-    addChildLink(_id: String!, _ChildId: String!): String
+    addChildLink(_id: String!, _childId: String!): String
+
+    addSpouseLink(_id1: String!, _id2: String!): String
+
+    addSiblingLink(_id1: String!, _id2: String!): String
+
+    createPerson(person: UserChanges): User
 
     updatePerson(_id:String!, patch: UserChanges): User
   }
