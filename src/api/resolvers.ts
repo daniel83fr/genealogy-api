@@ -123,7 +123,7 @@ function getParentById(_id: string, gender: string) {
 
             res = Object.assign(res);
             return {
-                "_id": _id,
+                "_id": res._id,
                 "FirstName": res.FirstName,
                 "LastName": res.LastName,
                 "MaidenName": res.MaidenName,

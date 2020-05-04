@@ -25,6 +25,7 @@ export async function getPersonsFromMongoDb() {
             FirstName: 1,
             LastName: 1
         }).toArray()
+        client.close()
     return res;
 }
 
@@ -33,6 +34,7 @@ export async function getPersonByIdFromMongoDb(id: string) {
     const db = client.db(mongoDbDatabase);
     let collection = db.collection(memberCollection);
     let res = await collection.findOne({ _id: ObjectId(id)})
+    client.close()
     return res;
 }
 
@@ -57,6 +59,7 @@ export async function getParentByIdFromMongoDb(id: string, gender:string) : Prom
             father  = element
         }
     });
+    client.close()
     return father;
 }
 
@@ -74,6 +77,7 @@ export async function getChildrenByIdFromMongoDb(id: string) {
     
     let query = { _id: { $in: items } }
     let children = await members.find(query).toArray();
+    client.close()
     return children
 }
 
@@ -100,6 +104,7 @@ export async function getSiblingsByIdFromMongoDb(id: string) {
     let members = db.collection(memberCollection);
     let query = { _id: { $in: items2 } }
     let parents = await members.find(query).toArray();
+    client.close()
     return parents
 }
 
@@ -124,6 +129,7 @@ export async function getSpousesByIdFromMongoDb(id: string) {
     let query = { _id: { $in: items } }
     console.log(query)
     let spouses = await members.find(query).toArray();
+    client.close()
     return spouses
 }
 
@@ -141,6 +147,7 @@ export async function deleteRelationFromMongoDb( id: string, id2: string) {
     let audit = db.collection(auditCollection);
     await audit.insertOne({ "timestamp": new Date().toISOString(), "Action": "Remove link", "Payload": res, "Id": ObjectId(id) })
     await audit.insertOne({ "timestamp": new Date().toISOString(), "Action": "Remove link", "Payload": res, "Id": ObjectId(id2) })
+    client.close()
     return `Deleted link between ${id} and ${id2}`;
   }
 
@@ -153,6 +160,7 @@ export async function deleteRelationFromMongoDb( id: string, id2: string) {
     let audit = db.collection(auditCollection);
     await audit.insertOne({ "timestamp": new Date().toISOString(), "Action": "Add parent link", "Payload": res, "Id": ObjectId(parentId) })
     await audit.insertOne({ "timestamp": new Date().toISOString(), "Action": "Add parent link", "Payload": res, "Id": ObjectId(id) })
+    client.close()
     return `Added link between ${parentId} and ${id}`;
   }
   
@@ -161,6 +169,7 @@ export async function deleteRelationFromMongoDb( id: string, id2: string) {
     const db = client.db(mongoDbDatabase);
     let collection = db.collection("membersUnused");
     let res = await collection.find({}).toArray();
+    client.close()
     return res;
   }
 
@@ -179,5 +188,6 @@ export async function deleteRelationFromMongoDb( id: string, id2: string) {
     await audit.insertOne({ "timestamp": new Date().toISOString(), "Action": "Person updated", "Payload": patch, "Id": ObjectId(id) })
 
     let res1 = await collection.findOne({ _id: ObjectId(id)})
+    client.close()
     return res1;
   }
