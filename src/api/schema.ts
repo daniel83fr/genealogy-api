@@ -3,13 +3,16 @@ import { GraphQLList, GraphQLString, buildSchema } from "graphql";
 var graphql = require('graphql');
 
 var schema = buildSchema(`
+  scalar DateTime
+
   type User {
     _id: String
     FirstName: String
     LastName: String
     MaidenName: String
     Gender: String
-    BirthDate : String
+    YearOfBirth : String
+    YearOfDeath: String
   }
 
   input UserChanges {
@@ -18,6 +21,7 @@ var schema = buildSchema(`
     MaidenName: String
     Gender: String
     BirthDate : String
+    DeathDate : String
   }
 
   type Query {
@@ -35,6 +39,10 @@ var schema = buildSchema(`
     getSiblingsById(_id: String!): [User]
 
     getSpousesById(_id: String!): [User]
+
+    shouldResetCache(lastEntry:DateTime): Boolean
+
+    shouldResetPersonCache(_id:String, lastEntry:DateTime): Boolean
   }
 
   type Mutation {
@@ -42,6 +50,8 @@ var schema = buildSchema(`
     removeLink(_id1: String!, _id2: String!): String
 
     removeSiblingLink(_id1: String!, _id2: String!): String
+
+    removeProfile(_id: String!): String
 
     addParentLink(_id: String!, _parentId: String!): String
 
@@ -54,6 +64,8 @@ var schema = buildSchema(`
     createPerson(person: UserChanges): User
 
     updatePerson(_id:String!, patch: UserChanges): User
+
+
   }
 `);
 

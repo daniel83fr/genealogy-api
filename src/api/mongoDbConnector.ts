@@ -23,7 +23,12 @@ export async function getPersonsFromMongoDb() {
     let res = await collection.find({},
         {
             FirstName: 1,
-            LastName: 1
+            LastName: 1,
+            MaidenName: 1, 
+            BirthDate:1,
+            DeathDate:1,
+            Gender:1
+
         }).toArray()
     client.close()
     return res;
@@ -144,8 +149,8 @@ export async function deleteRelationFromMongoDb(id: string, id2: string) {
     await links.deleteMany(query);
 
     let audit = db.collection(auditCollection);
-    await audit.insertOne({ "timestamp": new Date().toISOString(), "Action": "Remove link", "Payload": res, "Id": ObjectId(id) })
-    await audit.insertOne({ "timestamp": new Date().toISOString(), "Action": "Remove link", "Payload": res, "Id": ObjectId(id2) })
+    await audit.insertOne({ "timestamp": new Date().toISOString(), "Type" : "Relation",  "Action": "Remove link", "Payload": res, "Id": ObjectId(id) })
+    await audit.insertOne({ "timestamp": new Date().toISOString(), "Type" : "Relation", "Action": "Remove link", "Payload": res, "Id": ObjectId(id2) })
     client.close()
     return `Deleted link between ${id} and ${id2}`;
 }
@@ -169,6 +174,28 @@ export async function deleteSiblingRelationFromMongoDb(id: string, id2: string) 
     return `Deleted siblings link between ${id} and ${id2}`;
 }
 
+export async function deleteProfileFromMongoDb(id: string) {
+    const client = await initClient();
+    const db = client.db(mongoDbDatabase);
+  let collection = db.collection(memberCollection);
+
+  let query = { _id: ObjectId(id) }
+  var res = await collection.findOne(query);
+
+
+  let links = db.collection(relationCollection);
+  let query1 = { $or: [{ "Person1": ObjectId(id) }, {  "Person2": ObjectId(id) }] }
+  await links.deleteMany(query1);
+
+
+  await collection.deleteOne(query);
+
+  let audit = db.collection(auditCollection);
+  await audit.insertOne({ "timestamp": new Date().toISOString(), "Type" : "Person", "Action": "Person Deleted", "Payload": res, "Id": res._id })
+  client.close()
+  return `Deleted person ${id}`;
+}
+
 
 
 export async function addParentRelationFromMongoDb(id: string, parentId: string) {
@@ -178,8 +205,8 @@ export async function addParentRelationFromMongoDb(id: string, parentId: string)
 
     var res = await collection.insertOne({ "Person1": ObjectId(parentId), "Person2": ObjectId(id), "Type": "Parent" });
     let audit = db.collection(auditCollection);
-    await audit.insertOne({ "timestamp": new Date().toISOString(), "Action": "Add parent link", "Payload": res, "Id": ObjectId(parentId) })
-    await audit.insertOne({ "timestamp": new Date().toISOString(), "Action": "Add parent link", "Payload": res, "Id": ObjectId(id) })
+    await audit.insertOne({ "timestamp": new Date().toISOString(), "Type" : "Relation", "Action": "Add parent link", "Payload": res, "Id": ObjectId(parentId) })
+    await audit.insertOne({ "timestamp": new Date().toISOString(), "Type" : "Relation", "Action": "Add parent link", "Payload": res, "Id": ObjectId(id) })
     client.close()
     return `Added link between ${parentId} and ${id}`;
 }
@@ -191,8 +218,8 @@ export async function addSpouseRelationFromMongoDb(id1: string, id2: string) {
 
     var res = await collection.insertOne({ "Person1": ObjectId(id1), "Person2": ObjectId(id2), "Type": "Spouse" });
     let audit = db.collection(auditCollection);
-    await audit.insertOne({ "timestamp": new Date().toISOString(), "Action": "Add parent link", "Payload": res, "Id": ObjectId(id1) })
-    await audit.insertOne({ "timestamp": new Date().toISOString(), "Action": "Add parent link", "Payload": res, "Id": ObjectId(id2) })
+    await audit.insertOne({ "timestamp": new Date().toISOString(), "Type" : "Relation", "Action": "Add parent link", "Payload": res, "Id": ObjectId(id1) })
+    await audit.insertOne({ "timestamp": new Date().toISOString(), "Type" : "Relation", "Action": "Add parent link", "Payload": res, "Id": ObjectId(id2) })
     client.close()
     return `Added link between ${id1} and ${id2}`;
 }
@@ -234,7 +261,7 @@ export async function updatePersonFromMongoDb(id: string, patch: any) {
     var res = await collection.updateOne(query, { $set: patch });
 
     let audit = db.collection(auditCollection);
-    await audit.insertOne({ "timestamp": new Date().toISOString(), "Action": "Person updated", "Payload": patch, "Id": ObjectId(id) })
+    await audit.insertOne({ "timestamp": new Date().toISOString(), "Type" : "Person", "Action": "Person updated", "Payload": patch, "Id": ObjectId(id) })
 
     let res1 = await collection.findOne({ _id: ObjectId(id) })
     client.close()
@@ -251,9 +278,24 @@ export async function createPersonFromMongoDb(person: any) {
     var res = await collection.insertOne(person);
 
     let audit = db.collection(auditCollection);
-    await audit.insertOne({ "timestamp": new Date().toISOString(), "Action": "Person inserted", "Payload": person, "Id": ObjectId(res.insertedId ) })
+    await audit.insertOne({ "timestamp": new Date().toISOString(), "Type" : "Person", "Action": "Person inserted", "Payload": person, "Id": ObjectId(res.insertedId ) })
 
     let res1 = await collection.findOne({ _id: ObjectId(res.insertedId) })
     client.close()
     return res1;
 }
+
+export async function shouldResetCacheFromMongoDb(lastEntry: Date) {
+    console.log("function called")
+    const client = await initClient();
+    const db = client.db(mongoDbDatabase);
+    let collection = db.collection(auditCollection);
+
+    let query = `{'timestamp': {$gt : '${lastEntry.toISOString()}'}}`
+    console.log(query)
+    var res = await collection.find(query).limit(1).toArray();
+    client.close()
+    return res.length >0;
+}
+
+
