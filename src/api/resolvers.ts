@@ -180,10 +180,10 @@ function getChildrenById(_id: string) {
 
             let items: any[] = []
             res = Object.assign(res);
-            res.forEach((element: { _id: any; FirstName: any; LastName: any; MaidenName: any; BirthDate: any; Gender: any; }) => {
+            res.forEach((element: { _id: any; FirstName: any; LastName: any; MaidenName: any; BirthDate: any; DeathDate: any;Gender: any; }) => {
                
-                let yearOfBirth = res.BirthDate?.substring(0,4)
-                let yearOfDeath = res.DeathDate?.substring(0,4)
+                let yearOfBirth = element.BirthDate?.substring(0,4)
+                let yearOfDeath = element.DeathDate?.substring(0,4)
                 items.push({
                     "_id": element._id,
                     "FirstName": element.FirstName,
@@ -208,16 +208,18 @@ function getSpousesById(_id: string) {
 
             let items: any[] = []
             res = Object.assign(res);
-            res.forEach((element: { _id: any; FirstName: any; LastName: any; MaidenName: any; BirthDate: any; Gender: any; }) => {
-                let yearOfBirth = res.BirthDate?.substring(0,4)
-                let yearOfDeath = res.DeathDate?.substring(0,4)
+            res.forEach((element: { _id: any; FirstName: any; LastName: any; MaidenName: any; BirthDate: any;DeathDate: any; Gender: any; }) => {
+                let yearOfBirth = element.BirthDate?.substring(0,4)
+                let yearOfDeath = element.DeathDate?.substring(0,4)
                                 items.push({
                     "_id": element._id,
                     "FirstName": element.FirstName,
                     "LastName": element.LastName,
                     "MaidenName": element.MaidenName,
                     "BirthDate": element.BirthDate,
-                    "Gender": element.Gender
+                    "Gender": element.Gender,
+                    "YearOfBirth": yearOfBirth == "0000"? null: yearOfBirth,
+                    "YearOfDeath": yearOfDeath == "0000"? null: yearOfDeath,
                 })
             });
             return items;
@@ -234,16 +236,18 @@ function getSiblingsById(_id: string) {
 
             let items: any[] = []
             res = Object.assign(res);
-            res.forEach((element: { _id: any; FirstName: any; LastName: any; MaidenName: any; BirthDate: any; Gender: any; }) => {
-                let yearOfBirth = res.BirthDate?.substring(0,4)
-                let yearOfDeath = res.DeathDate?.substring(0,4)
+            res.forEach((element: { _id: any; FirstName: any; LastName: any; MaidenName: any; BirthDate: any; DeathDate: any;Gender: any; }) => {
+                let yearOfBirth = element.BirthDate?.substring(0,4)
+                let yearOfDeath = element.DeathDate?.substring(0,4)
                 items.push({
                     "_id": element._id,
                     "FirstName": element.FirstName,
                     "LastName": element.LastName,
                     "MaidenName": element.MaidenName,
                     "BirthDate": element.BirthDate,
-                    "Gender": element.Gender
+                    "Gender": element.Gender,
+                    "YearOfBirth": yearOfBirth == "0000"? null: yearOfBirth,
+                    "YearOfDeath": yearOfDeath == "0000"? null: yearOfDeath,
                 })
             });
             return items;
