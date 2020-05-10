@@ -14,8 +14,13 @@ import {
     deleteSiblingRelationFromMongoDb,
     createPersonFromMongoDb,
     deleteProfileFromMongoDb,
-    shouldResetCacheFromMongoDb
+    shouldResetCacheFromMongoDb,
+    checkCredentialsFromMongoDb,
+    createCredentialsFromMongoDb
 } from "../api/mongoDbConnector";
+
+const exjwt = require('express-jwt');
+const jwt = require('jsonwebtoken');
 
 
 var resolver = {
@@ -40,19 +45,23 @@ var resolver = {
     removeSiblingLink: (args: any) => removeSiblingLink(args._id1, args._id2),
     addParentLink: (args: any) => addParentLink(args._id, args._parentId),
 
-    addChildLink: (args: any) => addParentLink( args._childId, args._id),
+    addChildLink: (args: any) => addParentLink(args._childId, args._id),
 
-    addSpouseLink: (args: any) => addSpouseLink( args._id1, args._id2),
-    addSiblingLink: (args: any) => addSiblingLink( args._id1, args._id2),
+    addSpouseLink: (args: any) => addSpouseLink(args._id1, args._id2),
+    addSiblingLink: (args: any) => addSiblingLink(args._id1, args._id2),
 
     createPerson: (args: any) => createPerson(args.person),
     updatePerson: (args: any) => updatePerson(args._id, args.patch),
 
     removeProfile: (args: any) => removeProfile(args._id),
 
-    shouldResetCache: (args:any)=> shouldResetCache(args.lastEntry),
+    shouldResetCache: (args: any) => shouldResetCache(args.lastEntry),
 
-    shouldResetPersonCache: (args:any)=> shouldResetPersonCache(args._id, args.lastEntry)
+    shouldResetPersonCache: (args: any) => shouldResetPersonCache(args._id, args.lastEntry),
+
+    login: (args: any) => login(args.login, args.password),
+    register: (args: any) => register(args.id, args.login, args.password),
+    me: (args: any, context: any) => me(context.user)
 };
 
 export default resolver;
@@ -67,24 +76,24 @@ function getPersons() {
                 res = Object.assign(res);
                 res.forEach((element: {
                     _id: any;
-                    FirstName: any;
-                    LastName: any;
-                    MaidenName: any;
-                    Gender: any;
-                    BirthDate: any;
-                    DeathDate: any
+                    firstName: any;
+                    lastName: any;
+                    maidenName: any;
+                    gender: any;
+                    birthDate: any;
+                    deathDate: any
                 }) => {
 
-                    let yearOfBirth = element.BirthDate?.substring(0,4)
-                    let yearOfDeath = element.DeathDate?.substring(0,4)
+                    let yearOfBirth = element.birthDate?.substring(0, 4)
+                    let yearOfDeath = element.deathDate?.substring(0, 4)
                     items.push({
                         "_id": element._id,
-                        "FirstName": element.FirstName,
-                        "LastName": element.LastName,
-                        "MaidenName": element.MaidenName,
-                        "Gender": element.Gender,
-                        "YearOfBirth": yearOfBirth == "0000"? null: yearOfBirth,
-                        "YearOfDeath": yearOfDeath == "0000"? null: yearOfDeath,
+                        "firstName": element.firstName,
+                        "lastName": element.lastName,
+                        "maidenName": element.maidenName,
+                        "gender": element.gender,
+                        "yearOfBirth": yearOfBirth == "0000" ? null : yearOfBirth,
+                        "yearOfDeath": yearOfDeath == "0000" ? null : yearOfDeath,
                     });
                 });
                 console.debug(JSON.stringify(items))
@@ -127,18 +136,18 @@ function getPersonById(_id: string) {
         .then(res => {
             res = Object.assign(res);
 
-            let yearOfBirth = res.BirthDate?.substring(0,4)
-            let yearOfDeath = res.DeathDate?.substring(0,4)
+            let yearOfBirth = res.birthDate?.substring(0, 4)
+            let yearOfDeath = res.deathDate?.substring(0, 4)
 
             return {
                 "_id": _id,
-                "FirstName": res.FirstName,
-                "LastName": res.LastName,
-                "MaidenName": res.MaidenName,
-                "BirthDate": res.BirthDate,
-                "Gender": res.Gender,
-                "YearOfBirth": yearOfBirth == "0000"? null: yearOfBirth,
-                "YearOfDeath": yearOfDeath == "0000"? null: yearOfDeath,
+                "firstName": res.firstName,
+                "lastName": res.lastName,
+                "maidenName": res.maidenName,
+                "birthDate": res.birthDate,
+                "gender": res.gender,
+                "yearOfBirth": yearOfBirth == "0000" ? null : yearOfBirth,
+                "yearOfDeath": yearOfDeath == "0000" ? null : yearOfDeath,
             }
         });
 }
@@ -151,17 +160,17 @@ function getParentById(_id: string, gender: string) {
         })
         .then(res => {
 
-            let yearOfBirth = res.BirthDate?.substring(0,4)
-            let yearOfDeath = res.DeathDate?.substring(0,4)
+            let yearOfBirth = res.birthDate?.substring(0, 4)
+            let yearOfDeath = res.deathDate?.substring(0, 4)
             res = Object.assign(res);
             return {
                 "_id": res._id,
-                "FirstName": res.FirstName,
-                "LastName": res.LastName,
-                "MaidenName": res.MaidenName,
-                "Gender": res.Gender,
-                "YearOfBirth": yearOfBirth == "0000"? null: yearOfBirth,
-                "YearOfDeath": yearOfDeath == "0000"? null: yearOfDeath,
+                "firstName": res.firstName,
+                "lastName": res.lastName,
+                "maidenName": res.maidenName,
+                "gender": res.gender,
+                "yearOfBirth": yearOfBirth == "0000" ? null : yearOfBirth,
+                "yearOfDeath": yearOfDeath == "0000" ? null : yearOfDeath,
             }
 
 
@@ -180,18 +189,18 @@ function getChildrenById(_id: string) {
 
             let items: any[] = []
             res = Object.assign(res);
-            res.forEach((element: { _id: any; FirstName: any; LastName: any; MaidenName: any; BirthDate: any; DeathDate: any;Gender: any; }) => {
-               
-                let yearOfBirth = element.BirthDate?.substring(0,4)
-                let yearOfDeath = element.DeathDate?.substring(0,4)
+            res.forEach((element: { _id: any; firstName: any; lastName: any; maidenName: any; birthDate: any; deathDate: any; gender: any; }) => {
+
+                let yearOfBirth = element.birthDate?.substring(0, 4)
+                let yearOfDeath = element.deathDate?.substring(0, 4)
                 items.push({
                     "_id": element._id,
-                    "FirstName": element.FirstName,
-                    "LastName": element.LastName,
-                    "MaidenName": element.MaidenName,
-                    "Gender": element.Gender,
-                    "YearOfBirth": yearOfBirth == "0000"? null: yearOfBirth,
-                    "YearOfDeath": yearOfDeath == "0000"? null: yearOfDeath,
+                    "firstName": element.firstName,
+                    "lastName": element.lastName,
+                    "maidenName": element.maidenName,
+                    "gender": element.gender,
+                    "yearOfBirth": yearOfBirth == "0000" ? null : yearOfBirth,
+                    "yearOfDeath": yearOfDeath == "0000" ? null : yearOfDeath,
                 })
             });
             return items;
@@ -208,18 +217,18 @@ function getSpousesById(_id: string) {
 
             let items: any[] = []
             res = Object.assign(res);
-            res.forEach((element: { _id: any; FirstName: any; LastName: any; MaidenName: any; BirthDate: any;DeathDate: any; Gender: any; }) => {
-                let yearOfBirth = element.BirthDate?.substring(0,4)
-                let yearOfDeath = element.DeathDate?.substring(0,4)
-                                items.push({
+            res.forEach((element: { _id: any; firstName: any; lastName: any; maidenName: any; birthDate: any; deathDate: any; gender: any; }) => {
+                let yearOfBirth = element.birthDate?.substring(0, 4)
+                let yearOfDeath = element.deathDate?.substring(0, 4)
+                items.push({
                     "_id": element._id,
-                    "FirstName": element.FirstName,
-                    "LastName": element.LastName,
-                    "MaidenName": element.MaidenName,
-                    "BirthDate": element.BirthDate,
-                    "Gender": element.Gender,
-                    "YearOfBirth": yearOfBirth == "0000"? null: yearOfBirth,
-                    "YearOfDeath": yearOfDeath == "0000"? null: yearOfDeath,
+                    "firstName": element.firstName,
+                    "lastName": element.lastName,
+                    "maidenName": element.maidenName,
+                    "birthDate": element.birthDate,
+                    "gender": element.gender,
+                    "yearOfBirth": yearOfBirth == "0000" ? null : yearOfBirth,
+                    "yearOfDeath": yearOfDeath == "0000" ? null : yearOfDeath,
                 })
             });
             return items;
@@ -236,18 +245,18 @@ function getSiblingsById(_id: string) {
 
             let items: any[] = []
             res = Object.assign(res);
-            res.forEach((element: { _id: any; FirstName: any; LastName: any; MaidenName: any; BirthDate: any; DeathDate: any;Gender: any; }) => {
-                let yearOfBirth = element.BirthDate?.substring(0,4)
-                let yearOfDeath = element.DeathDate?.substring(0,4)
+            res.forEach((element: { _id: any; firstName: any; lastName: any; maidenName: any; birthDate: any; deathDate: any; gender: any; }) => {
+                let yearOfBirth = element.birthDate?.substring(0, 4)
+                let yearOfDeath = element.deathDate?.substring(0, 4)
                 items.push({
                     "_id": element._id,
-                    "FirstName": element.FirstName,
-                    "LastName": element.LastName,
-                    "MaidenName": element.MaidenName,
-                    "BirthDate": element.BirthDate,
-                    "Gender": element.Gender,
-                    "YearOfBirth": yearOfBirth == "0000"? null: yearOfBirth,
-                    "YearOfDeath": yearOfDeath == "0000"? null: yearOfDeath,
+                    "firstName": element.firstName,
+                    "lastName": element.lastName,
+                    "maidenName": element.maidenName,
+                    "birthDate": element.birthDate,
+                    "gender": element.gender,
+                    "yearOfBirth": yearOfBirth == "0000" ? null : yearOfBirth,
+                    "yearOfDeath": yearOfDeath == "0000" ? null : yearOfDeath,
                 })
             });
             return items;
@@ -351,23 +360,72 @@ function createPerson(person: any) {
 
 }
 
-function shouldResetCache(lastEntry:string){
+function shouldResetCache(lastEntry: string) {
     let lastEntry2 = new Date(lastEntry)
     return shouldResetCacheFromMongoDb(lastEntry2)
-    .catch(err => {
-        throw err;
-    })
-    .then((res: any) => {
-        return res
+        .catch(err => {
+            throw err;
+        })
+        .then((res: any) => {
+            return res
 
-    });
+        });
 
 
-    
-  
+
+
 }
 
 
-function shouldResetPersonCache(_id: String, lastEntry:Date){
+function shouldResetPersonCache(_id: String, lastEntry: Date) {
     return true
 }
+
+function login(login: string, password: string): any {
+
+    const jwtMW = exjwt({
+        secret: process.env.SECRET
+    });
+
+   return checkCredentialsFromMongoDb(login, password)
+        .then(res => {
+            console.log("then")
+            if (res == true) {
+                let token = jwt.sign({ login: login }, process.env.SECRET, { expiresIn: 129600 });
+                return {
+                    "success": true,
+                    "token": token,
+                    "error": ""
+                }
+            }
+            return {
+                "success": false,
+                "token": "",
+                "error": 'Username or password is incorrect'
+            }
+        })
+        
+}
+
+function register(id:string, login: string, password: string): any {
+   return createCredentialsFromMongoDb(id, login, password)
+        .then(res => {
+            console.log("123456")
+           return "login created"
+        })
+        .catch(err=>{
+            return "registration failed"
+        })
+        
+}
+
+
+
+
+function me(user: any) {
+    if (!user) {
+        return "Not connected"
+    }
+    return "Connected as " + user.login
+}
+

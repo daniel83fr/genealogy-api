@@ -1,32 +1,49 @@
 import express from 'express';
 import http from "http";
+const bodyParser = require('body-parser')
 
 import graphqlHTTP from 'express-graphql';
 import cors from 'cors'
 import schema from './api/schema'
 import resolver from './api/resolvers'
+import { isContext } from 'vm';
+const jwt = require('express-jwt')
 
+const auth = jwt({
+  secret: process.env.SECRET,
+  credentialsRequired: false
+})
 
-const router = express();
-router.use(cors())
-router.use(
-  '/graphql',
-  graphqlHTTP({
+const loggingMiddleware = (req: { ip: any; }, res: any, next: () => void) => {
+  console.log('ip:', req.ip);
+  next();
+}
+
+const app = express();
+app.use(loggingMiddleware);
+app.use(cors())
+
+app.use(
+  '/graphql', bodyParser.json(), auth,
+  graphqlHTTP((req:any)=>({
+    context: {
+      user: req.user
+    },
     schema: schema,
     rootValue: resolver,
     graphiql: true,
-  }),
+    
+
+  })),
 );
+
 
 
 const PORT = process.env.PORT;
 const NODE_ENV = process.env.NODE_ENV;
 const DATABASE = process.env.MONGODB_DATABASE
 
-const server = http.createServer(router);
-
-
-
+const server = http.createServer(app);
 server.listen(PORT, () => {
 
   console.log(`Server is running on port ${PORT}...`);

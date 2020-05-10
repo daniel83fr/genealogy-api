@@ -7,24 +7,36 @@ var schema = buildSchema(`
 
   type User {
     _id: String
-    FirstName: String
-    LastName: String
-    MaidenName: String
-    Gender: String
-    YearOfBirth : String
-    YearOfDeath: String
+    firstName: String
+    lastName: String
+    maidenName: String
+    gender: String
+    yearOfBirth : String
+    yearOfDeath: String
   }
 
   input UserChanges {
-    FirstName: String
-    LastName: String
-    MaidenName: String
-    Gender: String
-    BirthDate : String
-    DeathDate : String
+    firstName: String
+    lastName: String
+    maidenName: String
+    gender: String
+    birthDate : String
+    deathDate : String
+  }
+
+  type Token {
+    success: Boolean,
+    error: String,
+    token: String
   }
 
   type Query {
+
+    login(login: String!, password: String): Token
+
+    register(id: String!, login: String!, password: String): String
+
+    me: String
 
     getPersons: [User]
 
