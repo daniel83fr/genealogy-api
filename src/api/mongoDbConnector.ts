@@ -53,6 +53,17 @@ export async function getPersonByIdFromMongoDb(id: string) {
     return res;
 }
 
+export async function getPersonByLoginFromMongoDb(login: string) {
+    const client = await initClient();
+    const db = client.db(mongoDbDatabase);
+    let collection = db.collection("credentials");
+    let res = await collection.findOne({ login: login }, {login:1, id:1})
+    client.close()
+    return res;
+}
+
+
+
 export async function getParentByIdFromMongoDb(id: string, gender: string): Promise<any> {
     const client = await initClient();
     const db = client.db(mongoDbDatabase);

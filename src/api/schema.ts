@@ -15,6 +15,18 @@ var schema = buildSchema(`
     yearOfDeath: String
   }
 
+  type UserPrivate {
+    _id: String
+    birthDate: DateTime,
+    deathDate: DateTime,
+    location: String
+  }
+
+  input UserPrivateChanges{
+    birthDate: DateTime
+    location: String
+  }
+
   input UserChanges {
     firstName: String
     lastName: String
@@ -24,23 +36,46 @@ var schema = buildSchema(`
     deathDate : String
   }
 
+  type ConnectedUser {
+    login: String,
+    id: String
+  }
+
   type Token {
     success: Boolean,
     error: String,
     token: String
   }
 
+  """
+  A simple GraphQL schema which is well described.
+  """
   type Query {
 
+    """
+    Validates user credentials and returns authentication token
+    """
     login(login: String!, password: String): Token
 
+    """
+    Creates a new user and attaches it to an existing person
+    """
     register(id: String!, login: String!, password: String): String
 
-    me: String
+
+    me: ConnectedUser
 
     getPersons: [User]
 
+    """
+    Get person's public infos
+    """
     getPersonById(_id: String!): User
+
+    """
+    Get person's private infos (using provided token and role)
+    """
+    getPrivateInfoById(_id:String!): UserPrivate
 
     getFatherById(_id: String!): User
 
@@ -77,6 +112,7 @@ var schema = buildSchema(`
 
     updatePerson(_id:String!, patch: UserChanges): User
 
+    updatePersonPrivateInfo(_id:String!, patch: UserPrivateChanges): UserPrivate
 
   }
 `);

@@ -16,7 +16,8 @@ import {
     deleteProfileFromMongoDb,
     shouldResetCacheFromMongoDb,
     checkCredentialsFromMongoDb,
-    createCredentialsFromMongoDb
+    createCredentialsFromMongoDb,
+    getPersonByLoginFromMongoDb
 } from "../api/mongoDbConnector";
 
 const exjwt = require('express-jwt');
@@ -60,8 +61,14 @@ var resolver = {
     shouldResetPersonCache: (args: any) => shouldResetPersonCache(args._id, args.lastEntry),
 
     login: (args: any) => login(args.login, args.password),
+
     register: (args: any) => register(args.id, args.login, args.password),
-    me: (args: any, context: any) => me(context.user)
+
+    me: (args: any, context: any) => me(context.user),
+
+    getPrivateInfoById: (args: any, context: any) => getPrivateInfoById(args._id, context.user),
+
+    updatePersonPrivateInfo: (args: any, context: any) => updatePersonPrivateInfo(args._id, args.patch, context.user),
 };
 
 export default resolver;
@@ -330,7 +337,9 @@ function addSiblingLink(id1: string, id2: string) {
 }
 
 function updatePerson(_id: string, patch: any) {
-
+    if(patch == {}){
+        return null;
+    }
     console.debug("UpdatePersons")
 
     console.debug(_id)
@@ -421,11 +430,59 @@ function register(id:string, login: string, password: string): any {
 
 
 
-
-function me(user: any) {
+function CheckUserAuthenticated(user: any)
+{
     if (!user) {
-        return "Not connected"
+        throw Error("Not authenticated, please login first")
     }
-    return "Connected as " + user.login
 }
 
+function me(user: any) {
+    CheckUserAuthenticated(user);
+    return getPersonByLoginFromMongoDb(user.login)
+    .then(res=>
+        {
+            return res;
+        });
+}
+
+function getPrivateInfoById(_id: string, user: any) {
+    CheckUserAuthenticated(user);
+    console.debug("GetPersonById(private)")
+    return getPersonByIdFromMongoDb(_id)
+        .catch(err => {
+            throw err;
+        })
+        .then(res => {
+            res = Object.assign(res);
+
+            let yearOfBirth = res.birthDate?.substring(0, 4)
+            let yearOfDeath = res.deathDate?.substring(0, 4)
+
+            return {
+                "_id": _id,
+                "birthDate": res.birthDate,
+                "deathDate": res.birthDate
+            }
+        });
+}
+
+function updatePersonPrivateInfo(_id: string, patch: any, user: any) {
+    if(patch == {}){
+        return null;
+    }
+    CheckUserAuthenticated(user);
+    console.debug("UpdatePersonspivate")
+
+    console.debug(_id)
+    console.debug(JSON.stringify(patch))
+
+    return updatePersonFromMongoDb(_id, patch)
+        .catch(err => {
+            throw err;
+        })
+        .then((res: any) => {
+            return res
+        });
+
+}
