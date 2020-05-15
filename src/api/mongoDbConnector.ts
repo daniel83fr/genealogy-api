@@ -377,7 +377,10 @@ export async function checkCredentialsFromMongoDb(login: string, password: strin
 
     client.close()
 
-    return bcrypt.compareSync(password,res.password)
+    return {
+        'success': bcrypt.compareSync(password, res.password),
+        'profileId': res.id
+    } 
 }
 
 export async function createCredentialsFromMongoDb(id: string, login: string, password: string) {

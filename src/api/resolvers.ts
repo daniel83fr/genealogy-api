@@ -405,8 +405,12 @@ function login(login: string, password: string): any {
     return checkCredentialsFromMongoDb(login, password)
         .then(res => {
             console.log("then")
-            if (res == true) {
-                let token = jwt.sign({ login: login }, process.env.SECRET, { expiresIn: 129600 });
+            if (res.success == true) {
+                let token = jwt.sign(
+                    { 
+                        login: login,
+                        profile : res.profileId
+                    }, process.env.SECRET, { expiresIn: 129600 });
                 return {
                     "success": true,
                     "token": token,
