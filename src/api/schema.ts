@@ -41,6 +41,10 @@ var schema = buildSchema(`
     id: String
   }
 
+  type Photo {
+    url: String
+  }
+
   type Token {
     success: Boolean,
     error: String,
@@ -71,7 +75,8 @@ var schema = buildSchema(`
     Get person's public infos
     """
     getPersonById(_id: String!): User
-
+    
+    getPhotosById(_id: String!): [Photo]
     """
     Get person's private infos (using provided token and role)
     """
@@ -113,6 +118,8 @@ var schema = buildSchema(`
     updatePerson(_id:String!, patch: UserChanges): User
 
     updatePersonPrivateInfo(_id:String!, patch: UserPrivateChanges): UserPrivate
+
+    addPhoto( url : String!, deleteHash : String,  persons:[String]): String
 
   }
 `);

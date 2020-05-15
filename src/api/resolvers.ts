@@ -17,7 +17,9 @@ import {
     shouldResetCacheFromMongoDb,
     checkCredentialsFromMongoDb,
     createCredentialsFromMongoDb,
-    getPersonByLoginFromMongoDb
+    getPersonByLoginFromMongoDb,
+    getPhotosByIdFromMongoDb,
+    addPhotoFromMongoDb
 } from "../api/mongoDbConnector";
 
 const exjwt = require('express-jwt');
@@ -69,6 +71,10 @@ var resolver = {
     getPrivateInfoById: (args: any, context: any) => getPrivateInfoById(args._id, context.user),
 
     updatePersonPrivateInfo: (args: any, context: any) => updatePersonPrivateInfo(args._id, args.patch, context.user),
+
+    getPhotosById: (args: any) => getPhotosById(args._id),
+
+    addPhoto: (args: any, context: any) => addPhoto(args.url, args.deleteHash, args.persons, context.user)
 };
 
 export default resolver;
@@ -337,7 +343,7 @@ function addSiblingLink(id1: string, id2: string) {
 }
 
 function updatePerson(_id: string, patch: any) {
-    if(patch == {}){
+    if (patch == {}) {
         return null;
     }
     console.debug("UpdatePersons")
@@ -396,7 +402,7 @@ function login(login: string, password: string): any {
         secret: process.env.SECRET
     });
 
-   return checkCredentialsFromMongoDb(login, password)
+    return checkCredentialsFromMongoDb(login, password)
         .then(res => {
             console.log("then")
             if (res == true) {
@@ -413,25 +419,24 @@ function login(login: string, password: string): any {
                 "error": 'Username or password is incorrect'
             }
         })
-        
+
 }
 
-function register(id:string, login: string, password: string): any {
-   return createCredentialsFromMongoDb(id, login, password)
+function register(id: string, login: string, password: string): any {
+    return createCredentialsFromMongoDb(id, login, password)
         .then(res => {
             console.log("123456")
-           return "login created"
+            return "login created"
         })
-        .catch(err=>{
+        .catch(err => {
             return "registration failed"
         })
-        
+
 }
 
 
 
-function CheckUserAuthenticated(user: any)
-{
+function CheckUserAuthenticated(user: any) {
     if (!user) {
         throw Error("Not authenticated, please login first")
     }
@@ -440,8 +445,37 @@ function CheckUserAuthenticated(user: any)
 function me(user: any) {
     CheckUserAuthenticated(user);
     return getPersonByLoginFromMongoDb(user.login)
-    .then(res=>
-        {
+        .then(res => {
+            return res;
+        });
+}
+
+function addPhoto(url: string, deleteHash: string, persons: string[],  user: any) {
+
+    console.debug("add photo")
+
+    CheckUserAuthenticated(user);
+    if(persons == null || persons.length == 0){
+        throw Error("Need tag at least one person")
+    }
+    return addPhotoFromMongoDb(url, deleteHash, persons)
+        .catch((err: any) => {
+            throw err;
+        })
+        .then((res: any) => {
+            return res;
+        });
+}
+
+function getPhotosById(_id: string) {
+
+    console.debug("GetPhotos")
+    return getPhotosByIdFromMongoDb(_id)
+        .catch((err: any) => {
+            throw err;
+        })
+        .then((res: object) => {
+            res = Object.assign(res);
             return res;
         });
 }
@@ -468,7 +502,7 @@ function getPrivateInfoById(_id: string, user: any) {
 }
 
 function updatePersonPrivateInfo(_id: string, patch: any, user: any) {
-    if(patch == {}){
+    if (patch == {}) {
         return null;
     }
     CheckUserAuthenticated(user);

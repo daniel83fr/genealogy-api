@@ -62,6 +62,55 @@ export async function getPersonByLoginFromMongoDb(login: string) {
     return res;
 }
 
+export async function getPhotosByIdFromMongoDb(id: string) {
+    const client = await initClient();
+    console.log("Get photo from db")
+    const db = client.db(mongoDbDatabase);
+    let collection = db.collection("photoTags");
+ 
+    let res = await collection.find({ "person_id": id},
+        {
+            person_id: 1
+        }).toArray()
+
+        console.log(res);
+        let items: any = []
+        
+        res.forEach((element: { photo_id: string; }) => {
+            items.push(ObjectId(element.photo_id ))
+        });
+        
+        
+        let photos = db.collection("photos");
+    
+        let query = { _id: { $in: items } }
+        let photoResult = await photos.find(query).toArray();
+
+
+    client.close()
+    return photoResult;
+}
+
+export async function addPhotoFromMongoDb(url: string, deleteHash: string, persons: string[]) {
+    const client = await initClient();
+    console.log("add photo from db")
+    const db = client.db(mongoDbDatabase);
+
+    let photos = db.collection("photos");
+    
+    let query = { 'url': url, 'deleteHash': deleteHash }
+    let res = await photos.insertOne(query)
+    console.log(JSON.stringify(res))
+    let photo_id = res.insertedId.toString();
+
+    let collection = db.collection("photoTags");
+   persons.forEach(async elem=>{
+    await collection.insertOne({ 'photo_id' : photo_id, 'person_id': elem})
+   });
+    client.close()
+    return "Done";
+}
+
 
 
 export async function getParentByIdFromMongoDb(id: string, gender: string): Promise<any> {
