@@ -26,10 +26,10 @@ export async function getPersonsFromMongoDb() {
     const client = await initClient();
     const db = client.db(mongoDbDatabase);
     let collection = db.collection(memberCollection);
- 
 
-   //await db.collection(relationCollection)
-   // .updateMany({},{$rename: { "Type":"type"}})
+
+    //await db.collection(relationCollection)
+    // .updateMany({},{$rename: { "Type":"type"}})
     let res = await collection.find({},
         {
             firstName: 1,
@@ -53,11 +53,51 @@ export async function getPersonByIdFromMongoDb(id: string) {
     return res;
 }
 
+export async function getTodayBirthdaysFromMongoDb() {
+    const client = await initClient();
+    const db = client.db(mongoDbDatabase);
+    let collection = db.collection(memberCollection);
+    let dateFilter = new Date().toISOString().substring(5, 10)
+    let res = await collection.find({ "birthDate": { $regex : dateFilter}}).toArray();
+    client.close()
+    return res;
+}
+
+export async function getTodayDeathdaysFromMongoDb() {
+    const client = await initClient();
+    const db = client.db(mongoDbDatabase);
+    let collection = db.collection(memberCollection);
+    let dateFilter = new Date().toISOString().substring(5, 10)
+    let res = await collection.find({ "death": { $regex : dateFilter}}).toArray();
+    client.close()
+    return res;
+}
+
+export async function getTodayMarriagedaysFromMongoDb() {
+    const client = await initClient();
+    const db = client.db(mongoDbDatabase);
+    let collection = db.collection(relationCollection);
+    let dateFilter = new Date().toISOString().substring(5, 10)
+    let res = await collection.find({  "marriage_date": {$regex : dateFilter }}).toArray();
+    let items : string[]= [];
+    res.forEach((element: { person1_id: string; person2_id: string; }) => {
+        items.push(ObjectId(element.person1_id));
+        items.push(ObjectId(element.person2_id));
+    });
+
+    let query = { _id: { $in: items } }
+    let res2 = await db.collection(memberCollection).find(query).toArray()
+
+    client.close()
+    return res2;
+}
+
+
 export async function getPersonByLoginFromMongoDb(login: string) {
     const client = await initClient();
     const db = client.db(mongoDbDatabase);
     let collection = db.collection("credentials");
-    let res = await collection.findOne({ login: login }, {login:1, id:1})
+    let res = await collection.findOne({ login: login }, { login: 1, id: 1 })
     client.close()
     return res;
 }
@@ -67,28 +107,72 @@ export async function getPhotosByIdFromMongoDb(id: string) {
     console.log("Get photo from db")
     const db = client.db(mongoDbDatabase);
     let collection = db.collection("photoTags");
- 
-    let res = await collection.find({ "person_id": id},
+
+    let res = await collection.find({ "person_id": id },
         {
             person_id: 1
         }).toArray()
 
-        console.log(res);
-        let items: any = []
-        
-        res.forEach((element: { photo_id: string; }) => {
-            items.push(ObjectId(element.photo_id ))
-        });
-        
-        
-        let photos = db.collection("photos");
-    
-        let query = { _id: { $in: items } }
-        let photoResult = await photos.find(query).toArray();
+    console.log(res);
+    let items: any = []
+
+    res.forEach((element: { photo_id: string; }) => {
+        items.push(ObjectId(element.photo_id))
+    });
+
+
+    let photos = db.collection("photos");
+
+    let query = { _id: { $in: items } }
+    let photoResult = await photos.find(query).toArray();
 
 
     client.close()
     return photoResult;
+}
+
+export async function getPhotosRandomFromMongoDb(num: number) {
+    const client = await initClient();
+    console.log("Get photo from db")
+    const db = client.db(mongoDbDatabase);
+    let collection = db.collection("photos");
+
+    let res = await collection.aggregate([{ $sample: { size: 5 } }],
+        {
+            url: 1
+        }).toArray()
+
+    console.log(res);
+
+
+
+    client.close()
+    return res;
+}
+
+export async function getAuditLastEntriesFromMongoDb(num: number) {
+    const client = await initClient();
+    const db = client.db(mongoDbDatabase);
+    let collection = db.collection("audit");
+
+    let res = await collection.find({},
+        {
+            timestamp: 1,
+            type: 1,
+            id: 1,
+            user: 1
+
+        })
+        .sort({ _id: 1 })
+        .limit(num)
+        .toArray()
+
+    console.log(res);
+
+
+
+    client.close()
+    return res;
 }
 
 export async function addPhotoFromMongoDb(url: string, deleteHash: string, persons: string[]) {
@@ -97,16 +181,16 @@ export async function addPhotoFromMongoDb(url: string, deleteHash: string, perso
     const db = client.db(mongoDbDatabase);
 
     let photos = db.collection("photos");
-    
+
     let query = { 'url': url, 'deleteHash': deleteHash }
     let res = await photos.insertOne(query)
     console.log(JSON.stringify(res))
     let photo_id = res.insertedId.toString();
 
     let collection = db.collection("photoTags");
-   persons.forEach(async elem=>{
-    await collection.insertOne({ 'photo_id' : photo_id, 'person_id': elem})
-   });
+    persons.forEach(async elem => {
+        await collection.insertOne({ 'photo_id': photo_id, 'person_id': elem })
+    });
     client.close()
     return "Done";
 }
@@ -380,7 +464,7 @@ export async function checkCredentialsFromMongoDb(login: string, password: strin
     return {
         'success': bcrypt.compareSync(password, res.password),
         'profileId': res.id
-    } 
+    }
 }
 
 export async function createCredentialsFromMongoDb(id: string, login: string, password: string) {
@@ -398,8 +482,8 @@ export async function createCredentialsFromMongoDb(id: string, login: string, pa
         return "login already exist"
     }
 
-  
-    
+
+
     var hash = bcrypt.hashSync(password, 10);
     var document = { "id": id, "login": login, "password": hash }
     collection.insertOne(document)

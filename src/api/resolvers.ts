@@ -19,7 +19,12 @@ import {
     createCredentialsFromMongoDb,
     getPersonByLoginFromMongoDb,
     getPhotosByIdFromMongoDb,
-    addPhotoFromMongoDb
+    addPhotoFromMongoDb,
+    getPhotosRandomFromMongoDb,
+    getAuditLastEntriesFromMongoDb,
+    getTodayDeathdaysFromMongoDb,
+    getTodayBirthdaysFromMongoDb,
+    getTodayMarriagedaysFromMongoDb
 } from "../api/mongoDbConnector";
 
 const exjwt = require('express-jwt');
@@ -74,7 +79,15 @@ var resolver = {
 
     getPhotosById: (args: any) => getPhotosById(args._id),
 
-    addPhoto: (args: any, context: any) => addPhoto(args.url, args.deleteHash, args.persons, context.user)
+    getPhotosRandom: (args: any) => getPhotosRandom(args.number),
+
+    getAuditLastEntries: (args: any) => getAuditLastEntries(args.number),
+
+    addPhoto: (args: any, context: any) => addPhoto(args.url, args.deleteHash, args.persons, context.user),
+
+    getTodayBirthdays: (args: any, context: any) => getTodayBirthdays(context.user),
+    getTodayDeathdays: (args: any, context: any) => getTodayDeathdays(context.user),
+    getTodayMarriagedays: (args: any, context: any) => getTodayMarriagedays(context.user),
 };
 
 export default resolver;
@@ -454,6 +467,43 @@ function me(user: any) {
         });
 }
 
+function getTodayBirthdays(user: any) {
+    CheckUserAuthenticated(user);
+
+    return getTodayBirthdaysFromMongoDb()
+        .catch((err: any) => {
+            throw err;
+        })
+        .then((res: any) => {
+            return res;
+        });
+}
+
+function getTodayDeathdays(user: any) {
+
+    CheckUserAuthenticated(user);
+
+    return getTodayDeathdaysFromMongoDb()
+        .catch((err: any) => {
+            throw err;
+        })
+        .then((res: any) => {
+            return res;
+        });
+}
+
+function getTodayMarriagedays(user: any) {
+
+    CheckUserAuthenticated(user);
+    return getTodayMarriagedaysFromMongoDb()
+        .catch((err: any) => {
+            throw err;
+        })
+        .then((res: any) => {
+            return res;
+        });
+}
+
 function addPhoto(url: string, deleteHash: string, persons: string[],  user: any) {
 
     console.debug("add photo")
@@ -475,6 +525,31 @@ function getPhotosById(_id: string) {
 
     console.debug("GetPhotos")
     return getPhotosByIdFromMongoDb(_id)
+        .catch((err: any) => {
+            throw err;
+        })
+        .then((res: object) => {
+            res = Object.assign(res);
+            return res;
+        });
+}
+
+function getPhotosRandom(number: number) {
+
+    console.debug("GetPhotos")
+    return getPhotosRandomFromMongoDb(number)
+        .catch((err: any) => {
+            throw err;
+        })
+        .then((res: object) => {
+            res = Object.assign(res);
+            return res;
+        });
+}
+function getAuditLastEntries(number: number) {
+
+    console.debug("Get Audit")
+    return getAuditLastEntriesFromMongoDb(number)
         .catch((err: any) => {
             throw err;
         })

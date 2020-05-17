@@ -45,6 +45,14 @@ var schema = buildSchema(`
     url: String
   }
 
+  type AuditEntry{
+    timestamp: DateTime,
+    type: String,
+    id: String,
+    user: String
+    action: String
+  }
+
   type Token {
     success: Boolean,
     error: String,
@@ -76,7 +84,9 @@ var schema = buildSchema(`
     """
     getPersonById(_id: String!): User
     
-    getPhotosById(_id: String!): [Photo]
+    getAuditLastEntries(number: Int!): [AuditEntry],
+    getPhotosById(_id: String!): [Photo],
+    getPhotosRandom(number: Int!): [Photo],
     """
     Get person's private infos (using provided token and role)
     """
@@ -95,6 +105,10 @@ var schema = buildSchema(`
     shouldResetCache(lastEntry:DateTime): Boolean
 
     shouldResetPersonCache(_id:String, lastEntry:DateTime): Boolean
+
+    getTodayBirthdays: [User]
+    getTodayDeathdays: [User]
+    getTodayMarriagedays: [User]
   }
 
   type Mutation {
@@ -120,6 +134,7 @@ var schema = buildSchema(`
     updatePersonPrivateInfo(_id:String!, patch: UserPrivateChanges): UserPrivate
 
     addPhoto( url : String!, deleteHash : String,  persons:[String]): String
+
 
   }
 `);
