@@ -19,6 +19,7 @@ import {
     createCredentialsFromMongoDb,
     getPersonByLoginFromMongoDb,
     getPhotosByIdFromMongoDb,
+    getPhotoProfileFromMongoDb,
     addPhotoFromMongoDb,
     getPhotosRandomFromMongoDb,
     getAuditLastEntriesFromMongoDb,
@@ -78,6 +79,7 @@ var resolver = {
     updatePersonPrivateInfo: (args: any, context: any) => updatePersonPrivateInfo(args._id, args.patch, context.user),
 
     getPhotosById: (args: any) => getPhotosById(args._id),
+    getPhotoProfile: (args: any) => getPhotoProfile(args._id),
 
     getPhotosRandom: (args: any) => getPhotosRandom(args.number),
 
@@ -534,6 +536,18 @@ function getPhotosById(_id: string) {
         });
 }
 
+function getPhotoProfile(_id: string) {
+
+    console.debug("GetPhotos")
+    return getPhotoProfileFromMongoDb(_id)
+        .catch((err: any) => {
+            throw err;
+        })
+        .then((res: object) => {
+            res = Object.assign(res);
+            return res;
+        });
+}
 function getPhotosRandom(number: number) {
 
     console.debug("GetPhotos")

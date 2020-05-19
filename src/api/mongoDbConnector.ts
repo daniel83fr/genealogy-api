@@ -131,6 +131,37 @@ export async function getPhotosByIdFromMongoDb(id: string) {
     return photoResult;
 }
 
+export async function getPhotoProfileFromMongoDb(id: string) {
+    const client = await initClient();
+    console.log("Get photo from db")
+    const db = client.db(mongoDbDatabase);
+    let collection = db.collection("photoTags");
+
+    let res = await collection.find({ "person_id": id, "isProfile": "true" },
+        {
+            person_id: 1
+        }).toArray()
+
+    console.log(res);
+
+
+    let items: any = []
+
+    res.forEach((element: { photo_id: string; }) => {
+        items.push(ObjectId(element.photo_id))
+    });
+
+
+    let photos = db.collection("photos");
+
+    let query = { _id: { $in: items } }
+    let photoResult = await photos.findOne(query);
+
+
+    client.close()
+    return photoResult;
+}
+
 export async function getPhotosRandomFromMongoDb(num: number) {
     const client = await initClient();
     console.log("Get photo from db")

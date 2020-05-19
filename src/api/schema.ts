@@ -85,6 +85,7 @@ var schema = buildSchema(`
     getPersonById(_id: String!): User
     
     getAuditLastEntries(number: Int!): [AuditEntry],
+    getPhotoProfile(_id: String!): Photo,
     getPhotosById(_id: String!): [Photo],
     getPhotosRandom(number: Int!): [Photo],
     """
