@@ -43,6 +43,7 @@ var schema = buildSchema(`
 
   type Photo {
     url: String
+    _id: String
   }
 
   type AuditEntry{
@@ -136,7 +137,8 @@ var schema = buildSchema(`
 
     addPhoto( url : String!, deleteHash : String,  persons:[String]): String
 
-
+    setProfilePicture(person: String!, image: String!): String
+    deletePhoto(image: String!): String
   }
 `);
 

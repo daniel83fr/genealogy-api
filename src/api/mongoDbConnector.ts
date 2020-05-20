@@ -102,9 +102,34 @@ export async function getPersonByLoginFromMongoDb(login: string) {
     return res;
 }
 
+export async function setProfilePictureFromMongo(person: string, image: string){
+    console.log('Set profile pic' + image)
+    const client = await initClient();
+    const db = client.db(mongoDbDatabase);
+    let collection = db.collection("photoTags");
+
+    let res = await collection.updateMany({ "person_id": person, "isProfile": "true", "photo_id": { $ne: image} }
+    ,{ $set: { "isProfile": 'false' } } )
+
+    let resLinks2 = await collection.updateOne({ "person_id": person, "photo_id": image },
+    { $set: { "isProfile": "true" } } )
+    return "Profile picture updated."
+}
+
+export async function deletePhotoFromMongo( image: string){
+    const client = await initClient();
+    const db = client.db(mongoDbDatabase);
+    let collection = db.collection("photoTags");
+
+    let res = await collection.remove({ "photo_id": image })
+
+    let res2 = await db.collection('photos').remove({"_id": ObjectId(image)})
+    return "Photo deleted."
+}
+
+
 export async function getPhotosByIdFromMongoDb(id: string) {
     const client = await initClient();
-    console.log("Get photo from db")
     const db = client.db(mongoDbDatabase);
     let collection = db.collection("photoTags");
 
@@ -133,7 +158,6 @@ export async function getPhotosByIdFromMongoDb(id: string) {
 
 export async function getPhotoProfileFromMongoDb(id: string) {
     const client = await initClient();
-    console.log("Get photo from db")
     const db = client.db(mongoDbDatabase);
     let collection = db.collection("photoTags");
 
@@ -164,7 +188,6 @@ export async function getPhotoProfileFromMongoDb(id: string) {
 
 export async function getPhotosRandomFromMongoDb(num: number) {
     const client = await initClient();
-    console.log("Get photo from db")
     const db = client.db(mongoDbDatabase);
     let collection = db.collection("photos");
 
@@ -208,7 +231,6 @@ export async function getAuditLastEntriesFromMongoDb(num: number) {
 
 export async function addPhotoFromMongoDb(url: string, deleteHash: string, persons: string[]) {
     const client = await initClient();
-    console.log("add photo from db")
     const db = client.db(mongoDbDatabase);
 
     let photos = db.collection("photos");

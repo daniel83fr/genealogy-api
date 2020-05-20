@@ -25,7 +25,9 @@ import {
     getAuditLastEntriesFromMongoDb,
     getTodayDeathdaysFromMongoDb,
     getTodayBirthdaysFromMongoDb,
-    getTodayMarriagedaysFromMongoDb
+    getTodayMarriagedaysFromMongoDb,
+    setProfilePictureFromMongo,
+    deletePhotoFromMongo
 } from "../api/mongoDbConnector";
 
 const exjwt = require('express-jwt');
@@ -90,6 +92,9 @@ var resolver = {
     getTodayBirthdays: (args: any, context: any) => getTodayBirthdays(context.user),
     getTodayDeathdays: (args: any, context: any) => getTodayDeathdays(context.user),
     getTodayMarriagedays: (args: any, context: any) => getTodayMarriagedays(context.user),
+
+    setProfilePicture: (args: any, context:any) =>  setProfilePicture(args.person, args.image),
+    deletePhoto: (args: any, context:any) =>  deletePhoto(args.image)
 };
 
 export default resolver;
@@ -534,6 +539,26 @@ function getPhotosById(_id: string) {
             res = Object.assign(res);
             return res;
         });
+}
+
+function setProfilePicture(person: string, image: string): Promise<string> {
+    return setProfilePictureFromMongo(person, image)
+    .catch((err:any)=>{
+        throw err;
+    })
+    .then((res:any)=>{
+        return "Done";
+    });
+}
+
+function deletePhoto(image: string): Promise<string> {
+    return deletePhotoFromMongo( image)
+    .catch((err:any)=>{
+        throw err;
+    })
+    .then((res:any)=>{
+        return "Done";
+    });
 }
 
 function getPhotoProfile(_id: string) {
