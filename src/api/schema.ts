@@ -13,13 +13,18 @@ var schema = buildSchema(`
     gender: String
     yearOfBirth : String
     yearOfDeath: String
+    isDead: Boolean
   }
 
   type UserPrivate {
     _id: String
     birthDate: DateTime,
     deathDate: DateTime,
-    location: String
+    location: String,
+    birthLocation: String,
+    deathLocation: String,
+    email: String,
+    phone: String
   }
 
   input UserPrivateChanges{
@@ -44,6 +49,7 @@ var schema = buildSchema(`
   type Photo {
     url: String
     _id: String
+    persons: [User]
   }
 
   type AuditEntry{
@@ -139,6 +145,8 @@ var schema = buildSchema(`
 
     setProfilePicture(person: String!, image: String!): String
     deletePhoto(image: String!): String
+    addPhotoTag(image: String!, tag: String!): String
+    removePhotoTag(image: String!, tag: String!): String
   }
 `);
 

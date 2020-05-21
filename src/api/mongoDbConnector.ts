@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import { link } from "fs";
 dotenv.config();
 
 const connectionString = process.env.MONGODB;
@@ -58,7 +59,7 @@ export async function getTodayBirthdaysFromMongoDb() {
     const db = client.db(mongoDbDatabase);
     let collection = db.collection(memberCollection);
     let dateFilter = new Date().toISOString().substring(5, 10)
-    let res = await collection.find({ "birthDate": { $regex : dateFilter}}).toArray();
+    let res = await collection.find({ "birthDate": { $regex: dateFilter } }).toArray();
     client.close()
     return res;
 }
@@ -68,7 +69,7 @@ export async function getTodayDeathdaysFromMongoDb() {
     const db = client.db(mongoDbDatabase);
     let collection = db.collection(memberCollection);
     let dateFilter = new Date().toISOString().substring(5, 10)
-    let res = await collection.find({ "death": { $regex : dateFilter}}).toArray();
+    let res = await collection.find({ "death": { $regex: dateFilter } }).toArray();
     client.close()
     return res;
 }
@@ -78,8 +79,8 @@ export async function getTodayMarriagedaysFromMongoDb() {
     const db = client.db(mongoDbDatabase);
     let collection = db.collection(relationCollection);
     let dateFilter = new Date().toISOString().substring(5, 10)
-    let res = await collection.find({  "marriage_date": {$regex : dateFilter }}).toArray();
-    let items : string[]= [];
+    let res = await collection.find({ "marriage_date": { $regex: dateFilter } }).toArray();
+    let items: string[] = [];
     res.forEach((element: { person1_id: string; person2_id: string; }) => {
         items.push(ObjectId(element.person1_id));
         items.push(ObjectId(element.person2_id));
@@ -102,58 +103,146 @@ export async function getPersonByLoginFromMongoDb(login: string) {
     return res;
 }
 
-export async function setProfilePictureFromMongo(person: string, image: string){
+export async function setProfilePictureFromMongo(person: string, image: string) {
     console.log('Set profile pic' + image)
     const client = await initClient();
     const db = client.db(mongoDbDatabase);
     let collection = db.collection("photoTags");
 
-    let res = await collection.updateMany({ "person_id": person, "isProfile": "true", "photo_id": { $ne: image} }
-    ,{ $set: { "isProfile": 'false' } } )
+    let res = await collection.updateMany({ "person_id": person, "isProfile": "true", "photo_id": { $ne: image } }
+        , { $set: { "isProfile": 'false' } })
 
     let resLinks2 = await collection.updateOne({ "person_id": person, "photo_id": image },
-    { $set: { "isProfile": "true" } } )
+        { $set: { "isProfile": "true" } })
+
+        client.close()
     return "Profile picture updated."
 }
 
-export async function deletePhotoFromMongo( image: string){
+export async function addPhotoTagFromMongo(person: string, image: string) {
+
+    if(person.length < 12){
+        console.log("Invalid person Id")
+        throw Error("Invalid person id"); 
+    }
+
+    console.log("a")
+    const client = await initClient();
+    const db = client.db(mongoDbDatabase);
+
+    let collection = db.collection("photoTags");
+    let previous = await collection.find({"photo_id": image, "person_id": person}).toArray();
+    console.log("b")
+    console.log(JSON.stringify(previous))
+    if(previous.length > 0){
+        client.close()
+        console.log("already set")
+        return "Tag already set"
+    }
+    console.log("c")
+    let collectionMember = db.collection(memberCollection);
+    console.log('person ' + person)
+
+    
+   
+    let member = await collectionMember.find({_id: ObjectId(person)}).toArray();
+
+    console.log(JSON.stringify(member))
+   
+    if(member.length == 0){
+        client.close()
+        console.log("user missing")
+        throw Error("User doesnt exist");   
+    }
+
+    let res = await collection.insertOne({"photo_id": image, "person_id": person})
+    console.log(JSON.stringify(res))
+    client.close()
+    return "Tag added"
+}
+
+export async function removePhotoTagFromMongo(person: string, image: string) {
+    console.log('Set profile pic' + image)
+    const client = await initClient();
+    const db = client.db(mongoDbDatabase);
+    let collection = db.collection("photoTags");
+
+    let res = await collection.removeOne({"photo_id": image, "person_id": person})
+    client.close()
+    return "Tag removed"
+}
+export async function deletePhotoFromMongo(image: string) {
     const client = await initClient();
     const db = client.db(mongoDbDatabase);
     let collection = db.collection("photoTags");
 
     let res = await collection.remove({ "photo_id": image })
 
-    let res2 = await db.collection('photos').remove({"_id": ObjectId(image)})
+    let res2 = await db.collection('photos').remove({ "_id": ObjectId(image) })
     return "Photo deleted."
 }
 
 
-export async function getPhotosByIdFromMongoDb(id: string) {
+export async function getPhotosByIdFromMongoDb(personId: string) {
     const client = await initClient();
     const db = client.db(mongoDbDatabase);
     let collection = db.collection("photoTags");
 
-    let res = await collection.find({ "person_id": id },
+    let res = await collection.find({ "person_id": personId },
         {
-            person_id: 1
+            photo_id: 1
         }).toArray()
 
     console.log(res);
     let items: any = []
+    let itemsString: any =  []
+    let memberItems: any = []
 
     res.forEach((element: { photo_id: string; }) => {
         items.push(ObjectId(element.photo_id))
+        itemsString.push(element.photo_id)
     });
 
+    
 
     let photos = db.collection("photos");
 
     let query = { _id: { $in: items } }
-    let photoResult = await photos.find(query).toArray();
+    let photoResult2 = await photos.find(query).toArray();
+   
 
+    let query2 = { photo_id: { $in: itemsString } }
+    let links = await collection.find(query2).toArray();
+    console.log(JSON.stringify(photoResult2))
+    console.log(JSON.stringify(links))   
+    
+    links.forEach((element: { person_id: any; }) => {
+        memberItems.push(ObjectId(element.person_id))
+    });
+    console.log("members: " + JSON.stringify(memberItems))
 
+     let query3 = { _id: { $in : memberItems}}
+     let members = await db.collection(memberCollection).find(query3).toArray()
+     console.log(JSON.stringify(members))  
+     
+     let result: any[] = []
+photoResult2.forEach((element: any) => {
+    let elm = element
+    elm.persons = [];
+
+    links.forEach((l: { photo_id: any; person_id: any; }) => {
+        if(l.photo_id == elm._id.toString()){
+            members.forEach((m: { _id: { toString: () => any; }; }) => {
+                if(m._id.toString() == l.person_id){
+                    elm.persons.push(m)
+                }
+            });
+        }
+    });
+    result.push(elm)
+});
     client.close()
-    return photoResult;
+return result;
 }
 
 export async function getPhotoProfileFromMongoDb(id: string) {

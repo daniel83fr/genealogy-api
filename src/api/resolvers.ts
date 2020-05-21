@@ -27,7 +27,9 @@ import {
     getTodayBirthdaysFromMongoDb,
     getTodayMarriagedaysFromMongoDb,
     setProfilePictureFromMongo,
-    deletePhotoFromMongo
+    deletePhotoFromMongo,
+    addPhotoTagFromMongo,
+    removePhotoTagFromMongo
 } from "../api/mongoDbConnector";
 
 const exjwt = require('express-jwt');
@@ -94,7 +96,10 @@ var resolver = {
     getTodayMarriagedays: (args: any, context: any) => getTodayMarriagedays(context.user),
 
     setProfilePicture: (args: any, context:any) =>  setProfilePicture(args.person, args.image),
-    deletePhoto: (args: any, context:any) =>  deletePhoto(args.image)
+    deletePhoto: (args: any, context:any) =>  deletePhoto(args.image),
+
+    addPhotoTag: (args: any) => addPhotoTag(args.image, args.tag),
+    removePhotoTag: (args: any) => removePhotoTag(args.image, args.tag),
 };
 
 export default resolver;
@@ -114,7 +119,8 @@ function getPersons() {
                     maidenName: any;
                     gender: any;
                     birthDate: any;
-                    deathDate: any
+                    deathDate: any;
+                    isDead: boolean;
                 }) => {
 
                     let yearOfBirth = element.birthDate?.substring(0, 4)
@@ -127,6 +133,7 @@ function getPersons() {
                         "gender": element.gender,
                         "yearOfBirth": yearOfBirth == "0000" ? null : yearOfBirth,
                         "yearOfDeath": yearOfDeath == "0000" ? null : yearOfDeath,
+                        "isDead": element.isDead ?? false
                     });
                 });
                 console.debug(JSON.stringify(items))
@@ -181,12 +188,13 @@ function getPersonById(_id: string) {
                 "gender": res.gender,
                 "yearOfBirth": yearOfBirth == "0000" ? null : yearOfBirth,
                 "yearOfDeath": yearOfDeath == "0000" ? null : yearOfDeath,
+                "isDead": res.isDead ?? false
             }
         });
 }
 
 function getParentById(_id: string, gender: string) {
-    console.debug("GetParentById")
+    console.debug("GetParentById"); 
     return getParentByIdFromMongoDb(_id, gender)
         .catch(err => {
             throw err;
@@ -204,6 +212,7 @@ function getParentById(_id: string, gender: string) {
                 "gender": res.gender,
                 "yearOfBirth": yearOfBirth == "0000" ? null : yearOfBirth,
                 "yearOfDeath": yearOfDeath == "0000" ? null : yearOfDeath,
+                "isDead": res.isDead ?? false
             }
 
 
@@ -234,6 +243,7 @@ function getChildrenById(_id: string) {
                     "gender": element.gender,
                     "yearOfBirth": yearOfBirth == "0000" ? null : yearOfBirth,
                     "yearOfDeath": yearOfDeath == "0000" ? null : yearOfDeath,
+                    "isDead": res.isDead ?? false
                 })
             });
             return items;
@@ -262,6 +272,7 @@ function getSpousesById(_id: string) {
                     "gender": element.gender,
                     "yearOfBirth": yearOfBirth == "0000" ? null : yearOfBirth,
                     "yearOfDeath": yearOfDeath == "0000" ? null : yearOfDeath,
+                    "isDead": res.isDead ?? false
                 })
             });
             return items;
@@ -290,6 +301,7 @@ function getSiblingsById(_id: string) {
                     "gender": element.gender,
                     "yearOfBirth": yearOfBirth == "0000" ? null : yearOfBirth,
                     "yearOfDeath": yearOfDeath == "0000" ? null : yearOfDeath,
+                    "isDead": res.isDead ?? false
                 })
             });
             return items;
@@ -551,6 +563,26 @@ function setProfilePicture(person: string, image: string): Promise<string> {
     });
 }
 
+function addPhotoTag(image: string, person: string): Promise<string> {
+    return addPhotoTagFromMongo(person, image)
+    .catch((err:any)=>{
+        throw err;
+    })
+    .then((res:any)=>{
+        return "Done";
+    });
+}
+
+function removePhotoTag(image: string, person: string): Promise<string> {
+    return removePhotoTagFromMongo(person, image)
+    .catch((err:any)=>{
+        throw err;
+    })
+    .then((res:any)=>{
+        return "Done";
+    });
+}
+
 function deletePhoto(image: string): Promise<string> {
     return deletePhotoFromMongo( image)
     .catch((err:any)=>{
@@ -614,7 +646,12 @@ function getPrivateInfoById(_id: string, user: any) {
             return {
                 "_id": _id,
                 "birthDate": res.birthDate,
-                "deathDate": res.birthDate
+                "deathDate": res.deathDate,
+                "location": res.currentLocation,
+                "birthLocation": res.birthLocation,
+                "deathLocation": res.deathLocation,
+                "email": res.email,
+                "phone": res.phone
             }
         });
 }
