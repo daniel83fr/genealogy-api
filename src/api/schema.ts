@@ -20,7 +20,7 @@ var schema = buildSchema(`
     _id: String
     birthDate: DateTime,
     deathDate: DateTime,
-    location: String,
+    currentLocation: String,
     birthLocation: String,
     deathLocation: String,
     email: String,
@@ -29,7 +29,12 @@ var schema = buildSchema(`
 
   input UserPrivateChanges{
     birthDate: DateTime
-    location: String
+    deathDate: DateTime,
+    currentLocation: String,
+    birthLocation: String,
+    deathLocation: String,
+    email: String,
+    phone: String
   }
 
   input UserChanges {
@@ -39,6 +44,7 @@ var schema = buildSchema(`
     gender: String
     birthDate : String
     deathDate : String
+    isDead: Boolean
   }
 
   type ConnectedUser {

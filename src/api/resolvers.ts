@@ -647,7 +647,7 @@ function getPrivateInfoById(_id: string, user: any) {
                 "_id": _id,
                 "birthDate": res.birthDate,
                 "deathDate": res.deathDate,
-                "location": res.currentLocation,
+                "currentLocation": res.currentLocation,
                 "birthLocation": res.birthLocation,
                 "deathLocation": res.deathLocation,
                 "email": res.email,
