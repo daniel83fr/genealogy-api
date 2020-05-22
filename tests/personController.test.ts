@@ -15,7 +15,7 @@ describe('resolver', function () {
 
   it('check database called with correct args', async function () {
     const spy = spyOn(mongoDbConnector, 'getArrayFromMongoDb').and.returnValue(Promise.resolve(personListMock));
-    await personController.default.getPersons();
+    await personController.default.getPersonList();
     expect(spy).toHaveBeenCalledWith('genealogyDb', 'members', {}, {
       firstName: 1,
       lastName: 1,
@@ -29,7 +29,7 @@ describe('resolver', function () {
 
   it('should return the right number of persons', function () {
     spyOn(mongoDbConnector, 'getArrayFromMongoDb').and.returnValue(Promise.resolve(personListMock.slice(0, 2)));
-    return personController.default.getPersons()
+    return personController.default.getPersonList()
       .then((x: any[]) => {
         expect(x.length).toBe(2);
       })
@@ -39,7 +39,7 @@ describe('resolver', function () {
 
     spyOn(mongoDbConnector, 'getArrayFromMongoDb').and.returnValue(Promise.resolve(personListMock.slice(0, 1)));
 
-    return personController.default.getPersons()
+    return personController.default.getPersonList()
       .then((x: any[]) => {
         expect(x[0]).toEqual({ "_id": "5e6556437af677179baf2ece", "firstName": "Lourdes", "lastName": "Mariampillai", "maidenName": "", "gender": "Female", "yearOfBirth": "1900", "yearOfDeath": "1900", "isDead": true }
         );
@@ -53,7 +53,7 @@ describe('resolver', function () {
 
     spyOn(mongoDbConnector, 'getArrayFromMongoDb').and.returnValue(Promise.resolve([data]));
 
-    return personController.default.getPersons()
+    return personController.default.getPersonList()
       .then((x: any[]) => {
         expect(x[0].yearOfBirth).toEqual(null);
         expect(x[0].yearOfDeath).toEqual(null);
@@ -66,7 +66,7 @@ describe('resolver', function () {
 
     spyOn(mongoDbConnector, 'getArrayFromMongoDb').and.returnValue(Promise.resolve([data]));
 
-    return personController.default.getPersons()
+    return personController.default.getPersonList()
       .then((x: any[]) => {
         expect(x[0].isDead).toEqual(false);
       })

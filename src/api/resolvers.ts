@@ -1,9 +1,4 @@
 import {
-    getPersonByIdFromMongoDb,
-    getParentByIdFromMongoDb,
-    getChildrenByIdFromMongoDb,
-    getSiblingsByIdFromMongoDb,
-    getSpousesByIdFromMongoDb,
     deleteRelationFromMongoDb,
     addParentRelationFromMongoDb,
     addSpouseRelationFromMongoDb,
@@ -35,25 +30,15 @@ const exjwt = require('express-jwt');
 const jwt = require('jsonwebtoken');
 
 
-import personResolver from '../api/personController'
+import personController from '../api/personController'
 
 var resolver = {
 
-    ...personResolver,
+    ...personController.personResolver,
 
     getUnusedPersons: getUnusedPersons(),
 
-    getPersonById: (args: any) => getPersonById(args._id),
-
-    getFatherById: (args: any) => getParentById(args._id, "Male"),
-
-    getMotherById: (args: any) => getParentById(args._id, "Female"),
-
-    getChildrenById: (args: any) => getChildrenById(args._id),
-
-    getSpousesById: (args: any) => getSpousesById(args._id),
-
-    getSiblingsById: (args: any) => getSiblingsById(args._id),
+   
 
     removeLink: (args: any) => removeLink(args._id1, args._id2),
     removeSiblingLink: (args: any) => removeSiblingLink(args._id1, args._id2),
@@ -79,8 +64,7 @@ var resolver = {
 
     me: (args: any, context: any) => me(context.user),
 
-    getPrivateInfoById: (args: any, context: any) => getPrivateInfoById(args._id, context.user),
-
+   
     updatePersonPrivateInfo: (args: any, context: any) => updatePersonPrivateInfo(args._id, args.patch, context.user),
 
     getPhotosById: (args: any) => getPhotosById(args._id),
@@ -132,146 +116,7 @@ function getUnusedPersons() {
     };
 }
 
-function getPersonById(_id: string) {
-    console.debug("GetPersonById")
-    return getPersonByIdFromMongoDb(_id)
-        .catch(err => {
-            throw err;
-        })
-        .then(res => {
-            res = Object.assign(res);
 
-            let yearOfBirth = res.birthDate?.substring(0, 4)
-            let yearOfDeath = res.deathDate?.substring(0, 4)
-
-            return {
-                "_id": _id,
-                "firstName": res.firstName,
-                "lastName": res.lastName,
-                "maidenName": res.maidenName,
-                "birthDate": res.birthDate,
-                "gender": res.gender,
-                "yearOfBirth": yearOfBirth == "0000" ? null : yearOfBirth,
-                "yearOfDeath": yearOfDeath == "0000" ? null : yearOfDeath,
-                "isDead": res.isDead ?? false
-            }
-        });
-}
-
-function getParentById(_id: string, gender: string) {
-    console.debug("GetParentById"); 
-    return getParentByIdFromMongoDb(_id, gender)
-        .catch(err => {
-            throw err;
-        })
-        .then(res => {
-
-            let yearOfBirth = res.birthDate?.substring(0, 4)
-            let yearOfDeath = res.deathDate?.substring(0, 4)
-            res = Object.assign(res);
-            return {
-                "_id": res._id,
-                "firstName": res.firstName,
-                "lastName": res.lastName,
-                "maidenName": res.maidenName,
-                "gender": res.gender,
-                "yearOfBirth": yearOfBirth == "0000" ? null : yearOfBirth,
-                "yearOfDeath": yearOfDeath == "0000" ? null : yearOfDeath,
-                "isDead": res.isDead ?? false
-            }
-
-
-        }
-
-        );
-}
-
-function getChildrenById(_id: string) {
-    console.debug("GeChildrenById")
-    return getChildrenByIdFromMongoDb(_id)
-        .catch(err => {
-            throw err;
-        })
-        .then(res => {
-
-            let items: any[] = []
-            res = Object.assign(res);
-            res.forEach((element: { _id: any; firstName: any; lastName: any; maidenName: any; birthDate: any; deathDate: any; gender: any; }) => {
-
-                let yearOfBirth = element.birthDate?.substring(0, 4)
-                let yearOfDeath = element.deathDate?.substring(0, 4)
-                items.push({
-                    "_id": element._id,
-                    "firstName": element.firstName,
-                    "lastName": element.lastName,
-                    "maidenName": element.maidenName,
-                    "gender": element.gender,
-                    "yearOfBirth": yearOfBirth == "0000" ? null : yearOfBirth,
-                    "yearOfDeath": yearOfDeath == "0000" ? null : yearOfDeath,
-                    "isDead": res.isDead ?? false
-                })
-            });
-            return items;
-        });
-}
-
-function getSpousesById(_id: string) {
-    console.debug("GetSpousesById")
-    return getSpousesByIdFromMongoDb(_id)
-        .catch(err => {
-            throw err;
-        })
-        .then(res => {
-
-            let items: any[] = []
-            res = Object.assign(res);
-            res.forEach((element: { _id: any; firstName: any; lastName: any; maidenName: any; birthDate: any; deathDate: any; gender: any; }) => {
-                let yearOfBirth = element.birthDate?.substring(0, 4)
-                let yearOfDeath = element.deathDate?.substring(0, 4)
-                items.push({
-                    "_id": element._id,
-                    "firstName": element.firstName,
-                    "lastName": element.lastName,
-                    "maidenName": element.maidenName,
-                    "birthDate": element.birthDate,
-                    "gender": element.gender,
-                    "yearOfBirth": yearOfBirth == "0000" ? null : yearOfBirth,
-                    "yearOfDeath": yearOfDeath == "0000" ? null : yearOfDeath,
-                    "isDead": res.isDead ?? false
-                })
-            });
-            return items;
-        });
-}
-
-function getSiblingsById(_id: string) {
-    console.debug("GetSiblingsById")
-    return getSiblingsByIdFromMongoDb(_id)
-        .catch(err => {
-            throw err;
-        })
-        .then(res => {
-
-            let items: any[] = []
-            res = Object.assign(res);
-            res.forEach((element: { _id: any; firstName: any; lastName: any; maidenName: any; birthDate: any; deathDate: any; gender: any; }) => {
-                let yearOfBirth = element.birthDate?.substring(0, 4)
-                let yearOfDeath = element.deathDate?.substring(0, 4)
-                items.push({
-                    "_id": element._id,
-                    "firstName": element.firstName,
-                    "lastName": element.lastName,
-                    "maidenName": element.maidenName,
-                    "birthDate": element.birthDate,
-                    "gender": element.gender,
-                    "yearOfBirth": yearOfBirth == "0000" ? null : yearOfBirth,
-                    "yearOfDeath": yearOfDeath == "0000" ? null : yearOfDeath,
-                    "isDead": res.isDead ?? false
-                })
-            });
-            return items;
-        });
-}
 
 function removeLink(id1: string, id2: string) {
     console.debug("Remove link")
@@ -593,31 +438,7 @@ function getAuditLastEntries(number: number) {
         });
 }
 
-function getPrivateInfoById(_id: string, user: any) {
-    CheckUserAuthenticated(user);
-    console.debug("GetPersonById(private)")
-    return getPersonByIdFromMongoDb(_id)
-        .catch(err => {
-            throw err;
-        })
-        .then(res => {
-            res = Object.assign(res);
 
-            let yearOfBirth = res.birthDate?.substring(0, 4)
-            let yearOfDeath = res.deathDate?.substring(0, 4)
-
-            return {
-                "_id": _id,
-                "birthDate": res.birthDate,
-                "deathDate": res.deathDate,
-                "currentLocation": res.currentLocation,
-                "birthLocation": res.birthLocation,
-                "deathLocation": res.deathLocation,
-                "email": res.email,
-                "phone": res.phone
-            }
-        });
-}
 
 function updatePersonPrivateInfo(_id: string, patch: any, user: any) {
     if (patch == {}) {

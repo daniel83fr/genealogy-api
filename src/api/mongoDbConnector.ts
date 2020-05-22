@@ -5,7 +5,7 @@ const connectionString = process.env.MONGODB;
 export const mongoDbDatabase = process.env.MONGODB_DATABASE ??'';
 const { MongoClient } = require('mongodb');
 
-const ObjectId = require('mongodb').ObjectID;
+export const ObjectId = require('mongodb').ObjectID;
 
 export const memberCollection = "members";
 const auditCollection = "audit";
@@ -25,39 +25,33 @@ export async function initClient() {
 export async function getArrayFromMongoDb(mongoDbDatabase:string, collectionName: string, query: any, projection: any) {
     const client = await initClient();
     const db = client.db(mongoDbDatabase);
-    let collection = db.collection(collectionName);
-    let res = await collection.find(query, projection).toArray()
+    let res = await getArrayFromMongoDbAndDb(db, collectionName, query, projection )
     client.close()
     return res;
 }
 
-export async function getPersonByIdFromMongoDb(id: string) {
+export async function getArrayFromMongoDbAndDb(db:any, collectionName: string, query: any, projection: any) {
+    let collection = db.collection(collectionName);
+    return await collection.find(query, projection).toArray()
+}
+
+export async function getItemFromMongoDb(mongoDbDatabase:string, collectionName: string, query: any, projection: any) {
     const client = await initClient();
     const db = client.db(mongoDbDatabase);
-    let collection = db.collection(memberCollection);
-    let res = await collection.findOne({ _id: ObjectId(id) })
+    let collection = db.collection(collectionName);
+    let res = await collection.findOne(query, projection)
     client.close()
     return res;
 }
 
 export async function getTodayBirthdaysFromMongoDb() {
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
-    let collection = db.collection(memberCollection);
     let dateFilter = new Date().toISOString().substring(5, 10)
-    let res = await collection.find({ "birthDate": { $regex: dateFilter } }).toArray();
-    client.close()
-    return res;
+    return await getArrayFromMongoDb(mongoDbDatabase, memberCollection, { "birthDate": { $regex: dateFilter } }, {} );
 }
 
 export async function getTodayDeathdaysFromMongoDb() {
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
-    let collection = db.collection(memberCollection);
     let dateFilter = new Date().toISOString().substring(5, 10)
-    let res = await collection.find({ "death": { $regex: dateFilter } }).toArray();
-    client.close()
-    return res;
+    return await getArrayFromMongoDb(mongoDbDatabase, memberCollection, { "death": { $regex: dateFilter } }, {} );
 }
 
 export async function getTodayMarriagedaysFromMongoDb() {
@@ -130,8 +124,6 @@ export async function addPhotoTagFromMongo(person: string, image: string) {
    
     let member = await collectionMember.find({_id: ObjectId(person)}).toArray();
 
-  //  console.log(JSON.stringify(member))
-   
     if(member.length == 0){
         client.close()
         console.log("user missing")
@@ -139,7 +131,6 @@ export async function addPhotoTagFromMongo(person: string, image: string) {
     }
 
     let res = await collection.insertOne({"photo_id": image, "person_id": person})
-   // console.log(JSON.stringify(res))
     client.close()
     return "Tag added"
 }
@@ -154,6 +145,7 @@ export async function removePhotoTagFromMongo(person: string, image: string) {
     client.close()
     return "Tag removed"
 }
+
 export async function deletePhotoFromMongo(image: string) {
     const client = await initClient();
     const db = client.db(mongoDbDatabase);
@@ -322,29 +314,27 @@ export async function addPhotoFromMongoDb(url: string, deleteHash: string, perso
 
 
 
+
 export async function getParentByIdFromMongoDb(id: string, gender: string): Promise<any> {
     const client = await initClient();
     const db = client.db(mongoDbDatabase);
-
-    let links = db.collection(relationCollection);
-    let resLinks = await links.find({ "person2_id": ObjectId(id), "type": "Parent" }).toArray()
-    let items: any = []
-    resLinks.forEach((element: { person1_id: string; }) => {
-        items.push(ObjectId(element.person1_id))
+    let resLinks = await getArrayFromMongoDbAndDb(db, relationCollection, { "person2_id": ObjectId(id), "type": "Parent" }, {})
+   
+    let items: any = resLinks.map((element: { person1_id: any; })=>{
+        return ObjectId(element.person1_id)
     });
-    let members = db.collection(memberCollection);
 
-    let query = { _id: { $in: items } }
-    let parents = await members.find(query).toArray();
+    let parents = await getArrayFromMongoDbAndDb(db, memberCollection, { _id: { $in: items } }, {});
+    client.close()
 
-    let father = null;
+    let fatherOrMother = null;
     parents.forEach((element: { gender: string; }) => {
         if (element.gender == gender) {
-            father = element
+            fatherOrMother = element
         }
     });
-    client.close()
-    return father;
+    
+    return fatherOrMother;
 }
 
 export async function getChildrenByIdFromMongoDb(id: string) {
