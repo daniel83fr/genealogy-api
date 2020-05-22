@@ -1,5 +1,11 @@
 language: node_js
 node_js:
-  - 13
+- 13
 env:
-  - MONGODB_DATABASE=genealogyDb
+- MONGODB_DATABASE=genealogyDb
+deploy:
+  provider: heroku
+  api_key:
+    secure: CjTSx3FvQIUxCp3PojJtqSQDwaisa5tvRsV+gMBbSCGNvSAGif/W57oMpLuSUEq4QbTJS8Z5NDeYDBshi8f0akcIaO17tYmaC31dWTXWYTnWYmT07jH80XqOZaGhUcPTpUHiEZHOwQdmm/PIwmNlHXYuT+OgBR6OOY14y2iZ5KmMQgo4ZtHjXGxCEieQW0c41pB22sHAjkY/HYMOQk7DhEVscquJxw8u9Ojse7ncd62VkiOXDGuX7Heglw2CRYEfqSWqnSFRZ77vibCHw8WxHRr6fMbx6u2Z6Bo/GpSZ4xucGD7JspOiDeoyQ8/G6KpMzeO3lNkkwLkYXTSU/sIQ2snak8aE1EG5DEyvn4EVQbs2btpgousoXEsg8Dt7k7ucwwGkJON9oAiG3/CkoU6du1McJHxEcS4srglUQwe18e1vXFMPHbrlGjF6tMJXlkhD+f1/Xi8skIkT2LeTHprbiS0Mlsp4ZN/OZjnR2P+OcNhpW5HrD3qj+NUtybwSMd3BUijmRwcQ3Ut7vFRrb+Ah7XUtSrmuluPUPeJGkIyCtIY4x79UMNos1eTB1XI73z9iMUJ5sydt4Xjc0/9f2wdzFRiJ+QiK/a/yQl9/InQ6VFwElF7KjAr6w9iefCQyMVJLjUOs7icNGTzoz6nQ1F8cOv7dq6sQgK5Wn/vkimaBDT4=
+  app:
+    prod: genealogy-api
