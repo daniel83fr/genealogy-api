@@ -7,9 +7,8 @@ import {
     getChildrenByIdFromMongoDb,
     getSpousesByIdFromMongoDb,
     getSiblingsByIdFromMongoDb,
-    ObjectId
 } from "./mongoDbConnector";
-
+const ObjectId = require('mongodb').ObjectID;
 import { LoggerService } from '../services/logger_service';
 
 class PersonController {
