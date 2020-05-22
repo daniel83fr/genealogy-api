@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-const connectionString = process.env.MONGODB;
+const connectionString = process.env.MONGODB ??'';
 export const mongoDbDatabase = process.env.MONGODB_DATABASE ??'';
 const { MongoClient } = require('mongodb');
 
