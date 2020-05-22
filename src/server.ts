@@ -32,8 +32,6 @@ app.use(
     schema: schema,
     rootValue: resolver,
     graphiql: true,
-    
-
   })),
 );
 

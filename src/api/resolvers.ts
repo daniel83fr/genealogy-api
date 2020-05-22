@@ -1,5 +1,4 @@
 import {
-    getPersonsFromMongoDb,
     getPersonByIdFromMongoDb,
     getParentByIdFromMongoDb,
     getChildrenByIdFromMongoDb,
@@ -36,9 +35,11 @@ const exjwt = require('express-jwt');
 const jwt = require('jsonwebtoken');
 
 
+import personResolver from '../api/personController'
+
 var resolver = {
 
-    getPersons: getPersons(),
+    ...personResolver,
 
     getUnusedPersons: getUnusedPersons(),
 
@@ -104,43 +105,7 @@ var resolver = {
 
 export default resolver;
 
-function getPersons() {
 
-    console.debug("GetPersons")
-    return () => {
-        return getPersonsFromMongoDb()
-            .then(res => {
-                let items: any[] = [];
-                res = Object.assign(res);
-                res.forEach((element: {
-                    _id: any;
-                    firstName: any;
-                    lastName: any;
-                    maidenName: any;
-                    gender: any;
-                    birthDate: any;
-                    deathDate: any;
-                    isDead: boolean;
-                }) => {
-
-                    let yearOfBirth = element.birthDate?.substring(0, 4)
-                    let yearOfDeath = element.deathDate?.substring(0, 4)
-                    items.push({
-                        "_id": element._id,
-                        "firstName": element.firstName,
-                        "lastName": element.lastName,
-                        "maidenName": element.maidenName,
-                        "gender": element.gender,
-                        "yearOfBirth": yearOfBirth == "0000" ? null : yearOfBirth,
-                        "yearOfDeath": yearOfDeath == "0000" ? null : yearOfDeath,
-                        "isDead": element.isDead ?? false
-                    });
-                });
-                console.debug(JSON.stringify(items))
-                return items;
-            });
-    };
-}
 
 function getUnusedPersons() {
 
@@ -436,7 +401,6 @@ function login(login: string, password: string): any {
 
     return checkCredentialsFromMongoDb(login, password)
         .then(res => {
-            console.log("then")
             if (res.success == true) {
                 let token = jwt.sign(
                     { 
@@ -461,7 +425,6 @@ function login(login: string, password: string): any {
 function register(id: string, login: string, password: string): any {
     return createCredentialsFromMongoDb(id, login, password)
         .then(res => {
-            console.log("123456")
             return "login created"
         })
         .catch(err => {
