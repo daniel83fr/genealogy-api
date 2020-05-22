@@ -30,7 +30,6 @@ function getPersonList() {
 
     let logger = new LoggerService('personController')
     logger.info('Get person list')
-    console.debug("Get person list")
     return () => {
 
         let query = {};

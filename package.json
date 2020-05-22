@@ -5,10 +5,10 @@
   "main": "index.js",
   "scripts": {
     "postinstall": "npx tsc",
-    "start": "node ./dist/server.js",
-    "dev": "tsc-watch --onSuccess \"node ./dist/server.js\"",
+    "start": "node ./dist/src/server.js",
+    "dev": "tsc-watch --onSuccess \"node ./dist/src/server.js\"",
     "startPm2": "npx pm2 start pm2.yaml",
-    "debug": "tsc-watch --onSuccess \"node --nolazy --inspect-brk=3000  ./dist/server.js\"",
+    "debug": "tsc-watch --onSuccess \"node --nolazy --inspect-brk=3000  ./dist/src/server.js\"",
     "test": "ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
     "coverage": "nyc -r html -r text -e .ts -x \"tests/*.test.ts\" npm run test"
   },
