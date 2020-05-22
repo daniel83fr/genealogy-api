@@ -32,6 +32,9 @@ export async function getArrayFromMongoDb(mongoDbDatabase:string, collectionName
 
 export async function getArrayFromMongoDbAndDb(db:any, collectionName: string, query: any, projection: any) {
     let collection = db.collection(collectionName);
+    if(projection == {} || projection == null){
+        return await collection.find(query).toArray()
+    }
     return await collection.find(query, projection).toArray()
 }
 
@@ -39,7 +42,13 @@ export async function getItemFromMongoDb(mongoDbDatabase:string, collectionName:
     const client = await initClient();
     const db = client.db(mongoDbDatabase);
     let collection = db.collection(collectionName);
-    let res = await collection.findOne(query, projection)
+    let res = {}
+    if(projection == {} || projection == null){
+        res = await collection.findOne(query)
+    }
+    else{
+        res = await collection.findOne(query, projection)
+    }
     client.close()
     return res;
 }
