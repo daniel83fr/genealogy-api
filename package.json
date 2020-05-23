@@ -10,7 +10,8 @@
     "startPm2": "npx pm2 start pm2.yaml",
     "debug": "tsc-watch --onSuccess \"node --nolazy --inspect-brk=3000  ./dist/src/server.js\"",
     "test": "ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
-    "coverage": "nyc -r html -r text -e .ts -x \"tests/*.test.ts\" npm run test"
+    "coverageLocal": "nyc -r html -r text -e .ts -x \"tests/*.test.ts\" npm run test",
+    "coverage": "nyc npm test && nyc report --reporter=text-lcov | coveralls"
   },
   "keywords": [],
   "author": "",
@@ -30,6 +31,7 @@
     "bcrypt": "^4.0.1",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
+    "coveralls": "^3.1.0",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-graphql": "^0.9.0",
