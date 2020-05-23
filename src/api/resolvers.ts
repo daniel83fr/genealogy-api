@@ -37,83 +37,56 @@ const jwt = require('jsonwebtoken');
 const connectionString = process.env.MONGODB ?? '';
 
 
-class GraphQlResolver {
+export class GraphQlResolver {
   logger: LoggerService = new LoggerService('personController');
 
   queries: any;
 
   mutations: any;
 
-  constructor() {
+  constructor(personController: PersonController) {
 
-    const personController = new PersonController(new MongoConnector(connectionString));
     this.queries = {
-
-      test: () => true,
+      getAuditLastEntries: (args: any) => this.getAuditLastEntries(args.number),
       getPersons: () => personController.getPersonList(),
-
       getPersonById: (args: any) => personController.getPersonById(args._id),
-
       getFatherById: (args: any) => personController.getParentById(args._id, 'Male'),
-
       getMotherById: (args: any) => personController.getParentById(args._id, 'Female'),
-
       getChildrenById: (args: any) => personController.getChildrenById(args._id),
-
       getSpousesById: (args: any) => personController.getSpousesById(args._id),
-
       getSiblingsById: (args: any) => personController.getSiblingsById(args._id),
-
       getPrivateInfoById: (args: any, context: any) => personController.getPrivateInfoById(args._id, context.user),
-
       getUnusedPersons: () => this.getUnusedPersons(),
-      removeLink: (args: any) => this.removeLink(args._id1, args._id2),
-      removeSiblingLink: (args: any) => this.removeSiblingLink(args._id1, args._id2),
-      addParentLink: (args: any) => this.addParentLink(args._id, args._parentId),
-
-      addChildLink: (args: any) => this.addParentLink(args._childId, args._id),
-
-      addSpouseLink: (args: any) => this.addSpouseLink(args._id1, args._id2),
-      addSiblingLink: (args: any) => this.addSiblingLink(args._id1, args._id2),
-
-      createPerson: (args: any) => this.createPerson(args.person),
-      updatePerson: (args: any) => this.updatePerson(args._id, args.patch),
-
-      removeProfile: (args: any) => this.removeProfile(args._id),
-
       shouldResetCache: (args: any) => this.shouldResetCache(args.lastEntry),
-
       shouldResetPersonCache: (args: any) => this.shouldResetPersonCache(args._id, args.lastEntry),
-
       login: (args: any) => this.login(args.login, args.password),
-
       register: (args: any) => this.register(args.id, args.login, args.password),
-
       me: (args: any, context: any) => this.me(context.user),
-
-
-      updatePersonPrivateInfo: (args: any, context: any) => this.updatePersonPrivateInfo(args._id, args.patch, context.user),
-
       getPhotosById: (args: any) => this.getPhotosById(args._id),
       getPhotoProfile: (args: any) => this.getPhotoProfile(args._id),
-
       getPhotosRandom: (args: any) => this.getPhotosRandom(args.number),
-
-      getAuditLastEntries: (args: any) => this.getAuditLastEntries(args.number),
-
-      addPhoto: (args: any, context: any) => this.addPhoto(args.url, args.deleteHash, args.persons, context.user),
-
+      
       getTodayBirthdays: (args: any, context: any) => this.getTodayBirthdays(context.user),
       getTodayDeathdays: (args: any, context: any) => this.getTodayDeathdays(context.user),
       getTodayMarriagedays: (args: any, context: any) => this.getTodayMarriagedays(context.user),
-
+    };
+    this.mutations = {
+      updatePersonPrivateInfo: (args: any, context: any) => this.updatePersonPrivateInfo(args._id, args.patch, context.user),
+      addPhoto: (args: any, context: any) => this.addPhoto(args.url, args.deleteHash, args.persons, context.user),
+      removeLink: (args: any) => this.removeLink(args._id1, args._id2),
+      removeSiblingLink: (args: any) => this.removeSiblingLink(args._id1, args._id2),
+      addParentLink: (args: any) => this.addParentLink(args._id, args._parentId),
+      addChildLink: (args: any) => this.addParentLink(args._childId, args._id),
+      addSpouseLink: (args: any) => this.addSpouseLink(args._id1, args._id2),
+      addSiblingLink: (args: any) => this.addSiblingLink(args._id1, args._id2),
+      createPerson: (args: any) => this.createPerson(args.person),
+      updatePerson: (args: any) => this.updatePerson(args._id, args.patch),
+      removeProfile: (args: any) => this.removeProfile(args._id),
       setProfilePicture: (args: any, context: any) => this.setProfilePicture(args.person, args.image),
       deletePhoto: (args: any, context: any) => this.deletePhoto(args.image),
-
       addPhotoTag: (args: any) => this.addPhotoTag(args.image, args.tag),
       removePhotoTag: (args: any) => this.removePhotoTag(args.image, args.tag),
     };
-    this.mutations = {};
   }
 
   getResolver() {
@@ -437,4 +410,5 @@ class GraphQlResolver {
   }
 }
 
-export default new GraphQlResolver().getResolver();
+const personController = new PersonController(new MongoConnector(connectionString));
+export default new GraphQlResolver(personController).getResolver();
