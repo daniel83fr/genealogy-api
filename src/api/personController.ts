@@ -1,169 +1,135 @@
 import {
-    memberCollection,
-    mongoDbDatabase,
-    getArrayFromMongoDb,
-    getItemFromMongoDb,
-    getParentByIdFromMongoDb,
-    getChildrenByIdFromMongoDb,
-    getSpousesByIdFromMongoDb,
-    getSiblingsByIdFromMongoDb,
-} from "./mongoDbConnector";
-const ObjectId = require('mongodb').ObjectID;
-import { LoggerService } from '../services/logger_service';
+  memberCollection,
+  mongoDbDatabase,
+  getParentByIdFromMongoDb,
+  getChildrenByIdFromMongoDb,
+  getSpousesByIdFromMongoDb,
+  getSiblingsByIdFromMongoDb,
+  MongoConnector,
 
-class PersonController {
+} from './mongoDbConnector';
+
+import LoggerService from '../services/logger_service';
+
+const ObjectId = require('mongodb').ObjectID;
+
+
+export default class PersonController {
     logger: LoggerService = new LoggerService('personController');
 
-    personResolver = {
-        getPersons: this.getPersonList(),
+    connector: MongoConnector;
 
-        getPersonById: (args: any) => this.getPersonById(args._id),
+    constructor(connector: MongoConnector) {
+      this.connector = connector;
 
-        getFatherById: (args: any) => this.getParentById(args._id, "Male"),
-
-        getMotherById: (args: any) => this.getParentById(args._id, "Female"),
-
-        getChildrenById: (args: any) => this.getChildrenById(args._id),
-
-        getSpousesById: (args: any) => this.getSpousesById(args._id),
-
-        getSiblingsById: (args: any) => this.getSiblingsById(args._id),
-
-        getPrivateInfoById: (args: any, context: any) => this.getPrivateInfoById(args._id, context.user),
-
+      if (this.connector === undefined) {
+        throw Error('connector undefined1');
+      }
     }
 
-    mapping(element: any) {
-        let yearOfBirth = element.birthDate?.substring(0, 4)
-        let yearOfDeath = element.deathDate?.substring(0, 4)
-        return {
-            "_id": element._id,
-            "firstName": element.firstName,
-            "lastName": element.lastName,
-            "maidenName": element.maidenName,
-            "gender": element.gender,
-            "yearOfBirth": yearOfBirth == "0000" ? null : yearOfBirth,
-            "yearOfDeath": yearOfDeath == "0000" ? null : yearOfDeath,
-            "isDead": element.isDead ?? false
-        }
+
+    static mapping(element: any) {
+      const yearOfBirth = element?.birthDate?.substring(0, 4);
+      const yearOfDeath = element?.deathDate?.substring(0, 4);
+      return {
+        _id: element?._id,
+        firstName: element?.firstName,
+        lastName: element?.lastName,
+        maidenName: element?.maidenName,
+        gender: element?.gender,
+        yearOfBirth: yearOfBirth === '0000' ? null : yearOfBirth,
+        yearOfDeath: yearOfDeath === '0000' ? null : yearOfDeath,
+        isDead: element?.isDead ?? false,
+      };
     }
 
     getPersonList() {
+      this.logger.info('Get person list');
 
-        this.logger.info('Get person list')
+      const query = {};
+      const projection = {
+        firstName: 1,
+        lastName: 1,
+        maidenName: 1,
+        birthDate: 1,
+        gender: 1,
+        deathDate: 1,
+        isDead: 1,
+      };
 
-        let query = {};
-        let projection = {
-            firstName: 1,
-            lastName: 1,
-            maidenName: 1,
-            birthDate: 1,
-            gender: 1,
-            deathDate: 1,
-            isDead: 1
-        }
-
-        return getArrayFromMongoDb(mongoDbDatabase, memberCollection, query, projection)
-            .then((res: any[]) => {
-                return res.map(this.mapping);
-            });
-
+      return this.connector.getArrayFromMongoDb(mongoDbDatabase, memberCollection, query, projection)
+        .then((res: any[]) => res.map(PersonController.mapping));
     }
 
     getPersonById(_id: string) {
-        
-        this.logger.info('Get person by Id')
+      this.logger.info('Get person by Id');
 
-        let query = { _id: ObjectId(_id) };
-        let projection = {};
-        return getItemFromMongoDb(mongoDbDatabase, memberCollection, query, projection)
-            .catch((err: any) => {
-                throw err;
-            })
-            .then((res: any) => {
-                return this.mapping(res)
-            });
+      const query = { _id: ObjectId(_id) };
+      const projection = {};
+
+      return this.connector.getItemFromMongoDb(mongoDbDatabase, memberCollection, query, projection)
+        .catch((err: any) => {
+          throw err;
+        })
+        .then((res: any) => PersonController.mapping(res));
     }
 
     getParentById(_id: string, gender: string) {
-        
-        this.logger.info(`Get ${gender == "Male"? "Father" : "Mother"} by id `)
+      this.logger.info(`Get ${gender === 'Male' ? 'Father' : 'Mother'} by id `);
 
-        return getParentByIdFromMongoDb(_id, gender)
-            .catch((err: any) => {
-                throw err;
-            })
-            .then((res: object) => {
-                return this.mapping(res);
-            });
+      return getParentByIdFromMongoDb(_id, gender)
+        .catch((err: any) => {
+          throw err;
+        })
+        .then((res: object) => PersonController.mapping(res));
     }
 
     getChildrenById(_id: string) {
+      this.logger.info('Get children by id');
 
-        this.logger.info('Get children by id')
-
-        return getChildrenByIdFromMongoDb(_id)
-            .catch((err: any) => {
-                throw err;
-            })
-            .then((res: any[]) => {
-
-                return res.map(this.mapping);
-            });
+      return getChildrenByIdFromMongoDb(_id)
+        .catch((err: any) => {
+          throw err;
+        })
+        .then((res: any[]) => res.map(PersonController.mapping));
     }
 
     getSpousesById(_id: string) {
+      this.logger.info('Get spouses by id');
 
-        this.logger.info('Get spouses by id')
-
-        return getSpousesByIdFromMongoDb(_id)
-            .catch(err => {
-                throw err;
-            })
-            .then(res => {
-                return res.map(this.mapping);
-
-            });
+      return getSpousesByIdFromMongoDb(_id)
+        .catch((err) => {
+          throw err;
+        })
+        .then((res) => res.map(PersonController.mapping));
     }
 
     getSiblingsById(_id: string) {
+      this.logger.info('Get siblings by id');
 
-         this.logger.info('Get siblings by id')
-
-        return getSiblingsByIdFromMongoDb(_id)
-            .catch(err => {
-                throw err;
-            })
-            .then(res => {
-                return res.map(this.mapping);
-
-            });
+      return getSiblingsByIdFromMongoDb(_id)
+        .catch((err) => {
+          throw err;
+        })
+        .then((res) => res.map(PersonController.mapping));
     }
 
     getPrivateInfoById(_id: string, user: any) {
+      this.logger.info('Get private infos by id');
 
-        this.logger.info('Get private infos by id')
-
-        this.CheckUserAuthenticated(user);
-        let query = { _id: ObjectId(_id) };
-        let projection = {};
-        return getItemFromMongoDb(mongoDbDatabase, memberCollection, query, projection)
-            .catch(err => {
-                throw err;
-            })
-            .then(res => {
-                return this.mapping(res);
-            });
+      PersonController.CheckUserAuthenticated(user);
+      const query = { _id: ObjectId(_id) };
+      const projection = {};
+      return this.connector.getItemFromMongoDb(mongoDbDatabase, memberCollection, query, projection)
+        .catch((err: any) => {
+          throw err;
+        })
+        .then((res: any) => PersonController.mapping(res));
     }
 
-    CheckUserAuthenticated(user: any) {
-        if (!user) {
-            throw Error("Not authenticated, please login first")
-        }
+    static CheckUserAuthenticated(user: any) {
+      if (!user) {
+        throw Error('Not authenticated, please login first');
+      }
     }
 }
-
-
-export default new PersonController();
-
-

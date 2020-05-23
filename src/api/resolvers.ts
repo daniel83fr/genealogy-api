@@ -1,461 +1,440 @@
 import {
-    deleteRelationFromMongoDb,
-    addParentRelationFromMongoDb,
-    addSpouseRelationFromMongoDb,
-    addSiblingRelationFromMongoDb,
-    getUnusedPersonsFromMongoDb,
-    updatePersonFromMongoDb,
-    deleteSiblingRelationFromMongoDb,
-    createPersonFromMongoDb,
-    deleteProfileFromMongoDb,
-    shouldResetCacheFromMongoDb,
-    checkCredentialsFromMongoDb,
-    createCredentialsFromMongoDb,
-    getPersonByLoginFromMongoDb,
-    getPhotosByIdFromMongoDb,
-    getPhotoProfileFromMongoDb,
-    addPhotoFromMongoDb,
-    getPhotosRandomFromMongoDb,
-    getAuditLastEntriesFromMongoDb,
-    getTodayDeathdaysFromMongoDb,
-    getTodayBirthdaysFromMongoDb,
-    getTodayMarriagedaysFromMongoDb,
-    setProfilePictureFromMongo,
-    deletePhotoFromMongo,
-    addPhotoTagFromMongo,
-    removePhotoTagFromMongo
-} from "../api/mongoDbConnector";
+  deleteRelationFromMongoDb,
+  addParentRelationFromMongoDb,
+  addSpouseRelationFromMongoDb,
+  addSiblingRelationFromMongoDb,
+  getUnusedPersonsFromMongoDb,
+  updatePersonFromMongoDb,
+  deleteSiblingRelationFromMongoDb,
+  createPersonFromMongoDb,
+  deleteProfileFromMongoDb,
+  shouldResetCacheFromMongoDb,
+  checkCredentialsFromMongoDb,
+  createCredentialsFromMongoDb,
+  getPersonByLoginFromMongoDb,
+  getPhotosByIdFromMongoDb,
+  getPhotoProfileFromMongoDb,
+  addPhotoFromMongoDb,
+  getPhotosRandomFromMongoDb,
+  getAuditLastEntriesFromMongoDb,
+  getTodayDeathdaysFromMongoDb,
+  getTodayBirthdaysFromMongoDb,
+  getTodayMarriagedaysFromMongoDb,
+  setProfilePictureFromMongo,
+  deletePhotoFromMongo,
+  addPhotoTagFromMongo,
+  removePhotoTagFromMongo,
+  MongoConnector,
+} from '../api/mongoDbConnector';
+
+
+import PersonController from '../api/personController';
+import LoggerService from '../services/logger_service';
 
 const exjwt = require('express-jwt');
 const jwt = require('jsonwebtoken');
 
-
-import personController from '../api/personController'
-
-var resolver = {
-
-    ...personController.personResolver,
-
-    getUnusedPersons: getUnusedPersons(),
-
-   
-
-    removeLink: (args: any) => removeLink(args._id1, args._id2),
-    removeSiblingLink: (args: any) => removeSiblingLink(args._id1, args._id2),
-    addParentLink: (args: any) => addParentLink(args._id, args._parentId),
-
-    addChildLink: (args: any) => addParentLink(args._childId, args._id),
-
-    addSpouseLink: (args: any) => addSpouseLink(args._id1, args._id2),
-    addSiblingLink: (args: any) => addSiblingLink(args._id1, args._id2),
-
-    createPerson: (args: any) => createPerson(args.person),
-    updatePerson: (args: any) => updatePerson(args._id, args.patch),
-
-    removeProfile: (args: any) => removeProfile(args._id),
-
-    shouldResetCache: (args: any) => shouldResetCache(args.lastEntry),
-
-    shouldResetPersonCache: (args: any) => shouldResetPersonCache(args._id, args.lastEntry),
-
-    login: (args: any) => login(args.login, args.password),
-
-    register: (args: any) => register(args.id, args.login, args.password),
-
-    me: (args: any, context: any) => me(context.user),
-
-   
-    updatePersonPrivateInfo: (args: any, context: any) => updatePersonPrivateInfo(args._id, args.patch, context.user),
-
-    getPhotosById: (args: any) => getPhotosById(args._id),
-    getPhotoProfile: (args: any) => getPhotoProfile(args._id),
-
-    getPhotosRandom: (args: any) => getPhotosRandom(args.number),
-
-    getAuditLastEntries: (args: any) => getAuditLastEntries(args.number),
-
-    addPhoto: (args: any, context: any) => addPhoto(args.url, args.deleteHash, args.persons, context.user),
-
-    getTodayBirthdays: (args: any, context: any) => getTodayBirthdays(context.user),
-    getTodayDeathdays: (args: any, context: any) => getTodayDeathdays(context.user),
-    getTodayMarriagedays: (args: any, context: any) => getTodayMarriagedays(context.user),
-
-    setProfilePicture: (args: any, context:any) =>  setProfilePicture(args.person, args.image),
-    deletePhoto: (args: any, context:any) =>  deletePhoto(args.image),
-
-    addPhotoTag: (args: any) => addPhotoTag(args.image, args.tag),
-    removePhotoTag: (args: any) => removePhotoTag(args.image, args.tag),
-};
-
-export default resolver;
+const connectionString = process.env.MONGODB ?? '';
 
 
+class GraphQlResolver {
+  logger: LoggerService = new LoggerService('personController');
 
-function getUnusedPersons() {
+  queries: any;
 
-    console.debug("GetPersons")
-    return () => {
-        return getUnusedPersonsFromMongoDb()
-            .then(res => {
-                let items: any[] = [];
-                res = Object.assign(res);
-                res.forEach((element: {
-                    _id: any;
-                    FirstName: any;
-                    LastName: any;
-                }) => {
-                    items.push({
-                        "_id": element._id,
-                        "FirstName": element.FirstName,
-                        "LastName": element.LastName
-                    });
-                });
-                console.debug(JSON.stringify(items))
-                return items;
-            });
+  mutations: any;
+
+  constructor() {
+
+    const personController = new PersonController(new MongoConnector(connectionString));
+    this.queries = {
+
+      test: () => true,
+      getPersons: () => personController.getPersonList(),
+
+      getPersonById: (args: any) => personController.getPersonById(args._id),
+
+      getFatherById: (args: any) => personController.getParentById(args._id, 'Male'),
+
+      getMotherById: (args: any) => personController.getParentById(args._id, 'Female'),
+
+      getChildrenById: (args: any) => personController.getChildrenById(args._id),
+
+      getSpousesById: (args: any) => personController.getSpousesById(args._id),
+
+      getSiblingsById: (args: any) => personController.getSiblingsById(args._id),
+
+      getPrivateInfoById: (args: any, context: any) => personController.getPrivateInfoById(args._id, context.user),
+
+      getUnusedPersons: () => this.getUnusedPersons(),
+      removeLink: (args: any) => this.removeLink(args._id1, args._id2),
+      removeSiblingLink: (args: any) => this.removeSiblingLink(args._id1, args._id2),
+      addParentLink: (args: any) => this.addParentLink(args._id, args._parentId),
+
+      addChildLink: (args: any) => this.addParentLink(args._childId, args._id),
+
+      addSpouseLink: (args: any) => this.addSpouseLink(args._id1, args._id2),
+      addSiblingLink: (args: any) => this.addSiblingLink(args._id1, args._id2),
+
+      createPerson: (args: any) => this.createPerson(args.person),
+      updatePerson: (args: any) => this.updatePerson(args._id, args.patch),
+
+      removeProfile: (args: any) => this.removeProfile(args._id),
+
+      shouldResetCache: (args: any) => this.shouldResetCache(args.lastEntry),
+
+      shouldResetPersonCache: (args: any) => this.shouldResetPersonCache(args._id, args.lastEntry),
+
+      login: (args: any) => this.login(args.login, args.password),
+
+      register: (args: any) => this.register(args.id, args.login, args.password),
+
+      me: (args: any, context: any) => this.me(context.user),
+
+
+      updatePersonPrivateInfo: (args: any, context: any) => this.updatePersonPrivateInfo(args._id, args.patch, context.user),
+
+      getPhotosById: (args: any) => this.getPhotosById(args._id),
+      getPhotoProfile: (args: any) => this.getPhotoProfile(args._id),
+
+      getPhotosRandom: (args: any) => this.getPhotosRandom(args.number),
+
+      getAuditLastEntries: (args: any) => this.getAuditLastEntries(args.number),
+
+      addPhoto: (args: any, context: any) => this.addPhoto(args.url, args.deleteHash, args.persons, context.user),
+
+      getTodayBirthdays: (args: any, context: any) => this.getTodayBirthdays(context.user),
+      getTodayDeathdays: (args: any, context: any) => this.getTodayDeathdays(context.user),
+      getTodayMarriagedays: (args: any, context: any) => this.getTodayMarriagedays(context.user),
+
+      setProfilePicture: (args: any, context: any) => this.setProfilePicture(args.person, args.image),
+      deletePhoto: (args: any, context: any) => this.deletePhoto(args.image),
+
+      addPhotoTag: (args: any) => this.addPhotoTag(args.image, args.tag),
+      removePhotoTag: (args: any) => this.removePhotoTag(args.image, args.tag),
     };
-}
+    this.mutations = {};
+  }
+
+  getResolver() {
+    return {
+      ...this.queries,
+      ...this.mutations,
+    };
+  }
 
 
-
-function removeLink(id1: string, id2: string) {
-    console.debug("Remove link")
+  removeLink(id1: string, id2: string) {
+    this.logger.info('Remove link');
     return deleteRelationFromMongoDb(id1, id2)
-        .catch(err => {
-            throw err;
-        })
-        .then(res => {
-            return res;
-        });
-}
+      .catch((err) => {
+        throw err;
+      })
+      .then((res) => res);
+  }
 
-function removeProfile(id: string) {
-    console.debug("Remove profile")
+  removeProfile(id: string) {
+    this.logger.info('Remove profile');
     return deleteProfileFromMongoDb(id)
-        .catch(err => {
-            throw err;
-        })
-        .then(res => {
-            return res;
-        });
-}
+      .catch((err) => {
+        throw err;
+      })
+      .then((res) => res);
+  }
 
-function removeSiblingLink(id1: string, id2: string) {
-    console.debug("Remove sibling link")
+  removeSiblingLink(id1: string, id2: string) {
+    this.logger.info('Remove sibling link');
     return deleteSiblingRelationFromMongoDb(id1, id2)
-        .catch(err => {
-            throw err;
-        })
-        .then(res => {
-            return res;
-        });
-}
+      .catch((err) => {
+        throw err;
+      })
+      .then((res) => res);
+  }
 
-function addParentLink(id: string, parentId: string) {
-    console.debug("Add parent link")
+  addParentLink(id: string, parentId: string) {
+    this.logger.info('Add parent link');
     return addParentRelationFromMongoDb(id, parentId)
-        .catch(err => {
-            throw err;
-        })
-        .then(res => {
-            return res;
-        });
-}
+      .catch((err) => {
+        throw err;
+      })
+      .then((res) => res);
+  }
 
-function addSpouseLink(id1: string, id2: string) {
-    console.debug("Add spouse link")
+  addSpouseLink(id1: string, id2: string) {
+    this.logger.info('Add spouse link');
     return addSpouseRelationFromMongoDb(id1, id2)
-        .catch(err => {
-            throw err;
-        })
-        .then(res => {
-            return res;
-        });
-}
+      .catch((err) => {
+        throw err;
+      })
+      .then((res) => res);
+  }
 
-function addSiblingLink(id1: string, id2: string) {
-    console.debug("Add spouse link")
+  addSiblingLink(id1: string, id2: string) {
+    this.logger.info('Add spouse link');
     return addSiblingRelationFromMongoDb(id1, id2)
-        .catch(err => {
-            throw err;
-        })
-        .then(res => {
-            return res;
-        });
-}
+      .catch((err) => {
+        throw err;
+      })
+      .then((res) => res);
+  }
 
-function updatePerson(_id: string, patch: any) {
-    if (patch == {}) {
-        return null;
+  updatePerson(_id: string, patch: any) {
+    if (patch === {}) {
+      return null;
     }
-    console.debug("UpdatePersons")
+    this.logger.info('UpdatePersons');
 
-    console.debug(_id)
-    console.debug(JSON.stringify(patch))
+    this.logger.info(_id);
+    this.logger.info(JSON.stringify(patch));
 
     return updatePersonFromMongoDb(_id, patch)
-        .catch(err => {
-            throw err;
-        })
-        .then((res: any) => {
-            return res
-        });
+      .catch((err) => {
+        throw err;
+      })
+      .then((res: any) => res);
+  }
 
-}
-
-function createPerson(person: any) {
-
-    console.debug("Create Person")
+  createPerson(person: any) {
+    this.logger.info('Create Person');
 
     return createPersonFromMongoDb(person)
-        .catch(err => {
-            throw err;
-        })
-        .then((res: any) => {
-            return res
-        });
+      .catch((err) => {
+        throw err;
+      })
+      .then((res: any) => res);
+  }
 
-}
-
-function shouldResetCache(lastEntry: string) {
-    let lastEntry2 = new Date(lastEntry)
+  shouldResetCache(lastEntry: string) {
+    this.logger.info('Should reset cache?');
+    const lastEntry2 = new Date(lastEntry);
     return shouldResetCacheFromMongoDb(lastEntry2)
-        .catch(err => {
-            throw err;
-        })
-        .then((res: any) => {
-            return res
-
-        });
+      .catch((err) => {
+        throw err;
+      })
+      .then((res: any) => res);
+  }
 
 
+  shouldResetPersonCache(_id: String, lastEntry: Date) {
+    this.logger.info('Should reset person cache');
+    return true;
+  }
 
-
-}
-
-
-function shouldResetPersonCache(_id: String, lastEntry: Date) {
-    return true
-}
-
-function login(login: string, password: string): any {
-
+  login(login: string, password: string): any {
+    this.logger.info('Login');
     const jwtMW = exjwt({
-        secret: process.env.SECRET
+      secret: process.env.SECRET,
     });
 
     return checkCredentialsFromMongoDb(login, password)
-        .then(res => {
-            if (res.success == true) {
-                let token = jwt.sign(
-                    { 
-                        login: login,
-                        profile : res.profileId
-                    }, process.env.SECRET, { expiresIn: 129600 });
-                return {
-                    "success": true,
-                    "token": token,
-                    "error": ""
-                }
-            }
-            return {
-                "success": false,
-                "token": "",
-                "error": 'Username or password is incorrect'
-            }
-        })
+      .then((res) => {
+        if (res.success === true) {
+          const token = jwt.sign(
+            {
+              login,
+              profile: res.profileId,
+            }, process.env.SECRET, { expiresIn: 129600 },
+          );
+          return {
+            success: true,
+            token,
+            error: '',
+          };
+        }
+        return {
+          success: false,
+          token: '',
+          error: 'Username or password is incorrect',
+        };
+      });
+  }
 
-}
-
-function register(id: string, login: string, password: string): any {
+  register(id: string, login: string, password: string): any {
+    this.logger.info('Register');
     return createCredentialsFromMongoDb(id, login, password)
-        .then(res => {
-            return "login created"
-        })
-        .catch(err => {
-            return "registration failed"
-        })
-
-}
+      .then(() => 'login created')
+      .catch(() => 'registration failed');
+  }
 
 
-
-function CheckUserAuthenticated(user: any) {
+  CheckUserAuthenticated(user: any) {
+    this.logger.info('User authenticated');
     if (!user) {
-        throw Error("Not authenticated, please login first")
+      throw Error('Not authenticated, please login first');
     }
-}
+  }
 
-function me(user: any) {
-    CheckUserAuthenticated(user);
+  me(user: any) {
+    this.CheckUserAuthenticated(user);
     return getPersonByLoginFromMongoDb(user.login)
-        .then(res => {
-            return res;
-        });
-}
+      .then((res) => res);
+  }
 
-function getTodayBirthdays(user: any) {
-    CheckUserAuthenticated(user);
+  getTodayBirthdays(user: any) {
+    this.CheckUserAuthenticated(user);
 
     return getTodayBirthdaysFromMongoDb()
-        .catch((err: any) => {
-            throw err;
-        })
-        .then((res: any) => {
-            return res;
-        });
-}
+      .catch((err: any) => {
+        throw err;
+      })
+      .then((res: any) => res);
+  }
 
-function getTodayDeathdays(user: any) {
-
-    CheckUserAuthenticated(user);
+  getTodayDeathdays(user: any) {
+    this.CheckUserAuthenticated(user);
 
     return getTodayDeathdaysFromMongoDb()
-        .catch((err: any) => {
-            throw err;
-        })
-        .then((res: any) => {
-            return res;
-        });
-}
+      .catch((err: any) => {
+        throw err;
+      })
+      .then((res: any) => res);
+  }
 
-function getTodayMarriagedays(user: any) {
-
-    CheckUserAuthenticated(user);
+  getTodayMarriagedays(user: any) {
+    this.CheckUserAuthenticated(user);
     return getTodayMarriagedaysFromMongoDb()
-        .catch((err: any) => {
-            throw err;
-        })
-        .then((res: any) => {
-            return res;
-        });
-}
+      .catch((err: any) => {
+        throw err;
+      })
+      .then((res: any) => res);
+  }
 
-function addPhoto(url: string, deleteHash: string, persons: string[],  user: any) {
+  addPhoto(url: string, deleteHash: string, persons: string[], user: any) {
+    this.logger.info('add photo');
 
-    console.debug("add photo")
-
-    CheckUserAuthenticated(user);
-    if(persons == null || persons.length == 0){
-        throw Error("Need tag at least one person")
+    this.CheckUserAuthenticated(user);
+    if (persons == null || persons.length === 0) {
+      throw Error('Need tag at least one person');
     }
     return addPhotoFromMongoDb(url, deleteHash, persons)
-        .catch((err: any) => {
-            throw err;
-        })
-        .then((res: any) => {
-            return res;
-        });
-}
+      .catch((err: any) => {
+        throw err;
+      })
+      .then((res: any) => res);
+  }
 
-function getPhotosById(_id: string) {
-
-    console.debug("GetPhotos")
+  getPhotosById(_id: string) {
+    this.logger.info('GetPhotos');
     return getPhotosByIdFromMongoDb(_id)
-        .catch((err: any) => {
-            throw err;
-        })
-        .then((res: object) => {
-            res = Object.assign(res);
-            return res;
-        });
-}
+      .catch((err: any) => {
+        throw err;
+      })
+      .then((res: object) => {
+        res = Object.assign(res);
+        return res;
+      });
+  }
 
-function setProfilePicture(person: string, image: string): Promise<string> {
+  setProfilePicture(person: string, image: string): Promise<string> {
+    this.logger.info('Set profile pic');
     return setProfilePictureFromMongo(person, image)
-    .catch((err:any)=>{
+      .catch((err: any) => {
         throw err;
-    })
-    .then((res:any)=>{
-        return "Done";
-    });
-}
+      })
+      .then(() => 'Done');
+  }
 
-function addPhotoTag(image: string, person: string): Promise<string> {
+  addPhotoTag(image: string, person: string): Promise<string> {
+    this.logger.info('add photo tag');
     return addPhotoTagFromMongo(person, image)
-    .catch((err:any)=>{
+      .catch((err: any) => {
         throw err;
-    })
-    .then((res:any)=>{
-        return "Done";
-    });
-}
+      })
+      .then(() => 'Done');
+  }
 
-function removePhotoTag(image: string, person: string): Promise<string> {
+  removePhotoTag(image: string, person: string): Promise<string> {
+    this.logger.info('Remove photo tag');
     return removePhotoTagFromMongo(person, image)
-    .catch((err:any)=>{
+      .catch((err: any) => {
         throw err;
-    })
-    .then((res:any)=>{
-        return "Done";
-    });
-}
+      })
+      .then(() => 'Done');
+  }
 
-function deletePhoto(image: string): Promise<string> {
-    return deletePhotoFromMongo( image)
-    .catch((err:any)=>{
+  deletePhoto(image: string): Promise<string> {
+    this.logger.info('delete photo');
+    return deletePhotoFromMongo(image)
+      .catch((err: any) => {
         throw err;
-    })
-    .then((res:any)=>{
-        return "Done";
-    });
-}
+      })
+      .then(() => 'Done');
+  }
 
-function getPhotoProfile(_id: string) {
-
-    console.debug("GetPhotos")
+  getPhotoProfile(_id: string) {
+    this.logger.info('GetPhotos');
     return getPhotoProfileFromMongoDb(_id)
-        .catch((err: any) => {
-            throw err;
-        })
-        .then((res: object) => {
-            res = Object.assign(res);
-            return res;
-        });
-}
-function getPhotosRandom(number: number) {
+      .catch((err: any) => {
+        throw err;
+      })
+      .then((res: object) => {
+        res = Object.assign(res);
+        return res;
+      });
+  }
 
-    console.debug("GetPhotos")
+  getPhotosRandom(number: number) {
+    this.logger.info('GetPhotos');
     return getPhotosRandomFromMongoDb(number)
-        .catch((err: any) => {
-            throw err;
-        })
-        .then((res: object) => {
-            res = Object.assign(res);
-            return res;
-        });
-}
-function getAuditLastEntries(number: number) {
+      .catch((err: any) => {
+        throw err;
+      })
+      .then((res: object) => {
+        res = Object.assign(res);
+        return res;
+      });
+  }
 
-    console.debug("Get Audit")
+  getAuditLastEntries(number: number) {
+    this.logger.info('Get Audit');
     return getAuditLastEntriesFromMongoDb(number)
-        .catch((err: any) => {
-            throw err;
-        })
-        .then((res: object) => {
-            res = Object.assign(res);
-            return res;
-        });
-}
+      .catch((err: any) => {
+        throw err;
+      })
+      .then((res: object) => {
+        res = Object.assign(res);
+        return res;
+      });
+  }
 
 
-
-function updatePersonPrivateInfo(_id: string, patch: any, user: any) {
-    if (patch == {}) {
-        return null;
+  updatePersonPrivateInfo(_id: string, patch: any, user: any) {
+    if (patch === {}) {
+      return null;
     }
-    CheckUserAuthenticated(user);
-    console.debug("UpdatePersonspivate")
+    this.CheckUserAuthenticated(user);
+    this.logger.info('UpdatePersonspivate');
 
-    console.debug(_id)
-    console.debug(JSON.stringify(patch))
+    this.logger.info(_id);
+    this.logger.info(JSON.stringify(patch));
 
     return updatePersonFromMongoDb(_id, patch)
-        .catch(err => {
-            throw err;
-        })
-        .then((res: any) => {
-            return res
-        });
+      .catch((err) => {
+        throw err;
+      })
+      .then((res: any) => res);
+  }
 
+  getUnusedPersons() {
+    this.logger.info('get unused persons');
+    return () => getUnusedPersonsFromMongoDb()
+      .then((res) => {
+        const items: any[] = [];
+        res = Object.assign(res);
+        res.forEach((element: {
+          _id: any;
+          FirstName: any;
+          LastName: any;
+        }) => {
+          items.push({
+            _id: element._id,
+            FirstName: element.FirstName,
+            LastName: element.LastName,
+          });
+        });
+        return items;
+      });
+  }
 }
+
+export default new GraphQlResolver().getResolver();

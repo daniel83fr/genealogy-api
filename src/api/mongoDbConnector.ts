@@ -1,636 +1,677 @@
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
+import LoggerService from '../services/logger_service';
+
 dotenv.config();
 
-const connectionString = process.env.MONGODB ??'';
-export const mongoDbDatabase = process.env.MONGODB_DATABASE ??'';
+const connectionString = process.env.MONGODB ?? '';
+export const mongoDbDatabase = process.env.MONGODB_DATABASE ?? '';
 const { MongoClient } = require('mongodb');
 
 export const ObjectId = require('mongodb').ObjectID;
 
-export const memberCollection = "members";
-const auditCollection = "audit";
-const relationCollection = "relations";
-const credentialsCollection = "credentials"
-var bcrypt = require('bcrypt');
+export const memberCollection = 'members';
+const auditCollection = 'audit';
+const relationCollection = 'relations';
+const credentialsCollection = 'credentials';
+const bcrypt = require('bcrypt');
 
-const util = require('util')
+export class MongoConnector {
+  connectionString = '';
 
+  logger: LoggerService;
 
+  constructor(cstr: string) {
+    this.connectionString = cstr;
+    this.logger = new LoggerService('MongoConnector');
+  }
 
-export async function initClient() {
-    if(connectionString == ""){
-        return null;
+  async initClient() {
+    if (this.connectionString === '' || this.connectionString === undefined) {
+      return null;
     }
-    return await MongoClient.connect(connectionString, { useUnifiedTopology: true, useNewUrlParser: true })
-        .catch((err: any) => { console.log(err); });
-}
+    return MongoClient.connect(this.connectionString,
+      { useUnifiedTopology: true, useNewUrlParser: true })
+      .catch((err: any) => {
+        this.logger.error(`${err} for connection string ${this.connectionString}`);
+      });
+  }
 
-function setDb(client: any, database: string){
-    if(client!= null && database != null)
-    {
-       return client.db(database);
+  static setDb(client: any, database: string) {
+    if (client != null && database != null) {
+      return client.db(database);
     }
     return null;
-}
+  }
 
-function closeDb(client: any){
-    if(client!= null)
-    {
-       return client.close();
+  static closeDb(client: any) {
+    if (client != null) {
+      client.close();
     }
-}
+  }
 
-export async function getArrayFromMongoDb(mongoDbDatabase:string, collectionName: string, query: any, projection: any) {
-    const client = await initClient();
-    let db = setDb(client, mongoDbDatabase);
-    let res = await getArrayFromMongoDbAndDb(db, collectionName, query, projection )
-    closeDb(client)
+  static async getArrayFromMongoDbAndDb(db: any, collectionName: string, query: any, projection: any) {
+    if (db === undefined || db == null) {
+      return [];
+    }
+    const collection = db.collection(collectionName);
+    if (projection === {} || projection == null) {
+      return collection.find(query).toArray();
+    }
+    return collection.find(query, projection).toArray();
+  }
+
+  async getArrayFromMongoDb(database: string, collectionName: string, query: any, projection: any) {
+    const client = await this.initClient();
+    const db = MongoConnector.setDb(client, database);
+    const res = await MongoConnector.getArrayFromMongoDbAndDb(db, collectionName, query, projection);
+    MongoConnector.closeDb(client);
     return res;
-}
+  }
 
-export async function getArrayFromMongoDbAndDb(db:any, collectionName: string, query: any, projection: any) {
-    if(db == undefined || db == null){
-        return []
+  async getItemFromMongoDb(database: string, collectionName: string, query: any, projection: any) {
+    const client = await this.initClient();
+    const db = MongoConnector.setDb(client, database);
+    const collection = db.collection(collectionName);
+    let res = {};
+    if (projection === {} || projection == null) {
+      res = await collection.findOne(query);
+    } else {
+      res = await collection.findOne(query, projection);
     }
-    let collection = db.collection(collectionName);
-    if(projection == {} || projection == null){
-        return await collection.find(query).toArray()
-    }
-    return await collection.find(query, projection).toArray()
-}
-
-export async function getItemFromMongoDb(mongoDbDatabase:string, collectionName: string, query: any, projection: any) {
-    const client = await initClient();
-
-    const db =setDb( client, mongoDbDatabase)
-    let collection = db.collection(collectionName);
-    let res = {}
-    if(projection == {} || projection == null){
-        res = await collection.findOne(query)
-    }
-    else{
-        res = await collection.findOne(query, projection)
-    }
-    closeDb(client)
+    MongoConnector.closeDb(client);
     return res;
+  }
+}
+
+function getConnector() {
+  return new MongoConnector(connectionString);
 }
 
 export async function getTodayBirthdaysFromMongoDb() {
-    let dateFilter = new Date().toISOString().substring(5, 10)
-    return await getArrayFromMongoDb(mongoDbDatabase, memberCollection, { "birthDate": { $regex: dateFilter } }, {} );
+  const connector = getConnector();
+  const dateFilter = new Date().toISOString().substring(5, 10);
+  return connector.getArrayFromMongoDb(mongoDbDatabase, memberCollection,
+    { birthDate: { $regex: dateFilter } }, {});
 }
 
 export async function getTodayDeathdaysFromMongoDb() {
-    let dateFilter = new Date().toISOString().substring(5, 10)
-    return await getArrayFromMongoDb(mongoDbDatabase, memberCollection, { "death": { $regex: dateFilter } }, {} );
+  const connector = getConnector();
+  const dateFilter = new Date().toISOString().substring(5, 10);
+  return connector.getArrayFromMongoDb(mongoDbDatabase, memberCollection, { death: { $regex: dateFilter } }, {});
 }
 
 export async function getTodayMarriagedaysFromMongoDb() {
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
-    let collection = db.collection(relationCollection);
-    let dateFilter = new Date().toISOString().substring(5, 10)
-    let res = await collection.find({ "marriage_date": { $regex: dateFilter } }).toArray();
-    let items: string[] = [];
-    res.forEach((element: { person1_id: string; person2_id: string; }) => {
-        items.push(ObjectId(element.person1_id));
-        items.push(ObjectId(element.person2_id));
-    });
+  const connector = getConnector();
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
+  const collection = db.collection(relationCollection);
+  const dateFilter = new Date().toISOString().substring(5, 10);
+  const res = await collection.find({ marriage_date: { $regex: dateFilter } }).toArray();
+  const items: string[] = [];
+  res.forEach((element: { person1_id: string; person2_id: string; }) => {
+    items.push(ObjectId(element.person1_id));
+    items.push(ObjectId(element.person2_id));
+  });
 
-    let query = { _id: { $in: items } }
-    let res2 = await db.collection(memberCollection).find(query).toArray()
-
-    client.close()
-    return res2;
+  const query = { _id: { $in: items } };
+  const res2 = await db.collection(memberCollection).find(query).toArray();
+  MongoConnector.closeDb(client);
+  return res2;
 }
 
 
 export async function getPersonByLoginFromMongoDb(login: string) {
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
-    let collection = db.collection("credentials");
-    let res = await collection.findOne({ login: login }, { login: 1, id: 1 })
-    client.close()
-    return res;
+  const connector = getConnector();
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
+  const collection = db.collection('credentials');
+  const res = await collection.findOne({ login }, { login: 1, id: 1 });
+  MongoConnector.closeDb(client);
+  return res;
 }
 
 export async function setProfilePictureFromMongo(person: string, image: string) {
-    console.log('Set profile pic' + image)
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
-    let collection = db.collection("photoTags");
+  const connector = getConnector();
+  console.log(`Set profile pic${image}`);
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
+  const collection = db.collection('photoTags');
 
-    let res = await collection.updateMany({ "person_id": person, "isProfile": "true", "photo_id": { $ne: image } }
-        , { $set: { "isProfile": 'false' } })
+  await collection.updateMany({ person_id: person, isProfile: 'true', photo_id: { $ne: image } },
+    { $set: { isProfile: 'false' } });
 
-    let resLinks2 = await collection.updateOne({ "person_id": person, "photo_id": image },
-        { $set: { "isProfile": "true" } })
+  await collection.updateOne({ person_id: person, photo_id: image },
+    { $set: { isProfile: 'true' } });
 
-        client.close()
-    return "Profile picture updated."
+  MongoConnector.closeDb(client);
+  return 'Profile picture updated.';
 }
 
 export async function addPhotoTagFromMongo(person: string, image: string) {
+  if (person.length < 12) {
+    console.log('Invalid person Id');
+    throw Error('Invalid person id');
+  }
 
-    if(person.length < 12){
-        console.log("Invalid person Id")
-        throw Error("Invalid person id"); 
-    }
+  const connector = getConnector();
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
 
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
+  const collection = db.collection('photoTags');
+  const previous = await collection.find({ photo_id: image, person_id: person }).toArray();
+  console.log(JSON.stringify(previous));
+  if (previous.length > 0) {
+    client.close();
+    console.log('already set');
+    return 'Tag already set';
+  }
+  const collectionMember = db.collection(memberCollection);
+  console.log(`person ${person}`);
 
-    let collection = db.collection("photoTags");
-    let previous = await collection.find({"photo_id": image, "person_id": person}).toArray();
-    console.log(JSON.stringify(previous))
-    if(previous.length > 0){
-        client.close()
-        console.log("already set")
-        return "Tag already set"
-    }
-    let collectionMember = db.collection(memberCollection);
-    console.log('person ' + person)
 
-    
-   
-    let member = await collectionMember.find({_id: ObjectId(person)}).toArray();
+  const member = await collectionMember.find({ _id: ObjectId(person) }).toArray();
 
-    if(member.length == 0){
-        client.close()
-        console.log("user missing")
-        throw Error("User doesnt exist");   
-    }
+  if (member.length === 0) {
+    client.close();
+    console.log('user missing');
+    throw Error('User doesnt exist');
+  }
 
-    let res = await collection.insertOne({"photo_id": image, "person_id": person})
-    client.close()
-    return "Tag added"
+  await collection.insertOne({ photo_id: image, person_id: person });
+  client.close();
+  return 'Tag added';
 }
 
 export async function removePhotoTagFromMongo(person: string, image: string) {
-    console.log('Set profile pic' + image)
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
-    let collection = db.collection("photoTags");
+  const connector = getConnector();
+  console.log(`Set profile pic${image}`);
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
+  const collection = db.collection('photoTags');
 
-    let res = await collection.removeOne({"photo_id": image, "person_id": person})
-    client.close()
-    return "Tag removed"
+  const res = await collection.removeOne({ photo_id: image, person_id: person });
+  client.close();
+  return 'Tag removed';
 }
 
 export async function deletePhotoFromMongo(image: string) {
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
-    let collection = db.collection("photoTags");
+  const connector = getConnector();
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
+  const collection = db.collection('photoTags');
 
-    let res = await collection.remove({ "photo_id": image })
+  await collection.remove({ photo_id: image });
 
-    let res2 = await db.collection('photos').remove({ "_id": ObjectId(image) })
-    return "Photo deleted."
+  await db.collection('photos').remove({ _id: ObjectId(image) });
+  return 'Photo deleted.';
 }
 
 
 export async function getPhotosByIdFromMongoDb(personId: string) {
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
-    let collection = db.collection("photoTags");
+  const connector = getConnector();
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
+  const collection = db.collection('photoTags');
 
-    let res = await collection.find({ "person_id": personId },
-        {
-            photo_id: 1
-        }).toArray()
+  const res = await collection.find({ person_id: personId },
+    {
+      photo_id: 1,
+    }).toArray();
 
-   // console.log(res);
-    let items: any = []
-    let itemsString: any =  []
-    let memberItems: any = []
+  // console.log(res);
+  const items: any = [];
+  const itemsString: any = [];
+  const memberItems: any = [];
 
-    res.forEach((element: { photo_id: string; }) => {
-        items.push(ObjectId(element.photo_id))
-        itemsString.push(element.photo_id)
-    });
+  res.forEach((element: { photo_id: string; }) => {
+    items.push(ObjectId(element.photo_id));
+    itemsString.push(element.photo_id);
+  });
 
-    
 
-    let photos = db.collection("photos");
+  const photos = db.collection('photos');
 
-    let query = { _id: { $in: items } }
-    let photoResult2 = await photos.find(query).toArray();
-   
+  const query = { _id: { $in: items } };
+  const photoResult2 = await photos.find(query).toArray();
 
-    let query2 = { photo_id: { $in: itemsString } }
-    let links = await collection.find(query2).toArray();
-    console.log(JSON.stringify(photoResult2))
-    console.log(JSON.stringify(links))   
-    
-    links.forEach((element: { person_id: any; }) => {
-        memberItems.push(ObjectId(element.person_id))
-    });
- //   console.log("members: " + JSON.stringify(memberItems))
 
-     let query3 = { _id: { $in : memberItems}}
-     let members = await db.collection(memberCollection).find(query3).toArray()
-    // console.log(JSON.stringify(members))  
-     
-     let result: any[] = []
-photoResult2.forEach((element: any) => {
-    let elm = element
+  const query2 = { photo_id: { $in: itemsString } };
+  const links = await collection.find(query2).toArray();
+  console.log(JSON.stringify(photoResult2));
+  console.log(JSON.stringify(links));
+
+  links.forEach((element: { person_id: any; }) => {
+    memberItems.push(ObjectId(element.person_id));
+  });
+  //   console.log("members: " + JSON.stringify(memberItems))
+
+  const query3 = { _id: { $in: memberItems } };
+  const members = await db.collection(memberCollection).find(query3).toArray();
+  // console.log(JSON.stringify(members))
+
+  const result: any[] = [];
+  photoResult2.forEach((element: any) => {
+    const elm = element;
     elm.persons = [];
 
     links.forEach((l: { photo_id: any; person_id: any; }) => {
-        if(l.photo_id == elm._id.toString()){
-            members.forEach((m: { _id: { toString: () => any; }; }) => {
-                if(m._id.toString() == l.person_id){
-                    elm.persons.push(m)
-                }
-            });
-        }
+      if (l.photo_id == elm._id.toString()) {
+        members.forEach((m: { _id: { toString: () => any; }; }) => {
+          if (m._id.toString() == l.person_id) {
+            elm.persons.push(m);
+          }
+        });
+      }
     });
-    result.push(elm)
-});
-    client.close()
-return result;
+    result.push(elm);
+  });
+  client.close();
+  return result;
 }
 
 export async function getPhotoProfileFromMongoDb(id: string) {
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
-    let collection = db.collection("photoTags");
+  const connector = getConnector();
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
+  const collection = db.collection('photoTags');
 
-    let res = await collection.find({ "person_id": id, "isProfile": "true" },
-        {
-            person_id: 1
-        }).toArray()
+  const res = await collection.find({ person_id: id, isProfile: 'true' },
+    {
+      person_id: 1,
+    }).toArray();
 
-    console.log(res);
-
-
-    let items: any = []
-
-    res.forEach((element: { photo_id: string; }) => {
-        items.push(ObjectId(element.photo_id))
-    });
+  console.log(res);
 
 
-    let photos = db.collection("photos");
+  const items: any = [];
 
-    let query = { _id: { $in: items } }
-    let photoResult = await photos.findOne(query);
+  res.forEach((element: { photo_id: string; }) => {
+    items.push(ObjectId(element.photo_id));
+  });
 
 
-    client.close()
-    return photoResult;
+  const photos = db.collection('photos');
+
+  const query = { _id: { $in: items } };
+  const photoResult = await photos.findOne(query);
+
+
+  client.close();
+  return photoResult;
 }
 
 export async function getPhotosRandomFromMongoDb(num: number) {
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
-    let collection = db.collection("photos");
+  const connector = getConnector();
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
+  const collection = db.collection('photos');
 
-    let res = await collection.aggregate([{ $sample: { size: 5 } }],
-        {
-            url: 1
-        }).toArray()
+  const res = await collection.aggregate([{ $sample: { size: 5 } }],
+    {
+      url: 1,
+    }).toArray();
 
-    console.log(res);
+  console.log(res);
 
 
-
-    client.close()
-    return res;
+  client.close();
+  return res;
 }
 
 export async function getAuditLastEntriesFromMongoDb(num: number) {
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
-    let collection = db.collection("audit");
+  const connector = getConnector();
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
+  const collection = db.collection('audit');
 
-    let res = await collection.find({},
-        {
-            timestamp: 1,
-            type: 1,
-            id: 1,
-            user: 1
+  const res = await collection.find({},
+    {
+      timestamp: 1,
+      type: 1,
+      id: 1,
+      user: 1,
 
-        })
-        .sort({ _id: 1 })
-        .limit(num)
-        .toArray()
+    })
+    .sort({ _id: 1 })
+    .limit(num)
+    .toArray();
 
-    console.log(res);
+  console.log(res);
 
 
-
-    client.close()
-    return res;
+  client.close();
+  return res;
 }
 
 export async function addPhotoFromMongoDb(url: string, deleteHash: string, persons: string[]) {
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
+  const connector = getConnector();
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
 
-    let photos = db.collection("photos");
+  const photos = db.collection('photos');
 
-    let query = { 'url': url, 'deleteHash': deleteHash }
-    let res = await photos.insertOne(query)
-    //console.log(JSON.stringify(res))
-    let photo_id = res.insertedId.toString();
+  const query = { url, deleteHash };
+  const res = await photos.insertOne(query);
+  // console.log(JSON.stringify(res))
+  const photo_id = res.insertedId.toString();
 
-    let collection = db.collection("photoTags");
-    persons.forEach(async elem => {
-        await collection.insertOne({ 'photo_id': photo_id, 'person_id': elem })
-    });
-    client.close()
-    return "Done";
+  const collection = db.collection('photoTags');
+  persons.forEach(async (elem) => {
+    await collection.insertOne({ photo_id, person_id: elem });
+  });
+  client.close();
+  return 'Done';
 }
-
-
 
 
 export async function getParentByIdFromMongoDb(id: string, gender: string): Promise<any> {
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
-    let resLinks = await getArrayFromMongoDbAndDb(db, relationCollection, { "person2_id": ObjectId(id), "type": "Parent" }, {})
-   
-    let items: any = resLinks.map((element: { person1_id: any; })=>{
-        return ObjectId(element.person1_id)
-    });
+  const connector = getConnector();
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
+  const resLinks = await MongoConnector.getArrayFromMongoDbAndDb(db, relationCollection, { person2_id: ObjectId(id), type: 'Parent' }, {});
 
-    let parents = await getArrayFromMongoDbAndDb(db, memberCollection, { _id: { $in: items } }, {});
-    client.close()
+  const items: any = resLinks.map((element: { person1_id: any; }) => ObjectId(element.person1_id));
 
-    let fatherOrMother = null;
-    parents.forEach((element: { gender: string; }) => {
-        if (element.gender == gender) {
-            fatherOrMother = element
-        }
-    });
-    
-    return fatherOrMother;
+  const parents = await MongoConnector.getArrayFromMongoDbAndDb(db, memberCollection, { _id: { $in: items } }, {});
+  client.close();
+
+  let fatherOrMother = null;
+  parents.forEach((element: { gender: string; }) => {
+    if (element.gender == gender) {
+      fatherOrMother = element;
+    }
+  });
+
+  return fatherOrMother;
 }
 
 export async function getChildrenByIdFromMongoDb(id: string) {
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
+  const connector = getConnector();
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
 
-    let links = db.collection(relationCollection);
-    let resLinks = await links.find({ "person1_id": ObjectId(id), "type": "Parent" }).toArray()
-    let items: any = []
-    resLinks.forEach((element: { person2_id: string; }) => {
-        items.push(ObjectId(element.person2_id))
-    });
-    let members = db.collection(memberCollection);
+  const links = db.collection(relationCollection);
+  const resLinks = await links.find({ person1_id: ObjectId(id), type: 'Parent' }).toArray();
+  const items: any = [];
+  resLinks.forEach((element: { person2_id: string; }) => {
+    items.push(ObjectId(element.person2_id));
+  });
+  const members = db.collection(memberCollection);
 
-    let query = { _id: { $in: items } }
-    let children = await members.find(query).toArray();
-    client.close()
-    return children
+  const query = { _id: { $in: items } };
+  const children = await members.find(query).toArray();
+  client.close();
+  return children;
 }
 
 export async function getSiblingsByIdFromMongoDb(id: string) {
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
+  const connector = getConnector();
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
 
-    let links = db.collection(relationCollection);
-    let resLinks = await links.find({ "person2_id": ObjectId(id), "type": "Parent" }).toArray()
-    let items: any = []
-    resLinks.forEach((element: { person1_id: string; }) => {
-        items.push(ObjectId(element.person1_id))
-    });
+  const links = db.collection(relationCollection);
+  const resLinks = await links.find({ person2_id: ObjectId(id), type: 'Parent' }).toArray();
+  const items: any = [];
+  resLinks.forEach((element: { person1_id: string; }) => {
+    items.push(ObjectId(element.person1_id));
+  });
 
-    let resLinks2 = await links.find({ "person1_id": { $in: items }, "type": "Parent" }).toArray()
-    let items2: any = []
-    resLinks2.forEach((element: { person2_id: string; }) => {
-        if (element.person2_id.toString() != id) {
-            items2.push(ObjectId(element.person2_id))
-        }
-    });
+  const resLinks2 = await links.find({ person1_id: { $in: items }, type: 'Parent' }).toArray();
+  const items2: any = [];
+  resLinks2.forEach((element: { person2_id: string; }) => {
+    if (element.person2_id.toString() != id) {
+      items2.push(ObjectId(element.person2_id));
+    }
+  });
 
-    let members = db.collection(memberCollection);
-    let query = { _id: { $in: items2 } }
-    let parents = await members.find(query).toArray();
-    client.close()
-    return parents
+  const members = db.collection(memberCollection);
+  const query = { _id: { $in: items2 } };
+  const parents = await members.find(query).toArray();
+  client.close();
+  return parents;
 }
 
 export async function getSpousesByIdFromMongoDb(id: string) {
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
+  const connector = getConnector();
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
 
-    let links = db.collection(relationCollection);
-    let resLinks = await links.find({ type: "Spouse", $or: [{ "person1_id": ObjectId(id) }, { "person2_id": ObjectId(id) }] }).toArray()
-    let items: any = []
-    resLinks.forEach((element: { person1_id: string; person2_id: string; }) => {
-        if (element.person1_id.toString() == id) {
-            items.push(ObjectId(element.person2_id))
-        }
-        else {
-            items.push(ObjectId(element.person1_id))
-        }
-    });
-    console.log(items)
-    let members = db.collection(memberCollection);
+  const links = db.collection(relationCollection);
+  const resLinks = await links.find({ type: 'Spouse', $or: [{ person1_id: ObjectId(id) }, { person2_id: ObjectId(id) }] }).toArray();
+  const items: any = [];
+  resLinks.forEach((element: { person1_id: string; person2_id: string; }) => {
+    if (element.person1_id.toString() == id) {
+      items.push(ObjectId(element.person2_id));
+    } else {
+      items.push(ObjectId(element.person1_id));
+    }
+  });
+  console.log(items);
+  const members = db.collection(memberCollection);
 
-    let query = { _id: { $in: items } }
-    console.log(query)
-    let spouses = await members.find(query).toArray();
-    client.close()
-    return spouses
+  const query = { _id: { $in: items } };
+  console.log(query);
+  const spouses = await members.find(query).toArray();
+  client.close();
+  return spouses;
 }
 
 export async function deleteRelationFromMongoDb(id: string, id2: string) {
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
+  const connector = getConnector();
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
 
-    let links = db.collection(relationCollection);
-    let query = { $or: [{ "person1_id": ObjectId(id), "person2_id": ObjectId(id2) }, { "person1_id": ObjectId(id2), "person2_id": ObjectId(id) }] }
-    var res = await links.findOne(query);
-    console.log(query)
-    await links.deleteMany(query);
+  const links = db.collection(relationCollection);
+  const query = { $or: [{ person1_id: ObjectId(id), person2_id: ObjectId(id2) }, { person1_id: ObjectId(id2), person2_id: ObjectId(id) }] };
+  const res = await links.findOne(query);
+  console.log(query);
+  await links.deleteMany(query);
 
-    let audit = db.collection(auditCollection);
-    await audit.insertOne({ "timestamp": new Date().toISOString(), "type": "Relation", "action": "Remove link", "payload": res, "id": ObjectId(id) })
-    await audit.insertOne({ "timestamp": new Date().toISOString(), "type": "Relation", "action": "Remove link", "payload": res, "id": ObjectId(id2) })
-    client.close()
-    return `Deleted link between ${id} and ${id2}`;
+  const audit = db.collection(auditCollection);
+  await audit.insertOne({
+    timestamp: new Date().toISOString(), type: 'Relation', action: 'Remove link', payload: res, id: ObjectId(id),
+  });
+  await audit.insertOne({
+    timestamp: new Date().toISOString(), type: 'Relation', action: 'Remove link', payload: res, id: ObjectId(id2),
+  });
+  client.close();
+  return `Deleted link between ${id} and ${id2}`;
 }
 
 
 export async function deleteSiblingRelationFromMongoDb(id: string, id2: string) {
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
+  const connector = getConnector();
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
 
-    let links = db.collection(relationCollection);
+  const links = db.collection(relationCollection);
 
-    let parents1 = await links.find({ "type": "Parent", "person2_id": ObjectId(id) }).toArray()
-    console.log(parents1)
-    client.close()
+  const parents1 = await links.find({ type: 'Parent', person2_id: ObjectId(id) }).toArray();
+  console.log(parents1);
+  client.close();
 
-    await parents1.forEach(async (element: { Person1: any; }) => {
-        return deleteRelationFromMongoDb(element.Person1, id2)
-    });
+  await parents1.forEach(async (element: { Person1: any; }) => deleteRelationFromMongoDb(element.Person1, id2));
 
-    return `Deleted siblings link between ${id} and ${id2}`;
+  return `Deleted siblings link between ${id} and ${id2}`;
 }
 
 export async function deleteProfileFromMongoDb(id: string) {
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
-    let collection = db.collection(memberCollection);
+  const connector = getConnector();
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
+  const collection = db.collection(memberCollection);
 
-    let query = { _id: ObjectId(id) }
-    var res = await collection.findOne(query);
-
-
-    let links = db.collection(relationCollection);
-    let query1 = { $or: [{ "person1_id": ObjectId(id) }, { "person2_id": ObjectId(id) }] }
-    await links.deleteMany(query1);
+  const query = { _id: ObjectId(id) };
+  const res = await collection.findOne(query);
 
 
-    await collection.deleteOne(query);
+  const links = db.collection(relationCollection);
+  const query1 = { $or: [{ person1_id: ObjectId(id) }, { person2_id: ObjectId(id) }] };
+  await links.deleteMany(query1);
 
-    let audit = db.collection(auditCollection);
-    await audit.insertOne({ "timestamp": new Date().toISOString(), "type": "Person", "action": "Person Deleted", "payload": res, "id": res._id })
-    client.close()
-    return `Deleted person ${id}`;
+
+  await collection.deleteOne(query);
+
+  const audit = db.collection(auditCollection);
+  await audit.insertOne({
+    timestamp: new Date().toISOString(), type: 'Person', action: 'Person Deleted', payload: res, id: res._id,
+  });
+  client.close();
+  return `Deleted person ${id}`;
 }
-
 
 
 export async function addParentRelationFromMongoDb(id: string, parentId: string) {
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
-    let collection = db.collection(relationCollection);
+  const connector = getConnector();
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
+  const collection = db.collection(relationCollection);
 
-    var res = await collection.insertOne({ "person1_id": ObjectId(parentId), "person2_id": ObjectId(id), "type": "Parent" });
-    let audit = db.collection(auditCollection);
-    await audit.insertOne({ "timestamp": new Date().toISOString(), "type": "Relation", "action": "Add parent link", "payload": res, "id": ObjectId(parentId) })
-    await audit.insertOne({ "timestamp": new Date().toISOString(), "type": "Relation", "action": "Add parent link", "payload": res, "id": ObjectId(id) })
-    client.close()
-    return `Added link between ${parentId} and ${id}`;
+  const res = await collection.insertOne({ person1_id: ObjectId(parentId), person2_id: ObjectId(id), type: 'Parent' });
+  const audit = db.collection(auditCollection);
+  await audit.insertOne({
+    timestamp: new Date().toISOString(), type: 'Relation', action: 'Add parent link', payload: res, id: ObjectId(parentId),
+  });
+  await audit.insertOne({
+    timestamp: new Date().toISOString(), type: 'Relation', action: 'Add parent link', payload: res, id: ObjectId(id),
+  });
+  client.close();
+  return `Added link between ${parentId} and ${id}`;
 }
 
 export async function addSpouseRelationFromMongoDb(id1: string, id2: string) {
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
-    let collection = db.collection(relationCollection);
+  const connector = getConnector();
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
+  const collection = db.collection(relationCollection);
 
-    var res = await collection.insertOne({ "person1_id": ObjectId(id1), "person2_id": ObjectId(id2), "type": "Spouse" });
-    let audit = db.collection(auditCollection);
-    await audit.insertOne({ "timestamp": new Date().toISOString(), "Type": "Relation", "Action": "Add parent link", "Payload": res, "Id": ObjectId(id1) })
-    await audit.insertOne({ "timestamp": new Date().toISOString(), "Type": "Relation", "Action": "Add parent link", "Payload": res, "Id": ObjectId(id2) })
-    client.close()
-    return `Added link between ${id1} and ${id2}`;
+  const res = await collection.insertOne({ person1_id: ObjectId(id1), person2_id: ObjectId(id2), type: 'Spouse' });
+  const audit = db.collection(auditCollection);
+  await audit.insertOne({
+    timestamp: new Date().toISOString(), Type: 'Relation', Action: 'Add parent link', Payload: res, Id: ObjectId(id1),
+  });
+  await audit.insertOne({
+    timestamp: new Date().toISOString(), Type: 'Relation', Action: 'Add parent link', Payload: res, Id: ObjectId(id2),
+  });
+  client.close();
+  return `Added link between ${id1} and ${id2}`;
 }
 
 export async function addSiblingRelationFromMongoDb(id1: string, id2: string) {
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
-    let links = db.collection(relationCollection);
+  const connector = getConnector();
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
+  const links = db.collection(relationCollection);
 
-    let parents1 = await links.find({ "Type": "Parent", "person2_id": ObjectId(id1) }).toArray()
-    console.log(parents1)
-    client.close()
+  const parents1 = await links.find({ Type: 'Parent', person2_id: ObjectId(id1) }).toArray();
+  console.log(parents1);
+  client.close();
 
-    await parents1.forEach(async (element: { Person1: any; }) => {
-        return addParentRelationFromMongoDb(id2, element.Person1)
-    });
+  await parents1.forEach(async (element: { Person1: any; }) => addParentRelationFromMongoDb(id2, element.Person1));
 
-    return `Added link between ${id1} and ${id2}`;
+  return `Added link between ${id1} and ${id2}`;
 }
 
 export async function getUnusedPersonsFromMongoDb() {
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
-    let collection = db.collection("membersUnused");
-    let res = await collection.find({}).toArray();
-    client.close()
-    return res;
+  const connector = getConnector();
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
+  const collection = db.collection('membersUnused');
+  const res = await collection.find({}).toArray();
+  client.close();
+  return res;
 }
 
 export async function updatePersonFromMongoDb(id: string, patch: any) {
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
-    let collection = db.collection(memberCollection);
-    patch.UpdatedAt = new Date().toISOString()
+  const connector = getConnector();
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
+  const collection = db.collection(memberCollection);
+  patch.UpdatedAt = new Date().toISOString();
 
-    let query = { "_id": ObjectId(id) }
-    console.debug(query)
-    var res = await collection.updateOne(query, { $set: patch });
+  const query = { _id: ObjectId(id) };
+  console.debug(query);
+  await collection.updateOne(query, { $set: patch });
 
-    let audit = db.collection(auditCollection);
-    await audit.insertOne({ "timestamp": new Date().toISOString(), "type": "Person", "action": "Person updated", "payload": patch, "id": ObjectId(id) })
+  const audit = db.collection(auditCollection);
+  await audit.insertOne({
+    timestamp: new Date().toISOString(), type: 'Person', action: 'Person updated', payload: patch, id: ObjectId(id),
+  });
 
-    let res1 = await collection.findOne({ _id: ObjectId(id) })
-    client.close()
-    return res1;
+  const res1 = await collection.findOne({ _id: ObjectId(id) });
+  client.close();
+  return res1;
 }
 
 export async function createPersonFromMongoDb(person: any) {
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
-    let collection = db.collection(memberCollection);
+  const connector = getConnector();
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
+  const collection = db.collection(memberCollection);
 
 
-    var res = await collection.insertOne(person);
+  const res = await collection.insertOne(person);
 
-    let audit = db.collection(auditCollection);
-    await audit.insertOne({ "timestamp": new Date().toISOString(), "type": "Person", "action": "Person inserted", "payload": person, "id": ObjectId(res.insertedId) })
+  const audit = db.collection(auditCollection);
+  await audit.insertOne({
+    timestamp: new Date().toISOString(), type: 'Person', action: 'Person inserted', payload: person, id: ObjectId(res.insertedId),
+  });
 
-    let res1 = await collection.findOne({ _id: ObjectId(res.insertedId) })
-    client.close()
-    return res1;
+  const res1 = await collection.findOne({ _id: ObjectId(res.insertedId) });
+  client.close();
+  return res1;
 }
 
 export async function shouldResetCacheFromMongoDb(lastEntry: Date) {
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
-    let collection = db.collection(auditCollection);
+  const connector = getConnector();
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
+  const collection = db.collection(auditCollection);
 
-    let query = `{'timestamp': {$gt : '${lastEntry.toISOString()}'}}`
-    console.log(query)
-    var res = await collection.find(query).limit(1).toArray();
-    client.close()
-    return res.length > 0;
+  const query = `{'timestamp': {$gt : '${lastEntry.toISOString()}'}}`;
+  console.log(query);
+  const res = await collection.find(query).limit(1).toArray();
+  client.close();
+  return res.length > 0;
 }
 
 export async function checkCredentialsFromMongoDb(login: string, password: string): Promise<any> {
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
-    let collection = db.collection(credentialsCollection);
-    login = login.toLowerCase()
-    let query = { 'login': login }
-    var res = await collection.findOne(query);
+  const connector = getConnector();
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
+  const collection = db.collection(credentialsCollection);
+  login = login.toLowerCase();
+  const query = { login };
+  const res = await collection.findOne(query);
 
-    client.close()
+  client.close();
 
-    return {
-        'success': bcrypt.compareSync(password, res.password),
-        'profileId': res.id
-    }
+  return {
+    success: bcrypt.compareSync(password, res.password),
+    profileId: res.id,
+  };
 }
 
 export async function createCredentialsFromMongoDb(id: string, login: string, password: string) {
+  const connector = getConnector();
+  console.log('creating credentials');
+  const client = await connector.initClient();
+  const db = client.db(mongoDbDatabase);
+  const collection = db.collection(credentialsCollection);
+  login = login.toLowerCase();
+  const query = { login };
+  const res = await collection.findOne(query);
+  if (res != null) {
+    client.close();
+    console.log('login already exists');
+    return 'login already exist';
+  }
 
-    console.log("creating credentials")
-    const client = await initClient();
-    const db = client.db(mongoDbDatabase);
-    let collection = db.collection(credentialsCollection);
-    login = login.toLowerCase()
-    let query = { 'login': login }
-    var res = await collection.findOne(query);
-    if (res != null) {
-        client.close()
-        console.log("login already exists")
-        return "login already exist"
-    }
 
-
-
-    var hash = bcrypt.hashSync(password, 10);
-    var document = { "id": id, "login": login, "password": hash }
-    collection.insertOne(document)
-    client.close()
-    console.log("login already exists")
-    return "Account created"
-
+  const hash = bcrypt.hashSync(password, 10);
+  const document = { id, login, password: hash };
+  collection.insertOne(document);
+  client.close();
+  console.log('login already exists');
+  return 'Account created';
 }

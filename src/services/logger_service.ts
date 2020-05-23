@@ -1,9 +1,7 @@
 
-const dateFormat = () => {
-  return new Date(Date.now()).toUTCString()
-}
+const dateFormat = () => new Date(Date.now()).toISOString();
 
-export class LoggerService {
+export default class LoggerService {
   cls: string;
 
   constructor(cls: string) {
@@ -18,11 +16,11 @@ export class LoggerService {
     this.logToConsole(message, 'info');
   }
 
-  debug(message: string, obj: any) {
-    this.logToConsole(message, 'debug');
+  debug(message: string, obj: any = null) {
+    this.logToConsole(`${message} ${JSON.stringify(obj)}`, 'debug');
   }
 
-  error(message: string, obj: any) {
-    this.logToConsole(message, 'error');
+  error(message: string, obj: any = null) {
+    this.logToConsole(`${message} ${JSON.stringify(obj)}`, 'error');
   }
 }
