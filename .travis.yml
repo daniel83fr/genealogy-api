@@ -2,8 +2,7 @@ language: node_js
 node_js:
 - 13
 env:
-- MONGODB_DATABASE=genealogyDb
-- MONGODB=mongodb://localhost:27017/
+- MONGODB_DATABASE=genealogyDb MONGODB=mongodb://localhost:27017/
 deploy:
   provider: heroku
   api_key:
