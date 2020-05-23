@@ -18,19 +18,40 @@ const util = require('util')
 
 
 export async function initClient() {
+    if(connectionString == ""){
+        return null;
+    }
     return await MongoClient.connect(connectionString, { useUnifiedTopology: true, useNewUrlParser: true })
         .catch((err: any) => { console.log(err); });
 }
 
+function setDb(client: any, database: string){
+    if(client!= null && database != null)
+    {
+       return client.db(database);
+    }
+    return null;
+}
+
+function closeDb(client: any){
+    if(client!= null)
+    {
+       return client.close();
+    }
+}
+
 export async function getArrayFromMongoDb(mongoDbDatabase:string, collectionName: string, query: any, projection: any) {
     const client = await initClient();
-    const db = client.db(mongoDbDatabase);
+    let db = setDb(client, mongoDbDatabase);
     let res = await getArrayFromMongoDbAndDb(db, collectionName, query, projection )
-    client.close()
+    closeDb(client)
     return res;
 }
 
 export async function getArrayFromMongoDbAndDb(db:any, collectionName: string, query: any, projection: any) {
+    if(db == undefined || db == null){
+        return []
+    }
     let collection = db.collection(collectionName);
     if(projection == {} || projection == null){
         return await collection.find(query).toArray()
@@ -40,7 +61,8 @@ export async function getArrayFromMongoDbAndDb(db:any, collectionName: string, q
 
 export async function getItemFromMongoDb(mongoDbDatabase:string, collectionName: string, query: any, projection: any) {
     const client = await initClient();
-    const db = client.db(mongoDbDatabase);
+
+    const db =setDb( client, mongoDbDatabase)
     let collection = db.collection(collectionName);
     let res = {}
     if(projection == {} || projection == null){
@@ -49,7 +71,7 @@ export async function getItemFromMongoDb(mongoDbDatabase:string, collectionName:
     else{
         res = await collection.findOne(query, projection)
     }
-    client.close()
+    closeDb(client)
     return res;
 }
 

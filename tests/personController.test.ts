@@ -13,19 +13,19 @@ describe('resolver', function () {
     ];
   });
 
-  // it('check database called with correct args', async function () {
-  //   const spy = spyOn(mongoDbConnector, 'getArrayFromMongoDb').and.returnValue(Promise.resolve(personListMock));
-  //   await personController.default.getPersonList();
-  //   expect(spy).toHaveBeenCalledWith('genealogyDb', 'members', {}, {
-  //     firstName: 1,
-  //     lastName: 1,
-  //     maidenName: 1,
-  //     birthDate: 1,
-  //     gender: 1,
-  //     deathDate: 1,
-  //     isDead: 1
-  //   });
-  // });
+  it('check database called with correct args', async function () {
+    const spy = spyOn(mongoDbConnector, 'getArrayFromMongoDb').and.returnValue(Promise.resolve(personListMock));
+    await personController.default.getPersonList();
+    expect(spy).toHaveBeenCalledWith('genealogyDb', 'members', {}, {
+      firstName: 1,
+      lastName: 1,
+      maidenName: 1,
+      birthDate: 1,
+      gender: 1,
+      deathDate: 1,
+      isDead: 1
+    });
+  });
 
   it('should return the right number of persons', function () {
     spyOn(mongoDbConnector, 'getArrayFromMongoDb').and.returnValue(Promise.resolve(personListMock.slice(0, 2)));
