@@ -1,5 +1,6 @@
 import { GraphQLResolver } from '../src/api/graphQLResolver';
 import PersonController from '../src/api/personController';
+import LinkController from '../src/api/linkController';
 
 describe('GraphQLResolver queries', () => {
   it('should implement all methods', async () => {
@@ -228,57 +229,57 @@ describe('GraphQLResolver mutations', () => {
   });
 
   it('removeLink', async () => {
-    const r = new GraphQLResolver(<PersonController><unknown>null);
+    const controllerFake = jasmine.createSpyObj('LinkController', ['removeLink']);
+    const r = new GraphQLResolver(undefined, controllerFake);
     expect(Object.keys(r.mutations).includes('removeLink'));
-    const spy = spyOn(r, 'removeLink');
     const args = { _id1: 'id1', _id2: 'id2' };
     await r.mutations.removeLink(args);
-    expect(spy).toHaveBeenCalledWith(args._id1, args._id2);
+    expect(controllerFake.removeLink).toHaveBeenCalledWith(args._id1, args._id2);
   });
 
   it('removeSiblingLink', async () => {
-    const r = new GraphQLResolver(<PersonController><unknown>null);
+    const controllerFake = jasmine.createSpyObj('LinkController', ['removeSiblingLink']);
+    const r = new GraphQLResolver(undefined, controllerFake);
     expect(Object.keys(r.mutations).includes('removeSiblingLink'));
-    const spy = spyOn(r, 'removeSiblingLink');
     const args = { _id1: 'id1', _id2: 'id2' };
     await r.mutations.removeSiblingLink(args);
-    expect(spy).toHaveBeenCalledWith(args._id1, args._id2);
+    expect(controllerFake.removeSiblingLink).toHaveBeenCalledWith(args._id1, args._id2);
   });
 
   it('addParentLink', async () => {
-    const r = new GraphQLResolver(<PersonController><unknown>null);
+    const controllerFake = jasmine.createSpyObj('LinkController', ['addParentLink']);
+    const r = new GraphQLResolver(undefined, controllerFake);
     expect(Object.keys(r.mutations).includes('addParentLink'));
-    const spy = spyOn(r, 'addParentLink');
     const args = { _id: 'id1', _parentId: 'id2' };
     await r.mutations.addParentLink(args);
-    expect(spy).toHaveBeenCalledWith(args._id, args._parentId);
+    expect(controllerFake.addParentLink).toHaveBeenCalledWith(args._id, args._parentId);
   });
 
   it('addChildLink', async () => {
-    const r = new GraphQLResolver(<PersonController><unknown>null);
+    const controllerFake = jasmine.createSpyObj('LinkController', ['addParentLink']);
+    const r = new GraphQLResolver(undefined, controllerFake);
     expect(Object.keys(r.mutations).includes('addParentLink'));
-    const spy = spyOn(r, 'addParentLink');
     const args = { _childId: 'id1', _id: 'id2' };
     await r.mutations.addChildLink(args);
-    expect(spy).toHaveBeenCalledWith(args._childId, args._id);
+    expect(controllerFake.addParentLink).toHaveBeenCalledWith(args._childId, args._id);
   });
 
   it('addSpouseLink', async () => {
-    const r = new GraphQLResolver(<PersonController><unknown>null);
+    const controllerFake = jasmine.createSpyObj('LinkController', ['addSpouseLink']);
+    const r = new GraphQLResolver(undefined, controllerFake);
     expect(Object.keys(r.mutations).includes('addSpouseLink'));
-    const spy = spyOn(r, 'addSpouseLink');
     const args = { _id1: 'id1', _id2: 'id2' };
     await r.mutations.addSpouseLink(args);
-    expect(spy).toHaveBeenCalledWith(args._id1, args._id2);
+    expect(controllerFake.addSpouseLink).toHaveBeenCalledWith(args._id1, args._id2);
   });
 
   it('addSiblingLink', async () => {
-    const r = new GraphQLResolver(<PersonController><unknown>null);
+    const controllerFake = jasmine.createSpyObj('LinkController', ['addSiblingLink']);
+    const r = new GraphQLResolver(undefined, controllerFake);
     expect(Object.keys(r.mutations).includes('addSiblingLink'));
-    const spy = spyOn(r, 'addSiblingLink');
     const args = { _id1: 'id1', _id2: 'id2' };
     await r.mutations.addSiblingLink(args);
-    expect(spy).toHaveBeenCalledWith(args._id1, args._id2);
+    expect(controllerFake.addSiblingLink).toHaveBeenCalledWith(args._id1, args._id2);
   });
 
   it('createPerson', async () => {

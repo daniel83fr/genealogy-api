@@ -1,11 +1,6 @@
 import {
-  deleteRelationFromMongoDb,
-  addParentRelationFromMongoDb,
-  addSpouseRelationFromMongoDb,
-  addSiblingRelationFromMongoDb,
   getUnusedPersonsFromMongoDb,
   updatePersonFromMongoDb,
-  deleteSiblingRelationFromMongoDb,
   createPersonFromMongoDb,
   deleteProfileFromMongoDb,
   shouldResetCacheFromMongoDb,
@@ -30,6 +25,7 @@ import {
 
 import PersonController from './personController';
 import LoggerService from '../services/logger_service';
+import LinkController from './linkController';
 
 const exjwt = require('express-jwt');
 const jwt = require('jsonwebtoken');
@@ -41,18 +37,20 @@ export class GraphQLResolver {
 
   mutations: any;
 
-  constructor(personController: PersonController) {
+  constructor(
+    personController: PersonController| undefined = undefined,
+    linkController: LinkController| undefined = undefined) {
 
     this.queries = {
       getAuditLastEntries: (args: any) => this.getAuditLastEntries(args.number),
-      getPersons: () => personController.getPersonList(),
-      getPersonById: (args: any) => personController.getPersonById(args._id),
-      getFatherById: (args: any) => personController.getParentById(args._id, 'Male'),
-      getMotherById: (args: any) => personController.getParentById(args._id, 'Female'),
-      getChildrenById: (args: any) => personController.getChildrenById(args._id),
-      getSpousesById: (args: any) => personController.getSpousesById(args._id),
-      getSiblingsById: (args: any) => personController.getSiblingsById(args._id),
-      getPrivateInfoById: (args: any, context: any) => personController.getPrivateInfoById(args._id, context.user),
+      getPersons: () => personController?.getPersonList(),
+      getPersonById: (args: any) => personController?.getPersonById(args._id),
+      getFatherById: (args: any) => personController?.getParentById(args._id, 'Male'),
+      getMotherById: (args: any) => personController?.getParentById(args._id, 'Female'),
+      getChildrenById: (args: any) => personController?.getChildrenById(args._id),
+      getSpousesById: (args: any) => personController?.getSpousesById(args._id),
+      getSiblingsById: (args: any) => personController?.getSiblingsById(args._id),
+      getPrivateInfoById: (args: any, context: any) => personController?.getPrivateInfoById(args._id, context.user),
       getUnusedPersons: () => this.getUnusedPersons(),
       shouldResetCache: (args: any) => this.shouldResetCache(new Date(args.lastEntry)),
       shouldResetPersonCache: (args: any) => this.shouldResetPersonCache(args._id, new Date(args.lastEntry)),
@@ -69,12 +67,12 @@ export class GraphQLResolver {
     this.mutations = {
       updatePersonPrivateInfo: (args: any, context: any) => this.updatePersonPrivateInfo(args._id, args.patch, context.user),
       addPhoto: (args: any, context: any) => this.addPhoto(args.url, args.deleteHash, args.persons, context.user),
-      removeLink: (args: any) => this.removeLink(args._id1, args._id2),
-      removeSiblingLink: (args: any) => this.removeSiblingLink(args._id1, args._id2),
-      addParentLink: (args: any) => this.addParentLink(args._id, args._parentId),
-      addChildLink: (args: any) => this.addParentLink(args._childId, args._id),
-      addSpouseLink: (args: any) => this.addSpouseLink(args._id1, args._id2),
-      addSiblingLink: (args: any) => this.addSiblingLink(args._id1, args._id2),
+      removeLink: (args: any) => linkController?.removeLink(args._id1, args._id2),
+      removeSiblingLink: (args: any) => linkController?.removeSiblingLink(args._id1, args._id2),
+      addParentLink: (args: any) => linkController?.addParentLink(args._id, args._parentId),
+      addChildLink: (args: any) => linkController?.addParentLink(args._childId, args._id),
+      addSpouseLink: (args: any) => linkController?.addSpouseLink(args._id1, args._id2),
+      addSiblingLink: (args: any) => linkController?.addSiblingLink(args._id1, args._id2),
       createPerson: (args: any) => this.createPerson(args.person),
       updatePerson: (args: any) => this.updatePerson(args._id, args.patch),
       removeProfile: (args: any) => this.removeProfile(args._id),
@@ -93,14 +91,7 @@ export class GraphQLResolver {
   }
 
 
-  removeLink(id1: string, id2: string) {
-    this.logger.info('Remove link');
-    return deleteRelationFromMongoDb(id1, id2)
-      .catch((err) => {
-        throw err;
-      })
-      .then((res) => res);
-  }
+  
 
   removeProfile(id: string) {
     this.logger.info('Remove profile');
@@ -111,41 +102,7 @@ export class GraphQLResolver {
       .then((res) => res);
   }
 
-  removeSiblingLink(id1: string, id2: string) {
-    this.logger.info('Remove sibling link');
-    return deleteSiblingRelationFromMongoDb(id1, id2)
-      .catch((err) => {
-        throw err;
-      })
-      .then((res) => res);
-  }
-
-  addParentLink(id: string, parentId: string) {
-    this.logger.info('Add parent link');
-    return addParentRelationFromMongoDb(id, parentId)
-      .catch((err) => {
-        throw err;
-      })
-      .then((res) => res);
-  }
-
-  addSpouseLink(id1: string, id2: string) {
-    this.logger.info('Add spouse link');
-    return addSpouseRelationFromMongoDb(id1, id2)
-      .catch((err) => {
-        throw err;
-      })
-      .then((res) => res);
-  }
-
-  addSiblingLink(id1: string, id2: string) {
-    this.logger.info('Add spouse link');
-    return addSiblingRelationFromMongoDb(id1, id2)
-      .catch((err) => {
-        throw err;
-      })
-      .then((res) => res);
-  }
+ 
 
   updatePerson(_id: string, patch: any) {
     if (patch === {}) {
@@ -408,5 +365,8 @@ export class GraphQLResolver {
   }
 }
 
-const personController = new PersonController(new MongoConnector(process.env.MONGODB ?? ''));
-export default new GraphQLResolver(personController).getResolver();
+const connector = new MongoConnector(process.env.MONGODB ?? '');
+const personController = new PersonController(connector);
+const linkController = new LinkController(connector);
+
+export default new GraphQLResolver(personController, linkController).getResolver();

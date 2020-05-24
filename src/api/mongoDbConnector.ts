@@ -10,12 +10,13 @@ const { MongoClient } = require('mongodb');
 export const ObjectId = require('mongodb').ObjectID;
 
 export const memberCollection = 'members';
-const auditCollection = 'audit';
-const relationCollection = 'relations';
-const credentialsCollection = 'credentials';
+export const auditCollection = 'audit';
+export const relationCollection = 'relations';
+export const credentialsCollection = 'credentials';
 const bcrypt = require('bcrypt');
 
 export class MongoConnector {
+  
   connectionString = '';
 
   logger: LoggerService;
@@ -36,20 +37,23 @@ export class MongoConnector {
       });
   }
 
-  static setDb(client: any, database: string) {
+  setDb(client: any, database: string) {
     if (client != null && database != null) {
+      this.logger.debug('set db');
       return client.db(database);
     }
     return null;
   }
 
-  static closeDb(client: any) {
+  closeDb(client: any) {
+    this.logger.debug('close db');
     if (client != null) {
       client.close();
     }
   }
 
-  static async getArrayFromMongoDbAndDb(db: any, collectionName: string, query: any, projection: any) {
+  async getArrayFromMongoDbAndDb(db: any, collectionName: string, query: any, projection: any) {
+    this.logger.debug('get array');
     if (db === undefined || db == null) {
       return [];
     }
@@ -62,15 +66,28 @@ export class MongoConnector {
 
   async getArrayFromMongoDb(database: string, collectionName: string, query: any, projection: any) {
     const client = await this.initClient();
-    const db = MongoConnector.setDb(client, database);
-    const res = await MongoConnector.getArrayFromMongoDbAndDb(db, collectionName, query, projection);
-    MongoConnector.closeDb(client);
+    const db = this.setDb(client, database);
+    const res = await this.getArrayFromMongoDbAndDb(db, collectionName, query, projection);
+    this.closeDb(client);
     return res;
   }
 
   async getItemFromMongoDb(database: string, collectionName: string, query: any, projection: any) {
     const client = await this.initClient();
-    const db = MongoConnector.setDb(client, database);
+    const db = this.setDb(client, database);
+    const res = await this.getItemFromMongoDbAndDb(db, collectionName, query, projection);
+    this.closeDb(client);
+    return res;
+  }
+
+  async deleteManyFromMongoDbAndDb(db: any, collectionName: string, query: any) {
+    this.logger.debug('Delete Many');
+    const collection = db.collection(collectionName);
+    return collection.deleteMany(query);
+  }
+
+  async getItemFromMongoDbAndDb(db: any, collectionName: string, query: any, projection: any) {
+    this.logger.debug('get item from mongo');
     const collection = db.collection(collectionName);
     let res = {};
     if (projection === {} || projection == null) {
@@ -78,8 +95,22 @@ export class MongoConnector {
     } else {
       res = await collection.findOne(query, projection);
     }
-    MongoConnector.closeDb(client);
     return res;
+  }
+
+  async insertItem(db: any, collectionName: string, query: any) {
+    this.logger.debug('insert item');
+    const collection = db.collection(collectionName);
+    return collection.insertOne(query);
+  }
+
+  async insertAudit(db: any, type: string, action: string, persons: any[], payload: any) {
+    this.logger.debug('insert audit');
+    await persons.forEach((element) => {
+      this.insertItem(db, auditCollection, {
+        timestamp: new Date().toISOString(), type, action, payload, id: element,
+      });
+    });
   }
 }
 
@@ -115,7 +146,7 @@ export async function getTodayMarriagedaysFromMongoDb() {
 
   const query = { _id: { $in: items } };
   const res2 = await db.collection(memberCollection).find(query).toArray();
-  MongoConnector.closeDb(client);
+  connector.closeDb(client);
   return res2;
 }
 
@@ -126,7 +157,7 @@ export async function getPersonByLoginFromMongoDb(login: string) {
   const db = client.db(mongoDbDatabase);
   const collection = db.collection('credentials');
   const res = await collection.findOne({ login }, { login: 1, id: 1 });
-  MongoConnector.closeDb(client);
+  connector.closeDb(client);
   return res;
 }
 
@@ -143,7 +174,7 @@ export async function setProfilePictureFromMongo(person: string, image: string) 
   await collection.updateOne({ person_id: person, photo_id: image },
     { $set: { isProfile: 'true' } });
 
-  MongoConnector.closeDb(client);
+  connector.closeDb(client);
   return 'Profile picture updated.';
 }
 
@@ -368,11 +399,11 @@ export async function getParentByIdFromMongoDb(id: string, gender: string): Prom
   const connector = getConnector();
   const client = await connector.initClient();
   const db = client.db(mongoDbDatabase);
-  const resLinks = await MongoConnector.getArrayFromMongoDbAndDb(db, relationCollection, { person2_id: ObjectId(id), type: 'Parent' }, {});
+  const resLinks = await connector.getArrayFromMongoDbAndDb(db, relationCollection, { person2_id: ObjectId(id), type: 'Parent' }, {});
 
   const items: any = resLinks.map((element: { person1_id: any; }) => ObjectId(element.person1_id));
 
-  const parents = await MongoConnector.getArrayFromMongoDbAndDb(db, memberCollection, { _id: { $in: items } }, {});
+  const parents = await connector.getArrayFromMongoDbAndDb(db, memberCollection, { _id: { $in: items } }, {});
   client.close();
 
   let fatherOrMother = null;
@@ -456,44 +487,8 @@ export async function getSpousesByIdFromMongoDb(id: string) {
   return spouses;
 }
 
-export async function deleteRelationFromMongoDb(id: string, id2: string) {
-  const connector = getConnector();
-  const client = await connector.initClient();
-  const db = client.db(mongoDbDatabase);
-
-  const links = db.collection(relationCollection);
-  const query = { $or: [{ person1_id: ObjectId(id), person2_id: ObjectId(id2) }, { person1_id: ObjectId(id2), person2_id: ObjectId(id) }] };
-  const res = await links.findOne(query);
-  console.log(query);
-  await links.deleteMany(query);
-
-  const audit = db.collection(auditCollection);
-  await audit.insertOne({
-    timestamp: new Date().toISOString(), type: 'Relation', action: 'Remove link', payload: res, id: ObjectId(id),
-  });
-  await audit.insertOne({
-    timestamp: new Date().toISOString(), type: 'Relation', action: 'Remove link', payload: res, id: ObjectId(id2),
-  });
-  client.close();
-  return `Deleted link between ${id} and ${id2}`;
-}
 
 
-export async function deleteSiblingRelationFromMongoDb(id: string, id2: string) {
-  const connector = getConnector();
-  const client = await connector.initClient();
-  const db = client.db(mongoDbDatabase);
-
-  const links = db.collection(relationCollection);
-
-  const parents1 = await links.find({ type: 'Parent', person2_id: ObjectId(id) }).toArray();
-  console.log(parents1);
-  client.close();
-
-  await parents1.forEach(async (element: { Person1: any; }) => deleteRelationFromMongoDb(element.Person1, id2));
-
-  return `Deleted siblings link between ${id} and ${id2}`;
-}
 
 export async function deleteProfileFromMongoDb(id: string) {
   const connector = getConnector();
@@ -521,56 +516,7 @@ export async function deleteProfileFromMongoDb(id: string) {
 }
 
 
-export async function addParentRelationFromMongoDb(id: string, parentId: string) {
-  const connector = getConnector();
-  const client = await connector.initClient();
-  const db = client.db(mongoDbDatabase);
-  const collection = db.collection(relationCollection);
 
-  const res = await collection.insertOne({ person1_id: ObjectId(parentId), person2_id: ObjectId(id), type: 'Parent' });
-  const audit = db.collection(auditCollection);
-  await audit.insertOne({
-    timestamp: new Date().toISOString(), type: 'Relation', action: 'Add parent link', payload: res, id: ObjectId(parentId),
-  });
-  await audit.insertOne({
-    timestamp: new Date().toISOString(), type: 'Relation', action: 'Add parent link', payload: res, id: ObjectId(id),
-  });
-  client.close();
-  return `Added link between ${parentId} and ${id}`;
-}
-
-export async function addSpouseRelationFromMongoDb(id1: string, id2: string) {
-  const connector = getConnector();
-  const client = await connector.initClient();
-  const db = client.db(mongoDbDatabase);
-  const collection = db.collection(relationCollection);
-
-  const res = await collection.insertOne({ person1_id: ObjectId(id1), person2_id: ObjectId(id2), type: 'Spouse' });
-  const audit = db.collection(auditCollection);
-  await audit.insertOne({
-    timestamp: new Date().toISOString(), Type: 'Relation', Action: 'Add parent link', Payload: res, Id: ObjectId(id1),
-  });
-  await audit.insertOne({
-    timestamp: new Date().toISOString(), Type: 'Relation', Action: 'Add parent link', Payload: res, Id: ObjectId(id2),
-  });
-  client.close();
-  return `Added link between ${id1} and ${id2}`;
-}
-
-export async function addSiblingRelationFromMongoDb(id1: string, id2: string) {
-  const connector = getConnector();
-  const client = await connector.initClient();
-  const db = client.db(mongoDbDatabase);
-  const links = db.collection(relationCollection);
-
-  const parents1 = await links.find({ Type: 'Parent', person2_id: ObjectId(id1) }).toArray();
-  console.log(parents1);
-  client.close();
-
-  await parents1.forEach(async (element: { Person1: any; }) => addParentRelationFromMongoDb(id2, element.Person1));
-
-  return `Added link between ${id1} and ${id2}`;
-}
 
 export async function getUnusedPersonsFromMongoDb() {
   const connector = getConnector();
