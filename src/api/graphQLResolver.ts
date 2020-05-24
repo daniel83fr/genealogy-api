@@ -25,19 +25,16 @@ import {
   addPhotoTagFromMongo,
   removePhotoTagFromMongo,
   MongoConnector,
-} from '../api/mongoDbConnector';
+} from './mongoDbConnector';
 
 
-import PersonController from '../api/personController';
+import PersonController from './personController';
 import LoggerService from '../services/logger_service';
 
 const exjwt = require('express-jwt');
 const jwt = require('jsonwebtoken');
 
-const connectionString = process.env.MONGODB ?? '';
-
-
-export class GraphQlResolver {
+export class GraphQLResolver {
   logger: LoggerService = new LoggerService('personController');
 
   queries: any;
@@ -57,15 +54,14 @@ export class GraphQlResolver {
       getSiblingsById: (args: any) => personController.getSiblingsById(args._id),
       getPrivateInfoById: (args: any, context: any) => personController.getPrivateInfoById(args._id, context.user),
       getUnusedPersons: () => this.getUnusedPersons(),
-      shouldResetCache: (args: any) => this.shouldResetCache(args.lastEntry),
-      shouldResetPersonCache: (args: any) => this.shouldResetPersonCache(args._id, args.lastEntry),
+      shouldResetCache: (args: any) => this.shouldResetCache(new Date(args.lastEntry)),
+      shouldResetPersonCache: (args: any) => this.shouldResetPersonCache(args._id, new Date(args.lastEntry)),
       login: (args: any) => this.login(args.login, args.password),
       register: (args: any) => this.register(args.id, args.login, args.password),
       me: (args: any, context: any) => this.me(context.user),
       getPhotosById: (args: any) => this.getPhotosById(args._id),
       getPhotoProfile: (args: any) => this.getPhotoProfile(args._id),
       getPhotosRandom: (args: any) => this.getPhotosRandom(args.number),
-      
       getTodayBirthdays: (args: any, context: any) => this.getTodayBirthdays(context.user),
       getTodayDeathdays: (args: any, context: any) => this.getTodayDeathdays(context.user),
       getTodayMarriagedays: (args: any, context: any) => this.getTodayMarriagedays(context.user),
@@ -177,10 +173,9 @@ export class GraphQlResolver {
       .then((res: any) => res);
   }
 
-  shouldResetCache(lastEntry: string) {
+  shouldResetCache(lastEntry: Date) {
     this.logger.info('Should reset cache?');
-    const lastEntry2 = new Date(lastEntry);
-    return shouldResetCacheFromMongoDb(lastEntry2)
+    return shouldResetCacheFromMongoDb(lastEntry)
       .catch((err) => {
         throw err;
       })
@@ -190,7 +185,9 @@ export class GraphQlResolver {
 
   shouldResetPersonCache(_id: String, lastEntry: Date) {
     this.logger.info('Should reset person cache');
-    return true;
+    return new Promise((resolve) => {
+      resolve(true);
+    });
   }
 
   login(login: string, password: string): any {
@@ -390,7 +387,7 @@ export class GraphQlResolver {
 
   getUnusedPersons() {
     this.logger.info('get unused persons');
-    return () => getUnusedPersonsFromMongoDb()
+    return getUnusedPersonsFromMongoDb()
       .then((res) => {
         const items: any[] = [];
         res = Object.assign(res);
@@ -405,10 +402,11 @@ export class GraphQlResolver {
             LastName: element.LastName,
           });
         });
+
         return items;
       });
   }
 }
 
-const personController = new PersonController(new MongoConnector(connectionString));
-export default new GraphQlResolver(personController).getResolver();
+const personController = new PersonController(new MongoConnector(process.env.MONGODB ?? ''));
+export default new GraphQLResolver(personController).getResolver();

@@ -4,7 +4,7 @@ import http from 'http';
 import graphqlHTTP from 'express-graphql';
 import cors from 'cors';
 import schema from './api/schema';
-import resolver from './api/resolvers';
+import resolver from './api/graphQLResolver';
 import LoggerService from './services/logger_service';
 
 const bodyParser = require('body-parser');
