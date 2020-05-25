@@ -8,12 +8,7 @@ import EventController from './eventController';
 import { MongoConnector } from './mongoDbConnector';
 
 export class GraphQLResolver {
-
   logger: LoggerService = new LoggerService('personController');
-
-  queries: any;
-
-  mutations: any;
 
   adminController: AdminController | undefined;
 
@@ -27,8 +22,8 @@ export class GraphQLResolver {
 
   linkController: LinkController | undefined;
 
-  constructor() {
-    this.queries = {
+  getQuery() {
+    return {
       getAuditLastEntries: (args: any) => this.adminController?.getAuditLastEntries(args.number),
 
       getPersonList: () => this.personController?.getPersonList(),
@@ -52,8 +47,10 @@ export class GraphQLResolver {
       getTodayDeathdays: (args: any, context: any) => this.eventController?.getTodayDeathdays(context.user),
       getTodayMarriagedays: (args: any, context: any) => this.eventController?.getTodayMarriagedays(context.user),
     };
+  }
 
-    this.mutations = {
+  getMutation() {
+    return {
 
       updatePersonPrivateInfo: (args: any, context: any) => this.personController?.updatePersonPrivateInfo(args._id, args.patch, context.user),
       addPhoto: (args: any, context: any) => this.photoController?.addPhoto(args.url, args.deleteHash, args.persons, context.user),
@@ -77,8 +74,8 @@ export class GraphQLResolver {
 
   getResolver() {
     return {
-      ...this.queries,
-      ...this.mutations,
+      ...this.getQuery(),
+      ...this.getMutation(),
     };
   }
 }
@@ -92,4 +89,4 @@ resolver.adminController = new AdminController(connector);
 resolver.photoController = new PhotoController(connector);
 resolver.loginController = new LoginController(connector);
 resolver.eventController = new EventController(connector);
-export default new GraphQLResolver().getResolver();
+export default resolver.getResolver();

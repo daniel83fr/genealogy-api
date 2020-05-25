@@ -1,22 +1,21 @@
-import { GraphQLResolver } from '../src/api/graphQLResolver';
+import {GraphQLResolver} from '../src/api/graphQLResolver';
 import schema from '../src/api/schema';
-import { printSchema, validateSchema } from 'graphql';
 
 
 describe('GraphQLResolver queries', () => {
   it('should implement all methods', async () => {
     const r = new GraphQLResolver();
-    expect(Object.keys(r.queries).length).toEqual(18);
+    expect(Object.keys(r.getQuery()).length).toEqual(18);
   });
 
   it('getAuditLastEntries', async () => {
     const adminControllerFake = jasmine.createSpyObj('AdminController', ['getAuditLastEntries']);
     const r = new GraphQLResolver();
     r.adminController = adminControllerFake;
-    expect(Object.keys(r.queries).includes('getAuditLastEntries'));
+    expect(Object.keys(r.getQuery()).includes('getAuditLastEntries'));
     expect(schema.getQueryType()?.getFields()['getAuditLastEntries']).not.toBeUndefined();
     const args = { number: 4 };
-    await r.queries.getAuditLastEntries(args);
+    await r.getQuery().getAuditLastEntries(args);
     expect(adminControllerFake.getAuditLastEntries).toHaveBeenCalledWith(4);
   });
 
@@ -24,9 +23,9 @@ describe('GraphQLResolver queries', () => {
     const personControllerFake = jasmine.createSpyObj('PersonController', ['getChildren']);
     const r = new GraphQLResolver();
     r.personController = personControllerFake;
-    expect(Object.keys(r.queries).includes('getChildren'));
+    expect(Object.keys(r.getQuery()).includes('getChildren'));
     const args = { _id: 'aPersonId' };
-    await r.queries.getChildren(args);
+    await r.getQuery().getChildren(args);
     expect(personControllerFake.getChildren).toHaveBeenCalledWith('aPersonId');
     expect(schema.getQueryType()?.getFields()['getChildren']).not.toBeUndefined();
   });
@@ -35,9 +34,9 @@ describe('GraphQLResolver queries', () => {
     const personControllerFake = jasmine.createSpyObj('PersonController', ['getParent']);
     const r = new GraphQLResolver();
     r.personController = personControllerFake;
-    expect(Object.keys(r.queries).includes('getFather'));
+    expect(Object.keys(r.getQuery()).includes('getFather'));
     const args = { _id: 'aPersonId' };
-    await r.queries.getFather(args);
+    await r.getQuery().getFather(args);
     expect(personControllerFake.getParent).toHaveBeenCalledWith('aPersonId', 'Male');
     expect(schema.getQueryType()?.getFields()['getFather']).not.toBeUndefined();
   });
@@ -46,9 +45,9 @@ describe('GraphQLResolver queries', () => {
     const personControllerFake = jasmine.createSpyObj('PersonController', ['getParent']);
     const r = new GraphQLResolver();
     r.personController = personControllerFake;
-    expect(Object.keys(r.queries).includes('getMother'));
+    expect(Object.keys(r.getQuery()).includes('getMother'));
     const args = { _id: 'aPersonId' };
-    await r.queries.getMother(args);
+    await r.getQuery().getMother(args);
     expect(personControllerFake.getParent).toHaveBeenCalledWith('aPersonId', 'Female');
     expect(schema.getQueryType()?.getFields()['getMother']).not.toBeUndefined();
   });
@@ -57,10 +56,10 @@ describe('GraphQLResolver queries', () => {
     const personControllerFake = jasmine.createSpyObj('PersonController', ['getPerson']);
     const r = new GraphQLResolver();
     r.personController = personControllerFake;
-    expect(Object.keys(r.queries).includes('getPerson'));
+    expect(Object.keys(r.getQuery()).includes('getPerson'));
     expect(schema.getQueryType()?.getFields()['getPerson']).not.toBeUndefined();
     const args = { _id: 'aPersonId' };
-    await r.queries.getPerson(args);
+    await r.getQuery().getPerson(args);
     expect(personControllerFake.getPerson).toHaveBeenCalledWith('aPersonId');
 
   });
@@ -69,10 +68,10 @@ describe('GraphQLResolver queries', () => {
     const personControllerFake = jasmine.createSpyObj('PersonController', ['getSiblings']);
     const r = new GraphQLResolver();
     r.personController = personControllerFake;
-    expect(Object.keys(r.queries).includes('getSiblings'));
+    expect(Object.keys(r.getQuery()).includes('getSiblings'));
     expect(schema.getQueryType()?.getFields()['getSiblings']).not.toBeUndefined();
     const args = { _id: 'aPersonId' };
-    await r.queries.getSiblings(args);
+    await r.getQuery().getSiblings(args);
     expect(personControllerFake.getSiblings).toHaveBeenCalledWith('aPersonId');
   });
 
@@ -80,10 +79,10 @@ describe('GraphQLResolver queries', () => {
     const personControllerFake = jasmine.createSpyObj('PersonController', ['getSpouses']);
     const r = new GraphQLResolver();
     r.personController = personControllerFake;
-    expect(Object.keys(r.queries).includes('getSpouses'));
+    expect(Object.keys(r.getQuery()).includes('getSpouses'));
     expect(schema.getQueryType()?.getFields()['getSpouses']).not.toBeUndefined();
     const args = { _id: 'aPersonId' };
-    await r.queries.getSpouses(args);
+    await r.getQuery().getSpouses(args);
     expect(personControllerFake.getSpouses).toHaveBeenCalledWith('aPersonId');
   });
 
@@ -91,10 +90,9 @@ describe('GraphQLResolver queries', () => {
     const personControllerFake = jasmine.createSpyObj('PersonController', ['getPersonList']);
     const r = new GraphQLResolver();
     r.personController = personControllerFake;
-    expect(Object.keys(r.queries).includes('getPersonList'));
+    expect(Object.keys(r.getQuery()).includes('getPersonList'));
     expect(schema.getQueryType()?.getFields()['getPersonList']).not.toBeUndefined();
-    const args = { _id: 'aPersonId' };
-    await r.queries.getPersonList(args);
+    await r.getQuery().getPersonList();
     expect(personControllerFake.getPersonList).toHaveBeenCalled();
   });
 
@@ -102,11 +100,11 @@ describe('GraphQLResolver queries', () => {
     const personControllerFake = jasmine.createSpyObj('PersonController', ['getPrivateInfo']);
     const r = new GraphQLResolver();
     r.personController = personControllerFake;
-    expect(Object.keys(r.queries).includes('getPrivateInfo'));
+    expect(Object.keys(r.getQuery()).includes('getPrivateInfo'));
     expect(schema.getQueryType()?.getFields()['getPrivateInfo']).not.toBeUndefined();
     const args = { _id: 'aPersonId' };
     const context = { user: 'Daniel' };
-    await r.queries.getPrivateInfo(args, context);
+    await r.getQuery().getPrivateInfo(args, context);
     expect(personControllerFake.getPrivateInfo).toHaveBeenCalledWith('aPersonId', 'Daniel');
   });
 
@@ -114,9 +112,9 @@ describe('GraphQLResolver queries', () => {
     const loginControllerFake = jasmine.createSpyObj('LoginController', ['login']);
     const r = new GraphQLResolver();
     r.loginController = loginControllerFake;
-    expect(Object.keys(r.queries).includes('login'));
+    expect(Object.keys(r.getQuery()).includes('login'));
     const args = { login: 'login', password: 'password' };
-    await r.queries.login(args);
+    await r.getQuery().login(args);
     expect(loginControllerFake.login).toHaveBeenCalledWith(args.login, args.password);
   });
 
@@ -125,7 +123,7 @@ describe('GraphQLResolver queries', () => {
     const r = new GraphQLResolver();
     r.loginController = loginControllerFake;
     const args = { id: 'aPersonId', login: 'login', password: 'password' };
-    await r.queries.register(args);
+    await r.getQuery().register(args);
     expect(loginControllerFake.register).toHaveBeenCalledWith(args.id, args.login, args.password);
   });
 
@@ -133,10 +131,10 @@ describe('GraphQLResolver queries', () => {
     const loginControllerFake = jasmine.createSpyObj('LoginController', ['me']);
     const r = new GraphQLResolver();
     r.loginController = loginControllerFake;
-    expect(Object.keys(r.queries).includes('me'));
+    expect(Object.keys(r.getQuery()).includes('me'));
     const args = {};
     const context = { user: 'Daniel' };
-    await r.queries.me(args, context);
+    await r.getQuery().me(args, context);
     expect(loginControllerFake.me).toHaveBeenCalledWith(context.user);
   });
 
@@ -144,9 +142,9 @@ describe('GraphQLResolver queries', () => {
     const photoControllerFake = jasmine.createSpyObj('photoController', ['getPhotosById']);
     const r = new GraphQLResolver();
     r.photoController = photoControllerFake;
-    expect(Object.keys(r.queries).includes('getPhotosById'));
+    expect(Object.keys(r.getQuery()).includes('getPhotosById'));
     const args = { _id: 'anId' };
-    await r.queries.getPhotosById(args);
+    await r.getQuery().getPhotosById(args);
     expect(photoControllerFake.getPhotosById).toHaveBeenCalledWith(args._id);
   });
 
@@ -154,9 +152,9 @@ describe('GraphQLResolver queries', () => {
     const photoControllerFake = jasmine.createSpyObj('photoController', ['getPhotoProfile']);
     const r = new GraphQLResolver();
     r.photoController = photoControllerFake;
-    expect(Object.keys(r.queries).includes('getPhotoProfile'));
+    expect(Object.keys(r.getQuery()).includes('getPhotoProfile'));
     const args = { _id: 'anId' };
-    await r.queries.getPhotoProfile(args);
+    await r.getQuery().getPhotoProfile(args);
     expect(photoControllerFake.getPhotoProfile).toHaveBeenCalledWith(args._id);
   });
 
@@ -164,9 +162,9 @@ describe('GraphQLResolver queries', () => {
     const photoControllerFake = jasmine.createSpyObj('photoController', ['getPhotosRandom']);
     const r = new GraphQLResolver();
     r.photoController = photoControllerFake;
-    expect(Object.keys(r.queries).includes('getPhotosRandom'));
+    expect(Object.keys(r.getQuery()).includes('getPhotosRandom'));
     const args = { number: 5 };
-    await r.queries.getPhotosRandom(args);
+    await r.getQuery().getPhotosRandom(args);
     expect(photoControllerFake.getPhotosRandom).toHaveBeenCalledWith(args.number);
   });
 
@@ -174,10 +172,10 @@ describe('GraphQLResolver queries', () => {
     const eventControllerFake = jasmine.createSpyObj('eventController', ['getTodayBirthdays']);
     const r = new GraphQLResolver();
     r.eventController = eventControllerFake;
-    expect(Object.keys(r.queries).includes('getTodayBirthdays'));
+    expect(Object.keys(r.getQuery()).includes('getTodayBirthdays'));
     const args = {};
     const context = { user: 'Daniel' };
-    await r.queries.getTodayBirthdays(args, context);
+    await r.getQuery().getTodayBirthdays(args, context);
     expect(eventControllerFake.getTodayBirthdays).toHaveBeenCalledWith(context.user);
   });
 
@@ -185,10 +183,10 @@ describe('GraphQLResolver queries', () => {
     const eventControllerFake = jasmine.createSpyObj('eventController', ['getTodayDeathdays']);
     const r = new GraphQLResolver();
     r.eventController = eventControllerFake;
-    expect(Object.keys(r.queries).includes('getTodayDeathdays'));
+    expect(Object.keys(r.getQuery()).includes('getTodayDeathdays'));
     const args = {};
     const context = { user: 'Daniel' };
-    await r.queries.getTodayDeathdays(args, context);
+    await r.getQuery().getTodayDeathdays(args, context);
     expect(eventControllerFake.getTodayDeathdays).toHaveBeenCalledWith(context.user);
   });
 
@@ -196,10 +194,10 @@ describe('GraphQLResolver queries', () => {
     const eventControllerFake = jasmine.createSpyObj('eventController', ['getTodayMarriagedays']);
     const r = new GraphQLResolver();
     r.eventController = eventControllerFake;
-    expect(Object.keys(r.queries).includes('getTodayMarriagedays'));
+    expect(Object.keys(r.getQuery()).includes('getTodayMarriagedays'));
     const args = {};
     const context = { user: 'Daniel' };
-    await r.queries.getTodayMarriagedays(args, context);
+    await r.getQuery().getTodayMarriagedays(args, context);
     expect(eventControllerFake.getTodayMarriagedays).toHaveBeenCalledWith(context.user);
   });
 });
@@ -207,17 +205,17 @@ describe('GraphQLResolver queries', () => {
 describe('GraphQLResolver mutations', () => {
   it('should implement all methods', async () => {
     const r = new GraphQLResolver();
-    expect(Object.keys(r.mutations).length).toEqual(15);
+    expect(Object.keys(r.getMutation()).length).toEqual(15);
   });
 
   it('updatePersonPrivateInfo', async () => {
     const personControllerFake = jasmine.createSpyObj('personController', ['updatePersonPrivateInfo']);
     const r = new GraphQLResolver();
     r.personController = personControllerFake;
-    expect(Object.keys(r.mutations).includes('updatePersonPrivateInfo'));
+    expect(Object.keys(r.getMutation()).includes('updatePersonPrivateInfo'));
     const args = { _id: 'anId', patch: {} };
     const context = { user: 'Daniel' };
-    await r.mutations.updatePersonPrivateInfo(args, context);
+    await r.getMutation().updatePersonPrivateInfo(args, context);
     expect(personControllerFake.updatePersonPrivateInfo).toHaveBeenCalledWith(args._id, args.patch, context.user);
   });
 
@@ -225,10 +223,10 @@ describe('GraphQLResolver mutations', () => {
     const photoControllerFake = jasmine.createSpyObj('photoController', ['addPhoto']);
     const r = new GraphQLResolver();
     r.photoController = photoControllerFake;
-    expect(Object.keys(r.mutations).includes('addPhoto'));
+    expect(Object.keys(r.getMutation()).includes('addPhoto'));
     const args = { url: 'url', deleteHash: 'hash', persons: [] };
     const context = { user: 'Daniel' };
-    await r.mutations.addPhoto(args, context);
+    await r.getMutation().addPhoto(args, context);
     expect(photoControllerFake.addPhoto).toHaveBeenCalledWith(args.url, args.deleteHash, args.persons, context.user);
   });
 
@@ -236,9 +234,9 @@ describe('GraphQLResolver mutations', () => {
     const controllerFake = jasmine.createSpyObj('LinkController', ['removeLink']);
     const r = new GraphQLResolver();
     r.linkController = controllerFake;
-    expect(Object.keys(r.mutations).includes('removeLink'));
+    expect(Object.keys(r.getMutation()).includes('removeLink'));
     const args = { _id1: 'id1', _id2: 'id2' };
-    await r.mutations.removeLink(args);
+    await r.getMutation().removeLink(args);
     expect(controllerFake.removeLink).toHaveBeenCalledWith(args._id1, args._id2);
   });
 
@@ -246,9 +244,9 @@ describe('GraphQLResolver mutations', () => {
     const controllerFake = jasmine.createSpyObj('LinkController', ['removeSiblingLink']);
     const r = new GraphQLResolver();
     r.linkController = controllerFake;
-    expect(Object.keys(r.mutations).includes('removeSiblingLink'));
+    expect(Object.keys(r.getMutation()).includes('removeSiblingLink'));
     const args = { _id1: 'id1', _id2: 'id2' };
-    await r.mutations.removeSiblingLink(args);
+    await r.getMutation().removeSiblingLink(args);
     expect(controllerFake.removeSiblingLink).toHaveBeenCalledWith(args._id1, args._id2);
   });
 
@@ -256,9 +254,9 @@ describe('GraphQLResolver mutations', () => {
     const controllerFake = jasmine.createSpyObj('LinkController', ['addParentLink']);
     const r = new GraphQLResolver();
     r.linkController = controllerFake;
-    expect(Object.keys(r.mutations).includes('addParentLink'));
+    expect(Object.keys(r.getMutation()).includes('addParentLink'));
     const args = { _id: 'id1', _parentId: 'id2' };
-    await r.mutations.addParentLink(args);
+    await r.getMutation().addParentLink(args);
     expect(controllerFake.addParentLink).toHaveBeenCalledWith(args._id, args._parentId);
   });
 
@@ -266,9 +264,9 @@ describe('GraphQLResolver mutations', () => {
     const controllerFake = jasmine.createSpyObj('LinkController', ['addParentLink']);
     const r = new GraphQLResolver();
     r.linkController = controllerFake;
-    expect(Object.keys(r.mutations).includes('addParentLink'));
+    expect(Object.keys(r.getMutation()).includes('addParentLink'));
     const args = { _childId: 'id1', _id: 'id2' };
-    await r.mutations.addChildLink(args);
+    await r.getMutation().addChildLink(args);
     expect(controllerFake.addParentLink).toHaveBeenCalledWith(args._childId, args._id);
   });
 
@@ -276,9 +274,9 @@ describe('GraphQLResolver mutations', () => {
     const controllerFake = jasmine.createSpyObj('LinkController', ['addSpouseLink']);
     const r = new GraphQLResolver();
     r.linkController = controllerFake;
-    expect(Object.keys(r.mutations).includes('addSpouseLink'));
+    expect(Object.keys(r.getMutation()).includes('addSpouseLink'));
     const args = { _id1: 'id1', _id2: 'id2' };
-    await r.mutations.addSpouseLink(args);
+    await r.getMutation().addSpouseLink(args);
     expect(controllerFake.addSpouseLink).toHaveBeenCalledWith(args._id1, args._id2);
   });
 
@@ -286,9 +284,9 @@ describe('GraphQLResolver mutations', () => {
     const controllerFake = jasmine.createSpyObj('LinkController', ['addSiblingLink']);
     const r = new GraphQLResolver();
     r.linkController = controllerFake;
-    expect(Object.keys(r.mutations).includes('addSiblingLink'));
+    expect(Object.keys(r.getMutation()).includes('addSiblingLink'));
     const args = { _id1: 'id1', _id2: 'id2' };
-    await r.mutations.addSiblingLink(args);
+    await r.getMutation().addSiblingLink(args);
     expect(controllerFake.addSiblingLink).toHaveBeenCalledWith(args._id1, args._id2);
   });
 
@@ -296,9 +294,9 @@ describe('GraphQLResolver mutations', () => {
     const controllerFake = jasmine.createSpyObj('PersonController', ['createPerson']);
     const r = new GraphQLResolver();
     r.personController = controllerFake;
-    expect(Object.keys(r.mutations).includes('createPerson'));
+    expect(Object.keys(r.getMutation()).includes('createPerson'));
     const args = { person: {} };
-    await r.mutations.createPerson(args);
+    await r.getMutation().createPerson(args);
     expect(controllerFake.createPerson).toHaveBeenCalledWith(args.person);
   });
 
@@ -306,9 +304,9 @@ describe('GraphQLResolver mutations', () => {
     const controllerFake = jasmine.createSpyObj('PersonController', ['updatePerson']);
     const r = new GraphQLResolver();
     r.personController = controllerFake;
-    expect(Object.keys(r.mutations).includes('updatePerson'));
+    expect(Object.keys(r.getMutation()).includes('updatePerson'));
     const args = { _id: 'anId', patch: {} };
-    await r.mutations.updatePerson(args);
+    await r.getMutation().updatePerson(args);
     expect(controllerFake.updatePerson).toHaveBeenCalledWith(args._id, args.patch);
   });
 
@@ -316,9 +314,9 @@ describe('GraphQLResolver mutations', () => {
     const controllerFake = jasmine.createSpyObj('PersonController', ['removeProfile']);
     const r = new GraphQLResolver();
     r.personController = controllerFake;
-    expect(Object.keys(r.mutations).includes('removeProfile'));
+    expect(Object.keys(r.getMutation()).includes('removeProfile'));
     const args = { _id: 'anId' };
-    await r.mutations.removeProfile(args);
+    await r.getMutation().removeProfile(args);
     expect(controllerFake.removeProfile).toHaveBeenCalledWith(args._id);
   });
 
@@ -327,9 +325,9 @@ describe('GraphQLResolver mutations', () => {
     const r = new GraphQLResolver();
     r.photoController = photoControllerFake;
 
-    expect(Object.keys(r.mutations).includes('setProfilePicture'));
-    const args = { person: 'anId' , image: 'url'};
-    await r.mutations.setProfilePicture(args);
+    expect(Object.keys(r.getMutation()).includes('setProfilePicture'));
+    const args = { person: 'anId', image: 'url'};
+    await r.getMutation().setProfilePicture(args, null);
     expect(photoControllerFake.setProfilePicture).toHaveBeenCalledWith(args.person, args.image);
   });
 
@@ -337,9 +335,9 @@ describe('GraphQLResolver mutations', () => {
     const photoControllerFake = jasmine.createSpyObj('PhotoController', ['deletePhoto']);
     const r = new GraphQLResolver();
     r.photoController = photoControllerFake;
-    expect(Object.keys(r.mutations).includes('deletePhoto'));
+    expect(Object.keys(r.getMutation()).includes('deletePhoto'));
     const args = { image: 'url'};
-    await r.mutations.deletePhoto(args);
+    await r.getMutation().deletePhoto(args, null);
     expect(photoControllerFake.deletePhoto).toHaveBeenCalledWith(args.image);
   });
 
@@ -347,9 +345,9 @@ describe('GraphQLResolver mutations', () => {
     const photoControllerFake = jasmine.createSpyObj('PhotoController', ['addPhotoTag']);
     const r = new GraphQLResolver();
     r.photoController = photoControllerFake;
-    expect(Object.keys(r.mutations).includes('addPhotoTag'));
+    expect(Object.keys(r.getMutation()).includes('addPhotoTag'));
     const args = { tag: 'anId', image: 'url'};
-    await r.mutations.addPhotoTag(args);
+    await r.getMutation().addPhotoTag(args);
     expect(photoControllerFake.addPhotoTag).toHaveBeenCalledWith(args.image, args.tag);
   });
 
@@ -357,9 +355,9 @@ describe('GraphQLResolver mutations', () => {
     const photoControllerFake = jasmine.createSpyObj('PhotoController', ['removePhotoTag']);
     const r = new GraphQLResolver();
     r.photoController = photoControllerFake;
-    expect(Object.keys(r.mutations).includes('removePhotoTag'));
+    expect(Object.keys(r.getMutation()).includes('removePhotoTag'));
     const args = { tag: 'anId', image: 'url'};
-    await r.mutations.removePhotoTag(args);
+    await r.getMutation().removePhotoTag(args);
     expect(photoControllerFake.removePhotoTag).toHaveBeenCalledWith(args.image, args.tag);
   });
 });
