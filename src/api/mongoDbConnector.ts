@@ -16,6 +16,7 @@ export const credentialsCollection = 'credentials';
 const bcrypt = require('bcrypt');
 
 export class MongoConnector {
+ 
   
   connectionString = '';
 
@@ -50,6 +51,12 @@ export class MongoConnector {
     if (client != null) {
       client.close();
     }
+  }
+
+  async getItemFromMongoDbWithLimit(db: any, collectionName: string, query: string, limit: number) {
+    this.logger.debug('get item with limit');
+    const collection = db.collection(collectionName);
+    return collection.find(query).limit(limit).toArray();
   }
 
   async getArrayFromMongoDbAndDb(db: any, collectionName: string, query: any, projection: any) {
@@ -349,30 +356,7 @@ export async function getPhotosRandomFromMongoDb(num: number) {
   return res;
 }
 
-export async function getAuditLastEntriesFromMongoDb(num: number) {
-  const connector = getConnector();
-  const client = await connector.initClient();
-  const db = client.db(mongoDbDatabase);
-  const collection = db.collection('audit');
 
-  const res = await collection.find({},
-    {
-      timestamp: 1,
-      type: 1,
-      id: 1,
-      user: 1,
-
-    })
-    .sort({ _id: 1 })
-    .limit(num)
-    .toArray();
-
-  console.log(res);
-
-
-  client.close();
-  return res;
-}
 
 export async function addPhotoFromMongoDb(url: string, deleteHash: string, persons: string[]) {
   const connector = getConnector();
@@ -518,15 +502,7 @@ export async function deleteProfileFromMongoDb(id: string) {
 
 
 
-export async function getUnusedPersonsFromMongoDb() {
-  const connector = getConnector();
-  const client = await connector.initClient();
-  const db = client.db(mongoDbDatabase);
-  const collection = db.collection('membersUnused');
-  const res = await collection.find({}).toArray();
-  client.close();
-  return res;
-}
+
 
 export async function updatePersonFromMongoDb(id: string, patch: any) {
   const connector = getConnector();
@@ -568,18 +544,7 @@ export async function createPersonFromMongoDb(person: any) {
   return res1;
 }
 
-export async function shouldResetCacheFromMongoDb(lastEntry: Date) {
-  const connector = getConnector();
-  const client = await connector.initClient();
-  const db = client.db(mongoDbDatabase);
-  const collection = db.collection(auditCollection);
 
-  const query = `{'timestamp': {$gt : '${lastEntry.toISOString()}'}}`;
-  console.log(query);
-  const res = await collection.find(query).limit(1).toArray();
-  client.close();
-  return res.length > 0;
-}
 
 export async function checkCredentialsFromMongoDb(login: string, password: string): Promise<any> {
   const connector = getConnector();

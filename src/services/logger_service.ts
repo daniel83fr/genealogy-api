@@ -12,15 +12,15 @@ export default class LoggerService {
     console.log(`${dateFormat()} - ${this.cls} - ${level} - ${message}`);
   }
 
-  info(message: string) {
-    this.logToConsole(message, 'info');
+  info(message: string, obj: any = null) {
+    this.logToConsole(`${message} ${obj == null ? '' : JSON.stringify(obj)}`, 'info');
   }
 
   debug(message: string, obj: any = null) {
-    this.logToConsole(`${message} ${JSON.stringify(obj)}`, 'debug');
+    this.logToConsole(`${message} ${obj == null ? '' : JSON.stringify(obj)}`, 'debug');
   }
 
   error(message: string, obj: any = null) {
-    this.logToConsole(`${message} ${JSON.stringify(obj)}`, 'error');
+    this.logToConsole(`${message} ${obj == null ? '' : JSON.stringify(obj)}`, 'error');
   }
 }

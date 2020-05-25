@@ -90,12 +90,12 @@ var schema = buildSchema(`
 
     me: ConnectedUser
 
-    getPersons: [User]
+    getPersonList: [User]
 
     """
     Get person's public infos
     """
-    getPersonById(_id: String!): User
+    getPerson(_id: String!): User
     
     getAuditLastEntries(number: Int!): [AuditEntry],
     getPhotoProfile(_id: String!): Photo,
@@ -104,21 +104,17 @@ var schema = buildSchema(`
     """
     Get person's private infos (using provided token and role)
     """
-    getPrivateInfoById(_id:String!): UserPrivate
+    getPrivateInfo(_id:String!): UserPrivate
 
-    getFatherById(_id: String!): User
+    getFather(_id: String!): User
 
-    getMotherById(_id: String!): User
+    getMother(_id: String!): User
 
-    getChildrenById(_id: String!): [User]
+    getChildren(_id: String!): [User]
 
-    getSiblingsById(_id: String!): [User]
+    getSiblings(_id: String!): [User]
 
-    getSpousesById(_id: String!): [User]
-
-    shouldResetCache(lastEntry:DateTime): Boolean
-
-    shouldResetPersonCache(_id:String, lastEntry:DateTime): Boolean
+    getSpouses(_id: String!): [User]
 
     getTodayBirthdays: [User]
     getTodayDeathdays: [User]

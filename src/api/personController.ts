@@ -6,10 +6,14 @@ import {
   getSpousesByIdFromMongoDb,
   getSiblingsByIdFromMongoDb,
   MongoConnector,
+  updatePersonFromMongoDb,
+  createPersonFromMongoDb,
+  deleteProfileFromMongoDb,
 
 } from './mongoDbConnector';
 
 import LoggerService from '../services/logger_service';
+import LoginController from './loginController';
 
 const ObjectId = require('mongodb').ObjectID;
 
@@ -61,7 +65,7 @@ export default class PersonController {
         .then((res: any[]) => res.map(PersonController.mapping));
     }
 
-    getPersonById(_id: string) {
+    getPerson(_id: string) {
       this.logger.info('Get person by Id');
 
       const query = { _id: ObjectId(_id) };
@@ -74,7 +78,7 @@ export default class PersonController {
         .then((res: any) => PersonController.mapping(res));
     }
 
-    getParentById(_id: string, gender: string) {
+    getParent(_id: string, gender: string) {
       this.logger.info(`Get ${gender === 'Male' ? 'Father' : 'Mother'} by id `);
 
       return getParentByIdFromMongoDb(_id, gender)
@@ -84,7 +88,7 @@ export default class PersonController {
         .then((res: object) => PersonController.mapping(res));
     }
 
-    getChildrenById(_id: string) {
+    getChildren(_id: string) {
       this.logger.info('Get children by id');
 
       return getChildrenByIdFromMongoDb(_id)
@@ -94,7 +98,7 @@ export default class PersonController {
         .then((res: any[]) => res.map(PersonController.mapping));
     }
 
-    getSpousesById(_id: string) {
+    getSpouses(_id: string) {
       this.logger.info('Get spouses by id');
 
       return getSpousesByIdFromMongoDb(_id)
@@ -104,7 +108,7 @@ export default class PersonController {
         .then((res) => res.map(PersonController.mapping));
     }
 
-    getSiblingsById(_id: string) {
+    getSiblings(_id: string) {
       this.logger.info('Get siblings by id');
 
       return getSiblingsByIdFromMongoDb(_id)
@@ -114,9 +118,8 @@ export default class PersonController {
         .then((res) => res.map(PersonController.mapping));
     }
 
-    getPrivateInfoById(_id: string, user: any) {
+    getPrivateInfo(_id: string, user: any) {
       this.logger.info('Get private infos by id');
-
       PersonController.CheckUserAuthenticated(user);
       const query = { _id: ObjectId(_id) };
       const projection = {};
@@ -131,5 +134,58 @@ export default class PersonController {
       if (!user) {
         throw Error('Not authenticated, please login first');
       }
+    }
+
+    removeProfile(id: string) {
+      this.logger.info('Remove profile');
+      return deleteProfileFromMongoDb(id)
+        .catch((err: any) => {
+          throw err;
+        })
+        .then((res: any) => res);
+    }
+
+
+    updatePerson(_id: string, patch: any) {
+      if (patch === {}) {
+        return null;
+      }
+      this.logger.info('UpdatePersons');
+
+      this.logger.info(_id);
+      this.logger.info(JSON.stringify(patch));
+
+      return updatePersonFromMongoDb(_id, patch)
+        .catch((err) => {
+          throw err;
+        })
+        .then((res: any) => res);
+    }
+
+    createPerson(person: any) {
+      this.logger.info('Create Person');
+
+      return createPersonFromMongoDb(person)
+        .catch((err) => {
+          throw err;
+        })
+        .then((res: any) => res);
+    }
+
+    updatePersonPrivateInfo(_id: string, patch: any, user: any) {
+      if (patch === {}) {
+        return null;
+      }
+      LoginController.CheckUserAuthenticated(user);
+      this.logger.info('UpdatePersonspivate');
+  
+      this.logger.info(_id);
+      this.logger.info(JSON.stringify(patch));
+  
+      return updatePersonFromMongoDb(_id, patch)
+        .catch((err) => {
+          throw err;
+        })
+        .then((res: any) => res);
     }
 }
