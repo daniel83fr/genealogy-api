@@ -1,155 +1,208 @@
-import { GraphQLList, GraphQLString, buildSchema } from "graphql";
+import { GraphQLList, GraphQLString, buildSchema } from 'graphql';
 
-var graphql = require('graphql');
+const graphql = require('graphql');
 
-var schema = buildSchema(`
-  scalar DateTime
+class SchemaBuilder {
+  schemaTypeArray: string[] = [];
 
-  type User {
-    _id: String
-    firstName: String
-    lastName: String
-    maidenName: String
-    gender: String
-    yearOfBirth : String
-    yearOfDeath: String
-    isDead: Boolean
+  queryDescription = '';
+
+  mutationDescription = '';
+
+  schemaQueryArray: string[] = [];
+
+  schemaMutationArray: string[] = [];
+
+  addQuery(definition: string, description: string = '') {
+    this.schemaQueryArray.push(`
+    """
+    ${description}
+    """
+    ${definition}
+    `);
   }
 
-  type UserPrivate {
-    _id: String
-    birthDate: DateTime,
-    deathDate: DateTime,
-    currentLocation: String,
-    birthLocation: String,
-    deathLocation: String,
-    email: String,
-    phone: String
+  addMutation(definition: string, description: string = '') {
+    this.schemaMutationArray.push(`
+    """
+    ${description}
+    """
+    ${definition}
+    `);
   }
 
-  input UserPrivateChanges{
-    birthDate: DateTime
-    deathDate: DateTime,
-    currentLocation: String,
-    birthLocation: String,
-    deathLocation: String,
-    email: String,
-    phone: String
+  addType(definition: string, description: string = '') {
+    this.schemaTypeArray.push(`
+    """
+    ${description}
+    """
+    ${definition}
+    `);
   }
 
-  input UserChanges {
-    firstName: String
-    lastName: String
-    maidenName: String
-    gender: String
-    birthDate : String
-    deathDate : String
-    isDead: Boolean
+  setQueryDescription(description: string) {
+    this.queryDescription = description;
   }
 
-  type ConnectedUser {
-    login: String,
-    id: String
+  setMutationDescription(description: string) {
+    this.mutationDescription = description;
   }
 
-  type Photo {
-    url: String
-    _id: String
-    persons: [User]
-  }
+  build() {
+    const schemaItems : string[] = [];
+    schemaItems.push(...this.schemaTypeArray);
 
-  type AuditEntry{
-    timestamp: DateTime,
-    type: String,
-    id: String,
-    user: String
-    action: String
-  }
-
-  type Token {
-    success: Boolean,
-    error: String,
-    token: String
-  }
-
-  """
-  A simple GraphQL schema which is well described.
-  """
-  type Query {
+    if (this.schemaQueryArray.length > 0) {
+      schemaItems.push(`
 
     """
-    Validates user credentials and returns authentication token
+    ${this.queryDescription}
     """
-    login(login: String!, password: String): Token
+    type Query {
+    `);
+
+      this.schemaQueryArray.forEach((elm) => {
+        schemaItems.push(elm);
+      });
+
+      schemaItems.push(`
+    }`);
+    }
+
+    if (this.schemaMutationArray.length > 0) {
+      schemaItems.push(`
 
     """
-    Creates a new user and attaches it to an existing person
+    ${this.mutationDescription}
     """
-    register(id: String!, login: String!, password: String): String
+    type Mutation {
+    `);
 
+      this.schemaMutationArray.forEach((elm) => {
+        schemaItems.push(elm);
+      });
+      schemaItems.push(`
+    }`);
+    }
 
-    me: ConnectedUser
-
-    getPersonList: [User]
-
-    """
-    Get person's public infos
-    """
-    getPerson(_id: String!): User
-    
-    getAuditLastEntries(number: Int!): [AuditEntry],
-    getPhotoProfile(_id: String!): Photo,
-    getPhotosById(_id: String!): [Photo],
-    getPhotosRandom(number: Int!): [Photo],
-    """
-    Get person's private infos (using provided token and role)
-    """
-    getPrivateInfo(_id:String!): UserPrivate
-
-    getFather(_id: String!): User
-
-    getMother(_id: String!): User
-
-    getChildren(_id: String!): [User]
-
-    getSiblings(_id: String!): [User]
-
-    getSpouses(_id: String!): [User]
-
-    getTodayBirthdays: [User]
-    getTodayDeathdays: [User]
-    getTodayMarriagedays: [User]
+    const res = schemaItems.join('');
+    return res;
   }
+}
 
-  type Mutation {
+const schemaBuilder = new SchemaBuilder();
+schemaBuilder.addType('scalar DateTime');
+schemaBuilder.addType(`type User {
+  _id: String
+  firstName: String
+  lastName: String
+  maidenName: String
+  gender: String
+  yearOfBirth : String
+  yearOfDeath: String
+  isDead: Boolean
+}`, 'Person public info');
 
-    removeLink(_id1: String!, _id2: String!): String
+schemaBuilder.addType(`type UserPrivate {
+  _id: String
+  birthDate: DateTime,
+  deathDate: DateTime,
+  currentLocation: String,
+  birthLocation: String,
+  deathLocation: String,
+  email: String,
+  phone: String
+}`, 'Person private info');
 
-    removeSiblingLink(_id1: String!, _id2: String!): String
+schemaBuilder.addType(`input UserPrivateChanges{
+  birthDate: DateTime
+  deathDate: DateTime,
+  currentLocation: String,
+  birthLocation: String,
+  deathLocation: String,
+  email: String,
+  phone: String
+}`);
 
-    removeProfile(_id: String!): String
+schemaBuilder.addType(`input UserChanges {
+  firstName: String
+  lastName: String
+  maidenName: String
+  gender: String
+  birthDate : String
+  deathDate : String
+  isDead: Boolean
+}`);
 
-    addParentLink(_id: String!, _parentId: String!): String
+schemaBuilder.addType(`type ConnectedUser {
+  login: String,
+  id: String
+}`);
 
-    addChildLink(_id: String!, _childId: String!): String
+schemaBuilder.addType(`type Photo {
+  url: String
+  _id: String
+  persons: [User]
+}`);
 
-    addSpouseLink(_id1: String!, _id2: String!): String
+schemaBuilder.addType(`type AuditEntry{
+  timestamp: DateTime,
+  type: String,
+  id: String,
+  user: String
+  action: String
+}`);
 
-    addSiblingLink(_id1: String!, _id2: String!): String
+schemaBuilder.addType(`type Token {
+  success: Boolean,
+  error: String,
+  token: String
+}`);
 
-    createPerson(person: UserChanges): User
 
-    updatePerson(_id:String!, patch: UserChanges): User
+schemaBuilder.setQueryDescription('Queries definition.');
 
-    updatePersonPrivateInfo(_id:String!, patch: UserPrivateChanges): UserPrivate
 
-    addPhoto( url : String!, deleteHash : String,  persons:[String]): String
+schemaBuilder.addQuery('login(login: String!, password: String): Token',
+  'Validates user credentials and returns authentication token');
+schemaBuilder.addQuery('register(id: String!, login: String!, password: String): String',
+  'Validates user credentials and returns authentication token');
 
-    setProfilePicture(person: String!, image: String!): String
-    deletePhoto(image: String!): String
-    addPhotoTag(image: String!, tag: String!): String
-    removePhotoTag(image: String!, tag: String!): String
-  }
-`);
+schemaBuilder.addQuery('me: ConnectedUser');
+schemaBuilder.addQuery('getPersonList: [User]');
+schemaBuilder.addQuery('getPerson(_id: String!): User');
+schemaBuilder.addQuery('getAuditLastEntries(number: Int!): [AuditEntry]');
+schemaBuilder.addQuery('getPhotoProfile(_id: String!): Photo');
+schemaBuilder.addQuery('getPhotosById(_id: String!): [Photo]');
+schemaBuilder.addQuery('getPhotosRandom(number: Int!): [Photo]');
+schemaBuilder.addQuery('getPrivateInfo(_id:String!): UserPrivate');
+schemaBuilder.addQuery('getFather(_id: String!): User');
+schemaBuilder.addQuery('getMother(_id: String!): User');
+schemaBuilder.addQuery('getChildren(_id: String!): [User]');
+schemaBuilder.addQuery('getSiblings(_id: String!): [User]');
+schemaBuilder.addQuery('getSpouses(_id: String!): [User]');
+schemaBuilder.addQuery('getTodayBirthdays: [User]');
+schemaBuilder.addQuery('getTodayDeathdays: [User]');
+schemaBuilder.addQuery('getTodayMarriagedays: [User]');
 
-export default schema
+
+schemaBuilder.setMutationDescription('Mutations definition.');
+schemaBuilder.addMutation('removeLink(_id1: String!, _id2: String!): String');
+schemaBuilder.addMutation('removeSiblingLink(_id1: String!, _id2: String!): String');
+schemaBuilder.addMutation('removeProfile(_id: String!): String');
+schemaBuilder.addMutation('addParentLink(_id: String!, _parentId: String!): String');
+schemaBuilder.addMutation('addChildLink(_id: String!, _childId: String!): String');
+schemaBuilder.addMutation('addSpouseLink(_id1: String!, _id2: String!): String');
+schemaBuilder.addMutation('addSiblingLink(_id1: String!, _id2: String!): String');
+schemaBuilder.addMutation('createPerson(person: UserChanges): User');
+schemaBuilder.addMutation('updatePerson(_id:String!, patch: UserChanges): User');
+schemaBuilder.addMutation('updatePersonPrivateInfo(_id:String!, patch: UserPrivateChanges): UserPrivate');
+schemaBuilder.addMutation('addPhoto( url : String!, deleteHash : String,  persons:[String]): String');
+schemaBuilder.addMutation('setProfilePicture(person: String!, image: String!): String');
+schemaBuilder.addMutation('deletePhoto(image: String!): String');
+schemaBuilder.addMutation('addPhotoTag(image: String!, tag: String!): String');
+schemaBuilder.addMutation('removePhotoTag(image: String!, tag: String!): String');
+
+const schema = buildSchema(schemaBuilder.build());
+
+export default schema;
