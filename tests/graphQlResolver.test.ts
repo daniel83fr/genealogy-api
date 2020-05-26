@@ -205,7 +205,7 @@ describe('GraphQLResolver queries', () => {
 describe('GraphQLResolver mutations', () => {
   it('should implement all methods', async () => {
     const r = new GraphQLResolver();
-    expect(Object.keys(r.getMutation()).length).toEqual(15);
+    expect(Object.keys(r.getMutation()).length).toEqual(16);
   });
 
   it('updatePersonPrivateInfo', async () => {
@@ -359,5 +359,25 @@ describe('GraphQLResolver mutations', () => {
     const args = { tag: 'anId', image: 'url'};
     await r.getMutation().removePhotoTag(args);
     expect(photoControllerFake.removePhotoTag).toHaveBeenCalledWith(args.image, args.tag);
+  });
+
+  it('runMassUpdate', async () => {
+    const adminControllerFake = jasmine.createSpyObj('AdminController', ['runMassUpdate']);
+    const r = new GraphQLResolver();
+    r.adminController = adminControllerFake;
+    expect(Object.keys(r.getMutation()).includes('runMassUpdate'));
+    expect(schema.getMutationType()?.getFields()['runMassUpdate']).not.toBeUndefined();
+    await r.getMutation().runMassUpdate({});
+    expect(adminControllerFake.runMassUpdate).toHaveBeenCalled();
+  });
+
+  it('getProfileId', async () => {
+    const personControllerFake = jasmine.createSpyObj('PersonController', ['getProfileId']);
+    const r = new GraphQLResolver();
+    r.personController = personControllerFake;
+    expect(Object.keys(r.getQuery()).includes('getProfileId'));
+    expect(schema.getQueryType()?.getFields()['getProfileId']).not.toBeUndefined();
+    await r.getQuery().getProfileId('anId');
+    expect(personControllerFake.getProfileId).toHaveBeenCalled();
   });
 });

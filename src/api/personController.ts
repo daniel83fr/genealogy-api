@@ -44,6 +44,7 @@ export default class PersonController {
         yearOfBirth: yearOfBirth === '0000' ? null : yearOfBirth,
         yearOfDeath: yearOfDeath === '0000' ? null : yearOfDeath,
         isDead: element?.isDead ?? false,
+        profileId: element?.profileId,
       };
     }
 
@@ -59,10 +60,17 @@ export default class PersonController {
         gender: 1,
         deathDate: 1,
         isDead: 1,
+        profileId: 1,
       };
 
       return this.connector.getArrayFromMongoDb(mongoDbDatabase, memberCollection, query, projection)
         .then((res: any[]) => res.map(PersonController.mapping));
+    }
+
+    getProfileId(profileId: string) {
+      return this.connector.getItemFromMongoDb(mongoDbDatabase, memberCollection, { profileId }, {})
+        .catch(() => profileId)
+        .then((res: any) => res._id);
     }
 
     getPerson(_id: string) {

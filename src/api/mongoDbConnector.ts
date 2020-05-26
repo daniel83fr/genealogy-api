@@ -16,8 +16,7 @@ export const credentialsCollection = 'credentials';
 const bcrypt = require('bcrypt');
 
 export class MongoConnector {
- 
-  
+
   connectionString = '';
 
   logger: LoggerService;

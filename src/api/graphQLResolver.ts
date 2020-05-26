@@ -25,7 +25,7 @@ export class GraphQLResolver {
   getQuery() {
     return {
       getAuditLastEntries: (args: any) => this.adminController?.getAuditLastEntries(args.number),
-
+      getProfileId: (args: any) => this.personController?.getProfileId(args._id),
       getPersonList: () => this.personController?.getPersonList(),
       getPerson: (args: any) => this.personController?.getPerson(args._id),
       getFather: (args: any) => this.personController?.getParent(args._id, 'Male'),
@@ -52,6 +52,7 @@ export class GraphQLResolver {
   getMutation() {
     return {
 
+      runMassUpdate:( args: any) => this.adminController?.runMassUpdate(),
       updatePersonPrivateInfo: (args: any, context: any) => this.personController?.updatePersonPrivateInfo(args._id, args.patch, context.user),
       addPhoto: (args: any, context: any) => this.photoController?.addPhoto(args.url, args.deleteHash, args.persons, context.user),
       createPerson: (args: any) => this.personController?.createPerson(args.person),

@@ -94,6 +94,7 @@ const schemaBuilder = new SchemaBuilder();
 schemaBuilder.addType('scalar DateTime');
 schemaBuilder.addType(`type User {
   _id: String
+  profileId: String
   firstName: String
   lastName: String
   maidenName: String
@@ -184,7 +185,7 @@ schemaBuilder.addQuery('getSpouses(_id: String!): [User]');
 schemaBuilder.addQuery('getTodayBirthdays: [User]');
 schemaBuilder.addQuery('getTodayDeathdays: [User]');
 schemaBuilder.addQuery('getTodayMarriagedays: [User]');
-
+schemaBuilder.addQuery('getProfileId(_id: String!): String');
 
 schemaBuilder.setMutationDescription('Mutations definition.');
 schemaBuilder.addMutation('removeLink(_id1: String!, _id2: String!): String');
@@ -202,7 +203,7 @@ schemaBuilder.addMutation('setProfilePicture(person: String!, image: String!): S
 schemaBuilder.addMutation('deletePhoto(image: String!): String');
 schemaBuilder.addMutation('addPhotoTag(image: String!, tag: String!): String');
 schemaBuilder.addMutation('removePhotoTag(image: String!, tag: String!): String');
-
+schemaBuilder.addMutation('runMassUpdate: String', 'should not be used');
 const schema = buildSchema(schemaBuilder.build());
 
 export default schema;
