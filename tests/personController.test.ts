@@ -9,13 +9,13 @@ describe('personController', () => {
     connector = new mongoDbConnector.MongoConnector('connectionString');
     personListMock = [
       {
-        _id: '5e6556437af677179baf2ece', firstName: 'Lourdes', lastName: 'Mariampillai', maidenName: '', gender: 'Female', birthDate: '1900-01-01', deathDate: '1900-01-01', isDead: true,
+        _id: '5e6556437af677179baf2ece', firstName: 'Lourdes', lastName: 'Mariampillai', maidenName: '', gender: 'Female', birthDate: '1900-01-01', deathDate: '1900-01-01', isDead: true, profileId: '5e6556437af677179baf2ece',
       },
       {
-        _id: '5ec68d8566db3f2a946ce8d3', firstName: 'kaylan', lastName: 'Sivandan', gender: 'Male', isDead: false,
+        _id: '5ec68d8566db3f2a946ce8d3', firstName: 'kaylan', lastName: 'Sivandan', gender: 'Male', isDead: false, profileId: '5ec68d8566db3f2a946ce8d3',
       },
       {
-        _id: '5ec68d8566db3f2a946ce8d4', firstName: 'test', lastName: 'test2', gender: 'Male', isDead: false,
+        _id: '5ec68d8566db3f2a946ce8d4', firstName: 'test', lastName: 'test2', gender: 'Male', isDead: false, profileId: '5ec68d8566db3f2a946ce8d4',
       },
     ];
   });
@@ -32,6 +32,7 @@ describe('personController', () => {
       gender: 1,
       deathDate: 1,
       isDead: 1,
+      profileId: 1,
     });
   });
 
@@ -53,7 +54,7 @@ describe('personController', () => {
     return controller.getPersonList()
       .then((x: any[]) => {
         expect(x[0]).toEqual({
-          _id: '5e6556437af677179baf2ece', firstName: 'Lourdes', lastName: 'Mariampillai', maidenName: '', gender: 'Female', yearOfBirth: '1900', yearOfDeath: '1900', isDead: true,
+          _id: '5e6556437af677179baf2ece', firstName: 'Lourdes', lastName: 'Mariampillai', maidenName: '', gender: 'Female', yearOfBirth: '1900', yearOfDeath: '1900', isDead: true, profileId: '5e6556437af677179baf2ece',
         });
       });
   });
