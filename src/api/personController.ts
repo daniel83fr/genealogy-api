@@ -95,7 +95,8 @@ export default class PersonController {
         .catch((err: any) => {
           throw err;
         })
-        .then((res: any[]) => res.map(PersonController.mapping));
+        .then((res: any[]) => res.map(PersonController.mapping))
+        .then((res) => res.sort(PersonController.sortByYearOfBirth));
     }
 
     getSpouses(_id: string) {
@@ -108,6 +109,14 @@ export default class PersonController {
         .then((res) => res.map(PersonController.mapping));
     }
 
+    static sortByYearOfBirth(a:any, b:any) {
+      const keyA = new Date(a.yearOfBirth);
+      const keyB = new Date(b.yearOfBirth);
+      if (keyA < keyB) return -1;
+      if (keyA > keyB) return 1;
+      return 0;
+    }
+
     getSiblings(_id: string) {
       this.logger.info('Get siblings by id');
 
@@ -115,7 +124,8 @@ export default class PersonController {
         .catch((err) => {
           throw err;
         })
-        .then((res) => res.map(PersonController.mapping));
+        .then((res) => res.map(PersonController.mapping))
+        .then((res) => res.sort(PersonController.sortByYearOfBirth));
     }
 
     getPrivateInfo(_id: string, user: any) {
@@ -177,10 +187,10 @@ export default class PersonController {
       }
       LoginController.CheckUserAuthenticated(user);
       this.logger.info('UpdatePersonspivate');
-  
+
       this.logger.info(_id);
       this.logger.info(JSON.stringify(patch));
-  
+
       return updatePersonFromMongoDb(_id, patch)
         .catch((err) => {
           throw err;
