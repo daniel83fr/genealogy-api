@@ -126,8 +126,7 @@ export default class PersonController {
       return this.connector.getItemFromMongoDb(mongoDbDatabase, memberCollection, query, projection)
         .catch((err: any) => {
           throw err;
-        })
-        .then((res: any) => PersonController.mapping(res));
+        });
     }
 
     static CheckUserAuthenticated(user: any) {
