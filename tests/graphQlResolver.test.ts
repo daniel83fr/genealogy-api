@@ -122,9 +122,9 @@ describe('GraphQLResolver queries', () => {
     const loginControllerFake = jasmine.createSpyObj('LoginController', ['register']);
     const r = new GraphQLResolver();
     r.loginController = loginControllerFake;
-    const args = { id: 'aPersonId', login: 'login', password: 'password' };
+    const args = { id: 'aPersonId', login: 'login', email: 'email', password: 'password' };
     await r.getQuery().register(args);
-    expect(loginControllerFake.register).toHaveBeenCalledWith(args.id, args.login, args.password);
+    expect(loginControllerFake.register).toHaveBeenCalledWith(args.id, args.login, args.email, args.password);
   });
 
   it('me', async () => {
