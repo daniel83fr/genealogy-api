@@ -47,9 +47,9 @@ export default class LoginController {
       });
   }
 
-  register(id: string, login: string, password: string): any {
+  register(id: string, login: string, email: string, password: string): any {
     this.logger.info('Register');
-    return createCredentialsFromMongoDb(id, login, password)
+    return createCredentialsFromMongoDb(id, login, email, password)
       .then(() => 'login created')
       .catch(() => 'registration failed');
   }

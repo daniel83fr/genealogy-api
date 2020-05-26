@@ -16,7 +16,6 @@ export const credentialsCollection = 'credentials';
 const bcrypt = require('bcrypt');
 
 export class MongoConnector {
-
   connectionString = '';
 
   logger: LoggerService;
@@ -356,7 +355,6 @@ export async function getPhotosRandomFromMongoDb(num: number) {
 }
 
 
-
 export async function addPhotoFromMongoDb(url: string, deleteHash: string, persons: string[]) {
   const connector = getConnector();
   const client = await connector.initClient();
@@ -471,8 +469,6 @@ export async function getSpousesByIdFromMongoDb(id: string) {
 }
 
 
-
-
 export async function deleteProfileFromMongoDb(id: string) {
   const connector = getConnector();
   const client = await connector.initClient();
@@ -497,10 +493,6 @@ export async function deleteProfileFromMongoDb(id: string) {
   client.close();
   return `Deleted person ${id}`;
 }
-
-
-
-
 
 
 export async function updatePersonFromMongoDb(id: string, patch: any) {
@@ -544,16 +536,18 @@ export async function createPersonFromMongoDb(person: any) {
 }
 
 
-
 export async function checkCredentialsFromMongoDb(login: string, password: string): Promise<any> {
   const connector = getConnector();
   const client = await connector.initClient();
   const db = client.db(mongoDbDatabase);
   const collection = db.collection(credentialsCollection);
   login = login.toLowerCase();
-  const query = { login };
-  const res = await collection.findOne(query);
 
+  const members = db.collection(memberCollection);
+  const profile = await members.findOne({ profileId: login });
+
+
+  const res = await collection.findOne({ id: profile._id.toString() });
   client.close();
 
   return {
@@ -562,26 +556,29 @@ export async function checkCredentialsFromMongoDb(login: string, password: strin
   };
 }
 
-export async function createCredentialsFromMongoDb(id: string, login: string, password: string) {
+export async function createCredentialsFromMongoDb(id: string, login: string, email: string, password: string) {
   const connector = getConnector();
   console.log('creating credentials');
   const client = await connector.initClient();
   const db = client.db(mongoDbDatabase);
   const collection = db.collection(credentialsCollection);
   login = login.toLowerCase();
-  const query = { login };
-  const res = await collection.findOne(query);
+
+  const members = db.collection(memberCollection);
+  const query = { profileId: login };
+  const res = await members.findOne(query);
   if (res != null) {
     client.close();
-    console.log('login already exists');
-    return 'login already exist';
+    throw Error('login already exist');
   }
 
 
   const hash = bcrypt.hashSync(password, 10);
-  const document = { id, login, password: hash };
-  collection.insertOne(document);
+  const document = { id: id, password: hash };
+  await collection.insertOne(document);
+  await members.updateOne({ _id: ObjectId(id) }, { $set: { email: email, profileId: login, UpdatedAt: new Date().toISOString() } });
+
+
   client.close();
-  console.log('login already exists');
   return 'Account created';
 }

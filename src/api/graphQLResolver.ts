@@ -36,7 +36,7 @@ export class GraphQLResolver {
       getPrivateInfo: (args: any, context: any) => this.personController?.getPrivateInfo(args._id, context.user),
 
       login: (args: any) => this.loginController?.login(args.login, args.password),
-      register: (args: any) => this.loginController?.register(args.id, args.login, args.password),
+      register: (args: any) => this.loginController?.register(args.id, args.login, args.email, args.password),
       me: (args: any, context: any) => this.loginController?.me(context.user),
 
       getPhotosById: (args: any) => this.photoController?.getPhotosById(args._id),

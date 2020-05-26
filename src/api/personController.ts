@@ -64,7 +64,8 @@ export default class PersonController {
       };
 
       return this.connector.getArrayFromMongoDb(mongoDbDatabase, memberCollection, query, projection)
-        .then((res: any[]) => res.map(PersonController.mapping));
+        .then((res: any[]) => res.map(PersonController.mapping))
+        .then((res) => res.sort(PersonController.sortByName));
     }
 
     getProfileId(profileId: string) {
@@ -120,6 +121,14 @@ export default class PersonController {
     static sortByYearOfBirth(a:any, b:any) {
       const keyA = new Date(a.yearOfBirth);
       const keyB = new Date(b.yearOfBirth);
+      if (keyA < keyB) return -1;
+      if (keyA > keyB) return 1;
+      return 0;
+    }
+
+    static sortByName(a:any, b:any) {
+      const keyA = `${a.lastName ?? ''} ${a.firstName ?? ''}`;
+      const keyB = `${b.lastName ?? ''} ${b.firstName ?? ''}`;
       if (keyA < keyB) return -1;
       if (keyA > keyB) return 1;
       return 0;

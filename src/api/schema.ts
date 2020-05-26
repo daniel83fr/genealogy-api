@@ -166,7 +166,7 @@ schemaBuilder.setQueryDescription('Queries definition.');
 
 schemaBuilder.addQuery('login(login: String!, password: String): Token',
   'Validates user credentials and returns authentication token');
-schemaBuilder.addQuery('register(id: String!, login: String!, password: String): String',
+schemaBuilder.addQuery('register(id: String!, login: String!, email: String!, password: String!): String',
   'Validates user credentials and returns authentication token');
 
 schemaBuilder.addQuery('me: ConnectedUser');
