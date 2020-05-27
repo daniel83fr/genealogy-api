@@ -92,7 +92,8 @@ describe('GraphQLResolver queries', () => {
     r.personController = personControllerFake;
     expect(Object.keys(r.getQuery()).includes('getPersonList'));
     expect(schema.getQueryType()?.getFields()['getPersonList']).not.toBeUndefined();
-    await r.getQuery().getPersonList();
+    const args = { cacheCount: 0, cacheDate: new Date() };
+    await r.getQuery().getPersonList(args);
     expect(personControllerFake.getPersonList).toHaveBeenCalled();
   });
 

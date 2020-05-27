@@ -104,6 +104,11 @@ schemaBuilder.addType(`type User {
   isDead: Boolean
 }`, 'Person public info');
 
+schemaBuilder.addType(`type CachedUserList {
+  users: [User],
+  isUpToDate: Boolean
+}`, 'cached user list');
+
 schemaBuilder.addType(`type UserPrivate {
   _id: String
   birthDate: DateTime,
@@ -170,7 +175,7 @@ schemaBuilder.addQuery('register(id: String!, login: String!, email: String!, pa
   'Validates user credentials and returns authentication token');
 
 schemaBuilder.addQuery('me: ConnectedUser');
-schemaBuilder.addQuery('getPersonList: [User]');
+schemaBuilder.addQuery('getPersonList(cacheCount: Int, cacheDate: String): CachedUserList');
 schemaBuilder.addQuery('getPerson(_id: String!): User');
 schemaBuilder.addQuery('getAuditLastEntries(number: Int!): [AuditEntry]');
 schemaBuilder.addQuery('getPhotoProfile(_id: String!): Photo');

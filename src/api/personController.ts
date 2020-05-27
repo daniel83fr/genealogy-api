@@ -48,8 +48,10 @@ export default class PersonController {
       };
     }
 
-    getPersonList() {
+    getPersonList(cacheCount: number, cacheDate: string) {
       this.logger.info('Get person list');
+      this.logger.info(cacheCount.toString());
+      this.logger.info(JSON.stringify(cacheDate));
 
       const query = {};
       const projection = {
@@ -63,9 +65,32 @@ export default class PersonController {
         profileId: 1,
       };
 
-      return this.connector.getArrayFromMongoDb(mongoDbDatabase, memberCollection, query, projection)
-        .then((res: any[]) => res.map(PersonController.mapping))
-        .then((res) => res.sort(PersonController.sortByName));
+      return this.connector.initClient()
+        .then((client) => {
+          const db = client.db(mongoDbDatabase);
+
+          return this.connector.getLastUpdate(db, memberCollection)
+            .then((lastUpdate) => {
+              console.log(`cache: ${cacheDate}, lastUpdate: ${lastUpdate}`);
+              if (lastUpdate > cacheDate) {
+                return true;
+              }
+
+              return this.connector.getCollectionSize(db, memberCollection)
+                .then((count) => count != cacheCount);
+            })
+            .then((shouldUpdate) => {
+              client.close();
+              if (shouldUpdate == true) {
+                console.log(`should update: ${shouldUpdate}`);
+                return this.connector.getArrayFromMongoDb(mongoDbDatabase, memberCollection, query, projection)
+                  .then((res: any[]) => res.map(PersonController.mapping))
+                  .then((res) => res.sort(PersonController.sortByName))
+                  .then((res) => ({ isUpToDate: false, users: res }));
+              }
+              return { isUpToDate: true };
+            });
+        });
     }
 
     getProfileId(profileId: string) {

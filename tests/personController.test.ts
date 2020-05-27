@@ -23,7 +23,7 @@ describe('personController', () => {
   it('check database called with correct args', async () => {
     const spy = spyOn(connector, 'getArrayFromMongoDb').and.returnValue(Promise.resolve(personListMock));
     const controller = new PersonController(connector);
-    await controller.getPersonList();
+    await controller.getPersonList(0, new Date().toISOString());
     expect(spy).toHaveBeenCalledWith('genealogyDb', 'members', {}, {
       firstName: 1,
       lastName: 1,
@@ -41,9 +41,9 @@ describe('personController', () => {
     spyOn(connector, 'getArrayFromMongoDb').and.returnValue(Promise.resolve(personListMock.slice(0, 2)));
     const controller = new PersonController(connector);
 
-    return controller.getPersonList()
-      .then((x: any[]) => {
-        expect(x.length).toBe(2);
+    return controller.getPersonList(0, new Date().toISOString())
+      .then((x: any) => {
+        expect(x.users.length).toBe(2);
       });
   });
 
@@ -51,8 +51,8 @@ describe('personController', () => {
     spyOn(connector, 'getArrayFromMongoDb').and.returnValue(Promise.resolve(personListMock.slice(0, 1)));
     const controller = new PersonController(connector);
 
-    return controller.getPersonList()
-      .then((x: any[]) => {
+    return controller.getPersonList(0, new Date().toISOString())
+      .then((x: any) => {
         expect(x[0]).toEqual({
           _id: '5e6556437af677179baf2ece', firstName: 'Lourdes', lastName: 'Mariampillai', maidenName: '', gender: 'Female', yearOfBirth: '1900', yearOfDeath: '1900', isDead: true, profileId: '5e6556437af677179baf2ece',
         });
@@ -67,10 +67,10 @@ describe('personController', () => {
     spyOn(connector, 'getArrayFromMongoDb').and.returnValue(Promise.resolve([data]));
     const controller = new PersonController(connector);
 
-    return controller.getPersonList()
-      .then((x: any[]) => {
-        expect(x[0].yearOfBirth).toEqual(null);
-        expect(x[0].yearOfDeath).toEqual(null);
+    return controller.getPersonList(0, new Date().toISOString())
+      .then((x: any) => {
+        expect(x.users[0].yearOfBirth).toEqual(null);
+        expect(x.users[0].yearOfDeath).toEqual(null);
       });
   });
 
@@ -82,9 +82,9 @@ describe('personController', () => {
     const controller = new PersonController(connector);
 
 
-    return controller.getPersonList()
-      .then((x: any[]) => {
-        expect(x[0].isDead).toEqual(false);
+    return controller.getPersonList(0, new Date().toISOString())
+      .then((x: any) => {
+        expect(x.users[0].isDead).toEqual(false);
       });
   });
 });

@@ -26,7 +26,7 @@ export class GraphQLResolver {
     return {
       getAuditLastEntries: (args: any) => this.adminController?.getAuditLastEntries(args.number),
       getProfileId: (args: any) => this.personController?.getProfileId(args._id),
-      getPersonList: () => this.personController?.getPersonList(),
+      getPersonList: (args: any) => this.personController?.getPersonList(args.cacheCount, args.cacheDate),
       getPerson: (args: any) => this.personController?.getPerson(args._id),
       getFather: (args: any) => this.personController?.getParent(args._id, 'Male'),
       getMother: (args: any) => this.personController?.getParent(args._id, 'Female'),

@@ -16,6 +16,17 @@ export const credentialsCollection = 'credentials';
 const bcrypt = require('bcrypt');
 
 export class MongoConnector {
+  async getLastUpdate(db: any, collectionName: string) {
+    this.logger.info('get last update');
+    const a = await db.collection(collectionName).find({ UpdatedAt: { $exists: true } }).limit(1).sort({ UpdatedAt: -1 })
+      .toArray();
+    if (a.length == 0) {
+      return '2000-01-01T00:00:00.001Z';
+    }
+
+    return a[0].UpdatedAt;
+  }
+
   connectionString = '';
 
   logger: LoggerService;
@@ -49,6 +60,12 @@ export class MongoConnector {
     if (client != null) {
       client.close();
     }
+  }
+
+  async getCollectionSize(db: any, collectionName: string) {
+    this.logger.debug('get collectionSize');
+    const collection = db.collection(collectionName);
+    return collection.countDocuments();
   }
 
   async getItemFromMongoDbWithLimit(db: any, collectionName: string, query: string, limit: number) {
@@ -574,9 +591,9 @@ export async function createCredentialsFromMongoDb(id: string, login: string, em
 
 
   const hash = bcrypt.hashSync(password, 10);
-  const document = { id: id, password: hash };
+  const document = { id, password: hash };
   await collection.insertOne(document);
-  await members.updateOne({ _id: ObjectId(id) }, { $set: { email: email, profileId: login, UpdatedAt: new Date().toISOString() } });
+  await members.updateOne({ _id: ObjectId(id) }, { $set: { email, profileId: login, UpdatedAt: new Date().toISOString() } });
 
 
   client.close();
