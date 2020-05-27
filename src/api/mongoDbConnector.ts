@@ -265,13 +265,12 @@ export async function getPhotosByIdFromMongoDb(personId: string) {
   const client = await connector.initClient();
   const db = client.db(mongoDbDatabase);
   const collection = db.collection('photoTags');
-
-  const res = await collection.find({ person_id: personId },
+let query4 = { 'person_id': `${personId}` };
+  const res = await collection.find(query4,
     {
       photo_id: 1,
     }).toArray();
-
-  // console.log(res);
+    console.log(JSON.stringify(res));
   const items: any = [];
   const itemsString: any = [];
   const memberItems: any = [];
@@ -281,23 +280,16 @@ export async function getPhotosByIdFromMongoDb(personId: string) {
     itemsString.push(element.photo_id);
   });
 
-
   const photos = db.collection('photos');
 
   const query = { _id: { $in: items } };
   const photoResult2 = await photos.find(query).toArray();
 
-
   const query2 = { photo_id: { $in: itemsString } };
   const links = await collection.find(query2).toArray();
-  console.log(JSON.stringify(photoResult2));
-  console.log(JSON.stringify(links));
-
   links.forEach((element: { person_id: any; }) => {
     memberItems.push(ObjectId(element.person_id));
   });
-  //   console.log("members: " + JSON.stringify(memberItems))
-
   const query3 = { _id: { $in: memberItems } };
   const members = await db.collection(memberCollection).find(query3).toArray();
   // console.log(JSON.stringify(members))
@@ -364,6 +356,8 @@ export async function getPhotosRandomFromMongoDb(num: number) {
       url: 1,
     }).toArray();
 
+  
+
   console.log(res);
 
 
@@ -386,7 +380,7 @@ export async function addPhotoFromMongoDb(url: string, deleteHash: string, perso
 
   const collection = db.collection('photoTags');
   persons.forEach(async (elem) => {
-    await collection.insertOne({ photo_id, person_id: elem });
+    await collection.insertOne({ photo_id: photo_id, person_id: elem });
   });
   client.close();
   return 'Done';

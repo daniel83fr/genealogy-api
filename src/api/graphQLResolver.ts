@@ -33,6 +33,7 @@ export class GraphQLResolver {
       getChildren: (args: any) => this.personController?.getChildren(args._id),
       getSpouses: (args: any) => this.personController?.getSpouses(args._id),
       getSiblings: (args: any) => this.personController?.getSiblings(args._id),
+      getPublicInfo: (args: any) => this.personController?.getPublicInfo(args._id),
       getPrivateInfo: (args: any, context: any) => this.personController?.getPrivateInfo(args._id, context.user),
 
       login: (args: any) => this.loginController?.login(args.login, args.password),

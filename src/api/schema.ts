@@ -104,6 +104,17 @@ schemaBuilder.addType(`type User {
   isDead: Boolean
 }`, 'Person public info');
 
+schemaBuilder.addType(`type UserProfile 
+{
+  currentPerson: User
+  mother: User
+  father: User
+  children: [User]
+  spouses: [User]
+  siblings: [User]
+  photos: [Photo]
+}`, 'Person public info');
+
 schemaBuilder.addType(`type CachedUserList {
   users: [User],
   isUpToDate: Boolean
@@ -175,13 +186,18 @@ schemaBuilder.addQuery('register(id: String!, login: String!, email: String!, pa
   'Validates user credentials and returns authentication token');
 
 schemaBuilder.addQuery('me: ConnectedUser');
-schemaBuilder.addQuery('getPersonList(cacheCount: Int, cacheDate: String): CachedUserList');
+schemaBuilder.addQuery('getPersonList(cacheCount: Int, cacheDate: String): CachedUserList', `Get list of persons. Exisiting cache info can be passed to check if cache needs to be refreshed.
+- cacheCount : number of items in cache
+- cacheDate : Date of cached data
+`);
+
 schemaBuilder.addQuery('getPerson(_id: String!): User');
 schemaBuilder.addQuery('getAuditLastEntries(number: Int!): [AuditEntry]');
 schemaBuilder.addQuery('getPhotoProfile(_id: String!): Photo');
 schemaBuilder.addQuery('getPhotosById(_id: String!): [Photo]');
 schemaBuilder.addQuery('getPhotosRandom(number: Int!): [Photo]');
 schemaBuilder.addQuery('getPrivateInfo(_id:String!): UserPrivate');
+schemaBuilder.addQuery('getPublicInfo(_id:String!): UserProfile');
 schemaBuilder.addQuery('getFather(_id: String!): User');
 schemaBuilder.addQuery('getMother(_id: String!): User');
 schemaBuilder.addQuery('getChildren(_id: String!): [User]');

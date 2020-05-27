@@ -26,7 +26,7 @@ export default class PhotoController {
   }
 
   getPhotosById(_id: string) {
-    this.logger.info('GetPhotos');
+    this.logger.info('GetPhotos ' + _id);
     return getPhotosByIdFromMongoDb(_id)
       .catch((err: any) => {
         throw err;

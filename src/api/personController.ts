@@ -14,6 +14,7 @@ import {
 
 import LoggerService from '../services/logger_service';
 import LoginController from './loginController';
+import PhotoController from './photoController';
 
 const ObjectId = require('mongodb').ObjectID;
 
@@ -50,7 +51,7 @@ export default class PersonController {
 
     getPersonList(cacheCount: number, cacheDate: string) {
       this.logger.info('Get person list');
-      this.logger.info(cacheCount.toString());
+      this.logger.info(cacheCount?.toString());
       this.logger.info(JSON.stringify(cacheDate));
 
       const query = {};
@@ -72,7 +73,7 @@ export default class PersonController {
           return this.connector.getLastUpdate(db, memberCollection)
             .then((lastUpdate) => {
               console.log(`cache: ${cacheDate}, lastUpdate: ${lastUpdate}`);
-              if (lastUpdate > cacheDate) {
+              if (lastUpdate > cacheDate || cacheDate == undefined) {
                 return true;
               }
 
@@ -94,9 +95,14 @@ export default class PersonController {
     }
 
     getProfileId(profileId: string) {
-      return this.connector.getItemFromMongoDb(mongoDbDatabase, memberCollection, { profileId }, {})
+      return this.connector.getItemFromMongoDb(mongoDbDatabase, memberCollection, { "profileId" : profileId }, {})
         .catch(() => profileId)
-        .then((res: any) => res._id);
+        .then((res: any) => {
+          if (res == null) {
+            return profileId;
+          }
+          return res._id;
+        });
     }
 
     getPerson(_id: string) {
@@ -170,15 +176,41 @@ export default class PersonController {
         .then((res) => res.sort(PersonController.sortByYearOfBirth));
     }
 
-    getPrivateInfo(_id: string, user: any) {
+    async getPrivateInfo(_id: string, user: any) {
+      let profileId = await this.getProfileId(_id);
+      if (profileId == null) {
+        profileId = _id;
+      }
+
       this.logger.info('Get private infos by id');
       PersonController.CheckUserAuthenticated(user);
-      const query = { _id: ObjectId(_id) };
+      const query = { _id: ObjectId(profileId) };
       const projection = {};
       return this.connector.getItemFromMongoDb(mongoDbDatabase, memberCollection, query, projection)
         .catch((err: any) => {
           throw err;
         });
+    }
+
+    async getPublicInfo(_id: string) {
+      console.log(_id);
+
+      let profileId = await this.getProfileId(_id);
+      if (profileId == null) {
+        profileId = _id;
+      }
+      const data:any = {};
+      data.currentPerson = await this.getPerson(profileId);
+      data.mother = await this.getParent(profileId, 'Female');
+      data.father = await this.getParent(profileId, 'Male');
+      data.siblings = await this.getSiblings(profileId);
+      data.children = await this.getChildren(profileId);
+      data.spouses = await this.getSpouses(profileId);
+
+      const photoController = new PhotoController(this.connector);
+      data.photos = await photoController.getPhotosById(profileId);
+
+      return data;
     }
 
     static CheckUserAuthenticated(user: any) {
