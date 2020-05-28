@@ -194,7 +194,7 @@ schemaBuilder.addQuery('getPersonList(cacheCount: Int, cacheDate: String): Cache
 `);
 
 schemaBuilder.addQuery('getPrivateProfile(profileId: String!): PrivateProfile');
-
+schemaBuilder.addQuery('getProfile(profileId:String!): PublicProfile');
 
 schemaBuilder.addQuery('getAuditLastEntries(number: Int!): [AuditEntry]');
 schemaBuilder.addQuery('getPhotoProfile(_id: String!): Photo');
