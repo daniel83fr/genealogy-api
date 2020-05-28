@@ -138,11 +138,12 @@ schemaBuilder.addType(`input PrivateProfileChanges{
   currentLocation: String,
   birthLocation: String,
   deathLocation: String,
-  email: String,
+  email: String
   phone: String
+  updatedBy: String
 }`);
 
-schemaBuilder.addType(`input UserChanges {
+schemaBuilder.addType(`input ProfileChanges {
   firstName: String
   lastName: String
   maidenName: String
@@ -150,6 +151,7 @@ schemaBuilder.addType(`input UserChanges {
   birthDate : String
   deathDate : String
   isDead: Boolean
+  updatedBy: String
 }`);
 
 schemaBuilder.addType(`type ConnectedUser {
@@ -215,8 +217,8 @@ schemaBuilder.addMutation('addParentLink(_id: String!, _parentId: String!): Stri
 schemaBuilder.addMutation('addChildLink(_id: String!, _childId: String!): String');
 schemaBuilder.addMutation('addSpouseLink(_id1: String!, _id2: String!): String');
 schemaBuilder.addMutation('addSiblingLink(_id1: String!, _id2: String!): String');
-schemaBuilder.addMutation('createPerson(person: UserChanges): User');
-schemaBuilder.addMutation('updatePerson(_id:String!, patch: UserChanges): User');
+schemaBuilder.addMutation('createPerson(person: ProfileChanges): User');
+schemaBuilder.addMutation('updatePerson(_id:String!, patch: ProfileChanges): User');
 schemaBuilder.addMutation('updatePersonPrivateInfo(_id:String!, patch: PrivateProfileChanges): PrivateProfile');
 schemaBuilder.addMutation('addPhoto( url : String!, deleteHash : String,  persons:[String]): String');
 schemaBuilder.addMutation('setProfilePicture(person: String!, image: String!): String');

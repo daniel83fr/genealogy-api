@@ -286,6 +286,7 @@ export default class PersonController {
 
     updatePersonPrivateInfo(_id: string, patch: any, user: any) {
       if (patch === {}) {
+        console.log(patch)
         return null;
       }
       LoginController.CheckUserAuthenticated(user);
