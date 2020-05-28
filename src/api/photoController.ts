@@ -25,9 +25,9 @@ export default class PhotoController {
       .then((res: any) => res);
   }
 
-  getPhotosById(_id: string) {
+  getPhotosById(_id: string, db: any) {
     this.logger.info('GetPhotos ' + _id);
-    return getPhotosByIdFromMongoDb(_id)
+    return getPhotosByIdFromMongoDb(_id, db)
       .catch((err: any) => {
         throw err;
       })
@@ -96,6 +96,4 @@ export default class PhotoController {
         return res;
       });
   }
-  
-
 }

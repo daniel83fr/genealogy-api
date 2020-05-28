@@ -24,23 +24,17 @@ export class GraphQLResolver {
 
   getQuery() {
     return {
-      getAuditLastEntries: (args: any) => this.adminController?.getAuditLastEntries(args.number),
-      getProfileId: (args: any) => this.personController?.getProfileId(args._id),
-      getPersonList: (args: any) => this.personController?.getPersonList(args.cacheCount, args.cacheDate),
-      getPerson: (args: any) => this.personController?.getPerson(args._id),
-      getFather: (args: any) => this.personController?.getParent(args._id, 'Male'),
-      getMother: (args: any) => this.personController?.getParent(args._id, 'Female'),
-      getChildren: (args: any) => this.personController?.getChildren(args._id),
-      getSpouses: (args: any) => this.personController?.getSpouses(args._id),
-      getSiblings: (args: any) => this.personController?.getSiblings(args._id),
-      getPublicInfo: (args: any) => this.personController?.getPublicInfo(args._id),
-      getPrivateInfo: (args: any, context: any) => this.personController?.getPrivateInfo(args._id, context.user),
 
       login: (args: any) => this.loginController?.login(args.login, args.password),
       register: (args: any) => this.loginController?.register(args.id, args.login, args.email, args.password),
       me: (args: any, context: any) => this.loginController?.me(context.user),
 
-      getPhotosById: (args: any) => this.photoController?.getPhotosById(args._id),
+      getProfile: (args: any) => this.personController?.getProfile(args.profileId),
+      getPrivateProfile: (args: any, context: any) => this.personController?.getPrivateProfile(args.profileId, context.user),
+
+      getAuditLastEntries: (args: any) => this.adminController?.getAuditLastEntries(args.number),
+      getPersonList: (args: any) => this.personController?.getPersonList(args.cacheCount, args.cacheDate),
+  
       getPhotoProfile: (args: any) => this.photoController?.getPhotoProfile(args._id),
       getPhotosRandom: (args: any) => this.photoController?.getPhotosRandom(args.number),
 

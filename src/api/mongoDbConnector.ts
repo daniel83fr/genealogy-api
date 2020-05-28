@@ -99,6 +99,7 @@ export class MongoConnector {
     const db = this.setDb(client, database);
     const res = await this.getItemFromMongoDbAndDb(db, collectionName, query, projection);
     this.closeDb(client);
+    console.log(JSON.stringify(res))
     return res;
   }
 
@@ -260,10 +261,7 @@ export async function deletePhotoFromMongo(image: string) {
 }
 
 
-export async function getPhotosByIdFromMongoDb(personId: string) {
-  const connector = getConnector();
-  const client = await connector.initClient();
-  const db = client.db(mongoDbDatabase);
+export async function getPhotosByIdFromMongoDb(personId: string, db:any) {
   const collection = db.collection('photoTags');
 let query4 = { 'person_id': `${personId}` };
   const res = await collection.find(query4,
@@ -310,7 +308,6 @@ let query4 = { 'person_id': `${personId}` };
     });
     result.push(elm);
   });
-  client.close();
   return result;
 }
 
@@ -387,16 +384,14 @@ export async function addPhotoFromMongoDb(url: string, deleteHash: string, perso
 }
 
 
-export async function getParentByIdFromMongoDb(id: string, gender: string): Promise<any> {
+export async function getParentByIdFromMongoDb(id: string, gender: string, db: any): Promise<any> {
   const connector = getConnector();
-  const client = await connector.initClient();
-  const db = client.db(mongoDbDatabase);
+
   const resLinks = await connector.getArrayFromMongoDbAndDb(db, relationCollection, { person2_id: ObjectId(id), type: 'Parent' }, {});
 
   const items: any = resLinks.map((element: { person1_id: any; }) => ObjectId(element.person1_id));
 
   const parents = await connector.getArrayFromMongoDbAndDb(db, memberCollection, { _id: { $in: items } }, {});
-  client.close();
 
   let fatherOrMother = null;
   parents.forEach((element: { gender: string; }) => {
@@ -408,10 +403,7 @@ export async function getParentByIdFromMongoDb(id: string, gender: string): Prom
   return fatherOrMother;
 }
 
-export async function getChildrenByIdFromMongoDb(id: string) {
-  const connector = getConnector();
-  const client = await connector.initClient();
-  const db = client.db(mongoDbDatabase);
+export async function getChildrenByIdFromMongoDb(id: string, db: any) {
 
   const links = db.collection(relationCollection);
   const resLinks = await links.find({ person1_id: ObjectId(id), type: 'Parent' }).toArray();
@@ -423,14 +415,10 @@ export async function getChildrenByIdFromMongoDb(id: string) {
 
   const query = { _id: { $in: items } };
   const children = await members.find(query).toArray();
-  client.close();
   return children;
 }
 
-export async function getSiblingsByIdFromMongoDb(id: string) {
-  const connector = getConnector();
-  const client = await connector.initClient();
-  const db = client.db(mongoDbDatabase);
+export async function getSiblingsByIdFromMongoDb(id: string, db:any) {
 
   const links = db.collection(relationCollection);
   const resLinks = await links.find({ person2_id: ObjectId(id), type: 'Parent' }).toArray();
@@ -450,14 +438,10 @@ export async function getSiblingsByIdFromMongoDb(id: string) {
   const members = db.collection(memberCollection);
   const query = { _id: { $in: items2 } };
   const parents = await members.find(query).toArray();
-  client.close();
   return parents;
 }
 
-export async function getSpousesByIdFromMongoDb(id: string) {
-  const connector = getConnector();
-  const client = await connector.initClient();
-  const db = client.db(mongoDbDatabase);
+export async function getSpousesByIdFromMongoDb(id: string, db: any) {
 
   const links = db.collection(relationCollection);
   const resLinks = await links.find({ type: 'Spouse', $or: [{ person1_id: ObjectId(id) }, { person2_id: ObjectId(id) }] }).toArray();
@@ -475,7 +459,6 @@ export async function getSpousesByIdFromMongoDb(id: string) {
   const query = { _id: { $in: items } };
   console.log(query);
   const spouses = await members.find(query).toArray();
-  client.close();
   return spouses;
 }
 

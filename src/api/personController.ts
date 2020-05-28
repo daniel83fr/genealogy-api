@@ -94,44 +94,106 @@ export default class PersonController {
         });
     }
 
-    getProfileId(profileId: string) {
-      return this.connector.getItemFromMongoDb(mongoDbDatabase, memberCollection, { "profileId" : profileId }, {})
-        .catch(() => profileId)
+    async getProfile(_id: string) {
+      console.log(_id);
+
+      const client = await this.connector.initClient();
+      const db = client.db(mongoDbDatabase);
+
+      let profileId = await this.getProfileId(_id, db);
+      if (profileId == null) {
+        profileId = _id;
+      }
+      const data:any = {};
+      data.currentPerson = await this.getPerson(profileId, db);
+      data.mother = await this.getParent(profileId, 'Female', db);
+      data.father = await this.getParent(profileId, 'Male', db);
+      data.siblings = await this.getSiblings(profileId, db);
+      data.children = await this.getChildren(profileId, db);
+      data.spouses = await this.getSpouses(profileId, db);
+
+      const photoController = new PhotoController(this.connector);
+      data.photos = await photoController.getPhotosById(profileId, db);
+      client.close();
+      return data;
+    }
+
+    getProfileId(profileId: string, db: any) {
+      let query = { 'profileId' : `${profileId}` };
+      return this.connector.getItemFromMongoDbAndDb(db, memberCollection, query, {})
+        .catch(() =>{
+          return profileId
+        })
         .then((res: any) => {
+          console.log(JSON.stringify(res));
           if (res == null) {
             return profileId;
           }
-          return res._id;
+          return `${res._id}`;
         });
     }
 
-    getPerson(_id: string) {
+      async getPrivateProfile(_id: string, user: any) {
+        const client = await this.connector.initClient();
+        const db = client.db(mongoDbDatabase);
+  
+        let profileId = await this.getProfileId(_id, db);
+        if (profileId == null) {
+          profileId = _id;
+        }
+
+    console.log(_id)
+
+    
+      return this.getProfileId(_id, db)
+        .then((res)=>{
+          
+          let profile = res;
+
+          if (res == null) {
+            profile = _id;
+          }
+  
+          this.logger.info('Get private infos by id');
+
+
+         PersonController.CheckUserAuthenticated(user);
+          const query = { _id: ObjectId(profile) }
+          const projection = {};
+          return this.connector.getItemFromMongoDb(mongoDbDatabase, memberCollection, query, projection)
+            .catch((err: any) => {
+              throw err;
+            })
+            .then(res=>res);
+        });
+    }
+    getPerson(_id: string, db: any) {
       this.logger.info('Get person by Id');
 
       const query = { _id: ObjectId(_id) };
       const projection = {};
 
-      return this.connector.getItemFromMongoDb(mongoDbDatabase, memberCollection, query, projection)
+      return this.connector.getItemFromMongoDbAndDb(db, memberCollection, query, projection)
         .catch((err: any) => {
           throw err;
         })
         .then((res: any) => PersonController.mapping(res));
     }
 
-    getParent(_id: string, gender: string) {
+    getParent(_id: string, gender: string, db: any) {
       this.logger.info(`Get ${gender === 'Male' ? 'Father' : 'Mother'} by id `);
 
-      return getParentByIdFromMongoDb(_id, gender)
+      return getParentByIdFromMongoDb(_id, gender, db)
         .catch((err: any) => {
           throw err;
         })
         .then((res: object) => PersonController.mapping(res));
     }
 
-    getChildren(_id: string) {
+    getChildren(_id: string, db:any) {
       this.logger.info('Get children by id');
 
-      return getChildrenByIdFromMongoDb(_id)
+      return getChildrenByIdFromMongoDb(_id, db)
         .catch((err: any) => {
           throw err;
         })
@@ -139,10 +201,10 @@ export default class PersonController {
         .then((res) => res.sort(PersonController.sortByYearOfBirth));
     }
 
-    getSpouses(_id: string) {
+    getSpouses(_id: string, db: any) {
       this.logger.info('Get spouses by id');
 
-      return getSpousesByIdFromMongoDb(_id)
+      return getSpousesByIdFromMongoDb(_id, db)
         .catch((err) => {
           throw err;
         })
@@ -165,10 +227,10 @@ export default class PersonController {
       return 0;
     }
 
-    getSiblings(_id: string) {
+    getSiblings(_id: string, db: any) {
       this.logger.info('Get siblings by id');
 
-      return getSiblingsByIdFromMongoDb(_id)
+      return getSiblingsByIdFromMongoDb(_id, db)
         .catch((err) => {
           throw err;
         })
@@ -176,42 +238,9 @@ export default class PersonController {
         .then((res) => res.sort(PersonController.sortByYearOfBirth));
     }
 
-    async getPrivateInfo(_id: string, user: any) {
-      let profileId = await this.getProfileId(_id);
-      if (profileId == null) {
-        profileId = _id;
-      }
+  
 
-      this.logger.info('Get private infos by id');
-      PersonController.CheckUserAuthenticated(user);
-      const query = { _id: ObjectId(profileId) };
-      const projection = {};
-      return this.connector.getItemFromMongoDb(mongoDbDatabase, memberCollection, query, projection)
-        .catch((err: any) => {
-          throw err;
-        });
-    }
-
-    async getPublicInfo(_id: string) {
-      console.log(_id);
-
-      let profileId = await this.getProfileId(_id);
-      if (profileId == null) {
-        profileId = _id;
-      }
-      const data:any = {};
-      data.currentPerson = await this.getPerson(profileId);
-      data.mother = await this.getParent(profileId, 'Female');
-      data.father = await this.getParent(profileId, 'Male');
-      data.siblings = await this.getSiblings(profileId);
-      data.children = await this.getChildren(profileId);
-      data.spouses = await this.getSpouses(profileId);
-
-      const photoController = new PhotoController(this.connector);
-      data.photos = await photoController.getPhotosById(profileId);
-
-      return data;
-    }
+   
 
     static CheckUserAuthenticated(user: any) {
       if (!user) {

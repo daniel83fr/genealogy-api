@@ -104,7 +104,7 @@ schemaBuilder.addType(`type User {
   isDead: Boolean
 }`, 'Person public info');
 
-schemaBuilder.addType(`type UserProfile 
+schemaBuilder.addType(`type PublicProfile 
 {
   currentPerson: User
   mother: User
@@ -120,10 +120,11 @@ schemaBuilder.addType(`type CachedUserList {
   isUpToDate: Boolean
 }`, 'cached user list');
 
-schemaBuilder.addType(`type UserPrivate {
+schemaBuilder.addType(`type PrivateProfile {
   _id: String
   birthDate: DateTime,
   deathDate: DateTime,
+  isDead: Boolean,
   currentLocation: String,
   birthLocation: String,
   deathLocation: String,
@@ -131,7 +132,7 @@ schemaBuilder.addType(`type UserPrivate {
   phone: String
 }`, 'Person private info');
 
-schemaBuilder.addType(`input UserPrivateChanges{
+schemaBuilder.addType(`input PrivateProfileChanges{
   birthDate: DateTime
   deathDate: DateTime,
   currentLocation: String,
@@ -186,23 +187,21 @@ schemaBuilder.addQuery('register(id: String!, login: String!, email: String!, pa
   'Validates user credentials and returns authentication token');
 
 schemaBuilder.addQuery('me: ConnectedUser');
+
 schemaBuilder.addQuery('getPersonList(cacheCount: Int, cacheDate: String): CachedUserList', `Get list of persons. Exisiting cache info can be passed to check if cache needs to be refreshed.
 - cacheCount : number of items in cache
 - cacheDate : Date of cached data
 `);
 
-schemaBuilder.addQuery('getPerson(_id: String!): User');
+schemaBuilder.addQuery('getPrivateProfile(profileId: String!): PrivateProfile');
+
+
 schemaBuilder.addQuery('getAuditLastEntries(number: Int!): [AuditEntry]');
 schemaBuilder.addQuery('getPhotoProfile(_id: String!): Photo');
 schemaBuilder.addQuery('getPhotosById(_id: String!): [Photo]');
 schemaBuilder.addQuery('getPhotosRandom(number: Int!): [Photo]');
-schemaBuilder.addQuery('getPrivateInfo(_id:String!): UserPrivate');
-schemaBuilder.addQuery('getPublicInfo(_id:String!): UserProfile');
-schemaBuilder.addQuery('getFather(_id: String!): User');
-schemaBuilder.addQuery('getMother(_id: String!): User');
-schemaBuilder.addQuery('getChildren(_id: String!): [User]');
-schemaBuilder.addQuery('getSiblings(_id: String!): [User]');
-schemaBuilder.addQuery('getSpouses(_id: String!): [User]');
+
+
 schemaBuilder.addQuery('getTodayBirthdays: [User]');
 schemaBuilder.addQuery('getTodayDeathdays: [User]');
 schemaBuilder.addQuery('getTodayMarriagedays: [User]');
@@ -218,7 +217,7 @@ schemaBuilder.addMutation('addSpouseLink(_id1: String!, _id2: String!): String')
 schemaBuilder.addMutation('addSiblingLink(_id1: String!, _id2: String!): String');
 schemaBuilder.addMutation('createPerson(person: UserChanges): User');
 schemaBuilder.addMutation('updatePerson(_id:String!, patch: UserChanges): User');
-schemaBuilder.addMutation('updatePersonPrivateInfo(_id:String!, patch: UserPrivateChanges): UserPrivate');
+schemaBuilder.addMutation('updatePersonPrivateInfo(_id:String!, patch: PrivateProfileChanges): PrivateProfile');
 schemaBuilder.addMutation('addPhoto( url : String!, deleteHash : String,  persons:[String]): String');
 schemaBuilder.addMutation('setProfilePicture(person: String!, image: String!): String');
 schemaBuilder.addMutation('deletePhoto(image: String!): String');
