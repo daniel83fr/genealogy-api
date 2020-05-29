@@ -502,7 +502,7 @@ export async function updatePersonFromMongoDb(id: string, patch: any) {
 
   const audit = db.collection(auditCollection);
   await audit.insertOne({
-    timestamp: new Date().toISOString(), type: 'Person', action: 'Person updated', payload: patch, id: ObjectId(id),
+    timestamp: new Date().toISOString(), type: 'Person', action: 'updated profile', payload: patch, id: ObjectId(id),
   });
 
   const res1 = await collection.findOne({ _id: ObjectId(id) });
