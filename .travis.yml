@@ -3,11 +3,24 @@ node_js:
 - 13
 env:
 - MONGODB_DATABASE=genealogyDb MONGODB=mongodb://localhost:27017/
+before_deploy:
+  # Set up git user name and tag this commit
+  - git config --local user.name "daniel"
+  - git config --local user.email "daniel83fr@gmail.com"
+  - export TRAVIS_TAG=${TRAVIS_TAG:-$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)}
+  - git tag $TRAVIS_TAG
 deploy:
-  provider: heroku
-  api_key:
-    secure: K6+7IPx2OB7RrN48TLie7mCDLAPn0+N0UhUdHKSl5ItFCf3H6JwuVyzLLSwiL12Zd0OZgtb4RmbroH6quRfOHXTx0Q+ZtbiPlxsqq8THUjuXalKbB1lxOWtprIw7L3r02tmkegXOHDm6/kMQxtiHsyy8M9ifGiDcvixlt55OgM7iR85U110s4AkjG+lOftFAco4uYnTx9hybruas785st3ZUg50mtrmahBw+nNLt00lrTb6vBDNr2bamzaFp98JcXzqvgUh0gRc0VTdmbtJJT01BDIvJNcLvFXt9lq0ucw1hUX1yLDlbteFw4DmF8kLX8oyLp83dCHDPFGVw5iQK6FC2SB3nskUig3ssBED51mTsfT/+bxWXDXkuN2uE6dZVECXvm3mYOFeBuv+v+01XJ6BAmW0vdC8PAvbGiJgapRhmLoPdTEwi/zc5A3BmUL7Vxjopl/DpBOCssPFCB7hkFC+x/mHIIMasU1wRVaPmaIbnHLvjwfcf2Sy8lVBG/bAaRnGm6NQzAXRLD299QU56NXx3mGe8Mz/gBk4jakfoKQbGoI1N/iJJChUVuxlEBLhMO/v+EsAt5vBpxvQFJqVe167VYiYn32lVXo6+OEl7KS3Gsfvq/OPqLESQx4N5AIC20S/Z9Vrl3Zb8sXwakR5E5On5Yr//PkXFNsncdDWjfqY=
-  app:
-    prod: genealogy-api
+  - provider: heroku
+    api_key:
+      secure: K6+7IPx2OB7RrN48TLie7mCDLAPn0+N0UhUdHKSl5ItFCf3H6JwuVyzLLSwiL12Zd0OZgtb4RmbroH6quRfOHXTx0Q+ZtbiPlxsqq8THUjuXalKbB1lxOWtprIw7L3r02tmkegXOHDm6/kMQxtiHsyy8M9ifGiDcvixlt55OgM7iR85U110s4AkjG+lOftFAco4uYnTx9hybruas785st3ZUg50mtrmahBw+nNLt00lrTb6vBDNr2bamzaFp98JcXzqvgUh0gRc0VTdmbtJJT01BDIvJNcLvFXt9lq0ucw1hUX1yLDlbteFw4DmF8kLX8oyLp83dCHDPFGVw5iQK6FC2SB3nskUig3ssBED51mTsfT/+bxWXDXkuN2uE6dZVECXvm3mYOFeBuv+v+01XJ6BAmW0vdC8PAvbGiJgapRhmLoPdTEwi/zc5A3BmUL7Vxjopl/DpBOCssPFCB7hkFC+x/mHIIMasU1wRVaPmaIbnHLvjwfcf2Sy8lVBG/bAaRnGm6NQzAXRLD299QU56NXx3mGe8Mz/gBk4jakfoKQbGoI1N/iJJChUVuxlEBLhMO/v+EsAt5vBpxvQFJqVe167VYiYn32lVXo6+OEl7KS3Gsfvq/OPqLESQx4N5AIC20S/Z9Vrl3Zb8sXwakR5E5On5Yr//PkXFNsncdDWjfqY=
+    app:
+      prod: genealogy-api
+  - provider: releases
+    api_key:
+      secure: hGfr3p/jnd5KJ/jnZBM8AC9GYDliq20Xqf/yKVEOwU/ADAb0WYKSF6xckD3zn7Qw/97J1J/+GQQwOT1pVMn7IPXXIgZ01jF3+a+GfYuf0c+a+yG5K5Jy32YshuT+wCuHhIEnlQI8TV1UGtDiXNcLtQBDymvFcWpmPP2P7v94sn7vuA6dC9Ug+b5rC6Nq7q49WN8XPEUblK048JdwsyCJOTUQXfhC05mQbrHVCuJDhtHQqgmwmajX8CXrF3ECyEB9EP/j/YwdCKtntTVbRzrzEKoA8Z4Tzt65s5W0e1WfeTTMVEXJTK8tfdaPTVcuRzL8LUWS9jKu9Gw9jTJpVbQqmyYoeE7rsivmvYuTZVGRUXXwIZIlh1hqXZIXtESMU8jQxKiyT0J5wnOcWBq+AjSV/V40bKm8yUMvmpChSfWjcDNo9r+db1LfnF0HGISiLDPiyy8+Enn70sqCV2atuz3HRz0VcT0FXQgm0hGyPGJRKbYT2AwMtixVYaQh51++yS6JHq5yR2xrh90vlQU27Jx/fZtfegOgW6zt0hbSYj1U8D42SusuheqXbaEPNKumtwJVWTBZDOo6FM1btRvp8JhGhWGuiMKHO55f8SYZH+PJk2HDNCBVG9B2OO/blZtstTTC4dEqWrzA3K3DwDH029lVoGrXZvRIun9EAjdGh3TdVAs=
+    file: dist/**
+    cleanup: false
+    on:
+      branch: prod
 script: npm test
 after_success: npm run coverage
