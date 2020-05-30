@@ -6,14 +6,15 @@ env:
   - MONGODB_DATABASE=genealogyDb MONGODB=mongodb://localhost:27017/
   global:
     secure: PSGJiT6EM0x6BQCsKF3WVJpzcRiSqCZdZLq0/YfsUX3+r4GEZ/qHPcVZpYvGHGqp2rRROBkb4LJq8Vigisung6MebsqG6e8pr6L+OxqYDcVT4lZPI9pGExAz4NWPwTpGn/7d5mvzxWgdNRXcL2i79ifp2RV5lddApwO1biJnXb1Fa12Yxy20Qs7HW4tHspV4UCxoSk6Hp2A3vD0oxlV8lLGPN7L87c2EG9BGj5cSRPKKlZS5Fd+kr6tWbLX23WlTKJQIxkQBqnEY5RaM1kmo3U5vqfu9lIaiajmwxS/5tmFRgCx3+p4ZueUVkYTpdYbIcmSvfHFeEbNcpv6moSiaLg7VKSbVxJqpscxNeDsOfWeDTl4NF/fxHZJ27x9uw3qINGc8Baog+a2ryzCfUaeWFpzC9TqC0ftQH6gYz6cBR1wuK89ode2cNWfeKWniHeSRhhsTT/Z+roHEIA82gzI7nTI4NIKKbFSe95z7LAdCdFju0q/UI+OPlrlEH2JsRJvz89tOuvNHw3UhgONmnqdcIXAUtLPZEi71mBV7pAcZackCETBHqRpTbnIg205y9myqi2AG7IOKhUhV6y9yZ8WM2NaewiXYYj3yOcdJzgj4BSpfRswsXMRYGCLThNcrwuyhaeZTW/13lKo5quSzAx4OiBXVhtgN1onqjfrN83SIcKU=
-deploy: 
+  before_deploy:
+    - tar -zcf genealogy-api-$TRAVIS_BRANCH.tar.gz $TRAVIS_BUILD_DIR/dist
+
+  deploy: 
   provider: releases
   api_key: $GITHUB_TOKEN
-  file: $TRAVIS_BUILD_DIR/dist/src/server.js
+  file: genealogy-api-$TRAVIS_BRANCH.tar.gz
   skip_cleanup: true
   on:
     tags: true
-#script: npm run test
-script: ls dist/
-after_success: ls $TRAVIS_BUILD_DIR/
-#after_success: npm run coverage
+script: npm run test
+after_success: npm run coverage
