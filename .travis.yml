@@ -9,7 +9,7 @@ env:
 deploy: 
   provider: releases
   api_key: $GITHUB_TOKEN
-  file: $TRAVIS_BUILD_DIR/**
+  file: $TRAVIS_BUILD_DIR/dist/src/server.js
   cleanup: false
   draft: true
   on:
