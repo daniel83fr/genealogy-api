@@ -14,5 +14,7 @@ deploy:
   draft: true
   on:
     branch: prod
-script: npm run test
-after_success: npm run coverage
+#script: npm run test
+script: ls
+after_success: pwd
+#after_success: npm run coverage
