@@ -3,19 +3,13 @@ node_js:
 - 13
 env:
 - MONGODB_DATABASE=genealogyDb MONGODB=mongodb://localhost:27017/
-before_deploy:
-  # Set up git user name and tag this commit
-  - git config --local user.name "daniel"
-  - git config --global user.name "Travis CI"
-  - export GIT_TAG=v0.1.$TRAVIS_BUILD_NUMBER
-  #- git tag $GIT_TAG -a -m "Generated tag from TravisCI for build $TRAVIS_BUILD_NUMBER"
-  #- git push --tags
-  deploy:
-    provider: releases
-    api_key: "WB0XeUnSVd86qqA5KEaKMUpmSslWaytzFKgBICycQaPZhbnReBMOcZoMjtvbl1Vi9fc3vh8kTS4JHgmap4nPbXzFqZaWNXw8wrmiQLvj9q+XS762Lk+dUH/8I93T6go3WWEi0cTBxYAdqY6skilJnULn3n8p8tcnzTSdZObK6M87tPE9WGCKOkp/EPRGwj2M04PEZYn6j7/SmIaEDpSQJk26ki8ur0rubrjxD9tqInU/U01gEG09zVogUvVxUURSpKJQnVQewed+DIDIeJuh27XqmRCFH381HRS1IcfW7FHKOYf8hedi+M0hLkzD/zDpDjxbo1jcOH4f/deimeAYP5HPL1J/sxN7+WBXaao5B2GglnT6A6Pw5y/r5ml2aA5V5cxJAulMvUZZeVf89nna1ga2U3FJRwY27qMHh+wyRwnzcJ+27xgy+4Sm1RsO0DfKnGHH7aoW+K7zcC8whWZQPF0pCTfjU6gPLO2BvQVYuKTD5U79x0r9D+DETblgZgzMBUMvSQUDnfJXz5ONqvWc00J7no4gHHH1L+wcL5IGaaKddHWpm4CC+z28YihSfyyudUtS2eNTt+j2K9IwuUp069PZopGqFfPH2RyJ6Pnq0l2dw0aSJi5MQp6OqGyFa7BraeFpFzxTv8ShF7MBtvSrhDvcED/MTcsjL+bcJBanr9U="
-    file: dist/**
-    cleanup: false
-    draft: true
+deploy:
+  provider: releases
+  api_key: 
+    secure: "WB0XeUnSVd86qqA5KEaKMUpmSslWaytzFKgBICycQaPZhbnReBMOcZoMjtvbl1Vi9fc3vh8kTS4JHgmap4nPbXzFqZaWNXw8wrmiQLvj9q+XS762Lk+dUH/8I93T6go3WWEi0cTBxYAdqY6skilJnULn3n8p8tcnzTSdZObK6M87tPE9WGCKOkp/EPRGwj2M04PEZYn6j7/SmIaEDpSQJk26ki8ur0rubrjxD9tqInU/U01gEG09zVogUvVxUURSpKJQnVQewed+DIDIeJuh27XqmRCFH381HRS1IcfW7FHKOYf8hedi+M0hLkzD/zDpDjxbo1jcOH4f/deimeAYP5HPL1J/sxN7+WBXaao5B2GglnT6A6Pw5y/r5ml2aA5V5cxJAulMvUZZeVf89nna1ga2U3FJRwY27qMHh+wyRwnzcJ+27xgy+4Sm1RsO0DfKnGHH7aoW+K7zcC8whWZQPF0pCTfjU6gPLO2BvQVYuKTD5U79x0r9D+DETblgZgzMBUMvSQUDnfJXz5ONqvWc00J7no4gHHH1L+wcL5IGaaKddHWpm4CC+z28YihSfyyudUtS2eNTt+j2K9IwuUp069PZopGqFfPH2RyJ6Pnq0l2dw0aSJi5MQp6OqGyFa7BraeFpFzxTv8ShF7MBtvSrhDvcED/MTcsjL+bcJBanr9U="
+  file: dist/**
+  cleanup: false
+  draft: true
 # deploy:
 #   - provider: heroku
 #     api_key:
