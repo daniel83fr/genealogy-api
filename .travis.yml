@@ -6,8 +6,10 @@ env:
 before_deploy:
   # Set up git user name and tag this commit
   - git config --local user.name "daniel"
-  - git config --local user.email "daniel83fr@gmail.com"
-  - git tag v1.0.$TRAVIS_BUILD_ID --force
+  - git config --global user.name "Travis CI"
+  - export GIT_TAG=v0.1.$TRAVIS_BUILD_NUMBER
+  - git tag $GIT_TAG -a -m "Generated tag from TravisCI for build $TRAVIS_BUILD_NUMBER"
+  - git push -q https://$TAGPERM@github.com/daniel83fr/genealogy-api --tags
 deploy:
   - provider: heroku
     api_key:
@@ -20,6 +22,6 @@ deploy:
     file: dist/**
     cleanup: false
     on:
-      branch: prod
+      tags: true
 script: npm test
 after_success: npm run coverage
