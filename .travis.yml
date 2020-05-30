@@ -8,20 +8,26 @@ before_deploy:
   - git config --local user.name "daniel"
   - git config --global user.name "Travis CI"
   - export GIT_TAG=v0.1.$TRAVIS_BUILD_NUMBER
-  - git tag $GIT_TAG -a -m "Generated tag from TravisCI for build $TRAVIS_BUILD_NUMBER"
+  #- git tag $GIT_TAG -a -m "Generated tag from TravisCI for build $TRAVIS_BUILD_NUMBER"
   #- git push --tags
-deploy:
-  - provider: heroku
-    api_key:
-      secure: K6+7IPx2OB7RrN48TLie7mCDLAPn0+N0UhUdHKSl5ItFCf3H6JwuVyzLLSwiL12Zd0OZgtb4RmbroH6quRfOHXTx0Q+ZtbiPlxsqq8THUjuXalKbB1lxOWtprIw7L3r02tmkegXOHDm6/kMQxtiHsyy8M9ifGiDcvixlt55OgM7iR85U110s4AkjG+lOftFAco4uYnTx9hybruas785st3ZUg50mtrmahBw+nNLt00lrTb6vBDNr2bamzaFp98JcXzqvgUh0gRc0VTdmbtJJT01BDIvJNcLvFXt9lq0ucw1hUX1yLDlbteFw4DmF8kLX8oyLp83dCHDPFGVw5iQK6FC2SB3nskUig3ssBED51mTsfT/+bxWXDXkuN2uE6dZVECXvm3mYOFeBuv+v+01XJ6BAmW0vdC8PAvbGiJgapRhmLoPdTEwi/zc5A3BmUL7Vxjopl/DpBOCssPFCB7hkFC+x/mHIIMasU1wRVaPmaIbnHLvjwfcf2Sy8lVBG/bAaRnGm6NQzAXRLD299QU56NXx3mGe8Mz/gBk4jakfoKQbGoI1N/iJJChUVuxlEBLhMO/v+EsAt5vBpxvQFJqVe167VYiYn32lVXo6+OEl7KS3Gsfvq/OPqLESQx4N5AIC20S/Z9Vrl3Zb8sXwakR5E5On5Yr//PkXFNsncdDWjfqY=
-    app:
-      prod: genealogy-api
-  - provider: releases
-    api_key:
-      secure: hGfr3p/jnd5KJ/jnZBM8AC9GYDliq20Xqf/yKVEOwU/ADAb0WYKSF6xckD3zn7Qw/97J1J/+GQQwOT1pVMn7IPXXIgZ01jF3+a+GfYuf0c+a+yG5K5Jy32YshuT+wCuHhIEnlQI8TV1UGtDiXNcLtQBDymvFcWpmPP2P7v94sn7vuA6dC9Ug+b5rC6Nq7q49WN8XPEUblK048JdwsyCJOTUQXfhC05mQbrHVCuJDhtHQqgmwmajX8CXrF3ECyEB9EP/j/YwdCKtntTVbRzrzEKoA8Z4Tzt65s5W0e1WfeTTMVEXJTK8tfdaPTVcuRzL8LUWS9jKu9Gw9jTJpVbQqmyYoeE7rsivmvYuTZVGRUXXwIZIlh1hqXZIXtESMU8jQxKiyT0J5wnOcWBq+AjSV/V40bKm8yUMvmpChSfWjcDNo9r+db1LfnF0HGISiLDPiyy8+Enn70sqCV2atuz3HRz0VcT0FXQgm0hGyPGJRKbYT2AwMtixVYaQh51++yS6JHq5yR2xrh90vlQU27Jx/fZtfegOgW6zt0hbSYj1U8D42SusuheqXbaEPNKumtwJVWTBZDOo6FM1btRvp8JhGhWGuiMKHO55f8SYZH+PJk2HDNCBVG9B2OO/blZtstTTC4dEqWrzA3K3DwDH029lVoGrXZvRIun9EAjdGh3TdVAs=
+  deploy:
+    provider: releases
+    api_key: "WB0XeUnSVd86qqA5KEaKMUpmSslWaytzFKgBICycQaPZhbnReBMOcZoMjtvbl1Vi9fc3vh8kTS4JHgmap4nPbXzFqZaWNXw8wrmiQLvj9q+XS762Lk+dUH/8I93T6go3WWEi0cTBxYAdqY6skilJnULn3n8p8tcnzTSdZObK6M87tPE9WGCKOkp/EPRGwj2M04PEZYn6j7/SmIaEDpSQJk26ki8ur0rubrjxD9tqInU/U01gEG09zVogUvVxUURSpKJQnVQewed+DIDIeJuh27XqmRCFH381HRS1IcfW7FHKOYf8hedi+M0hLkzD/zDpDjxbo1jcOH4f/deimeAYP5HPL1J/sxN7+WBXaao5B2GglnT6A6Pw5y/r5ml2aA5V5cxJAulMvUZZeVf89nna1ga2U3FJRwY27qMHh+wyRwnzcJ+27xgy+4Sm1RsO0DfKnGHH7aoW+K7zcC8whWZQPF0pCTfjU6gPLO2BvQVYuKTD5U79x0r9D+DETblgZgzMBUMvSQUDnfJXz5ONqvWc00J7no4gHHH1L+wcL5IGaaKddHWpm4CC+z28YihSfyyudUtS2eNTt+j2K9IwuUp069PZopGqFfPH2RyJ6Pnq0l2dw0aSJi5MQp6OqGyFa7BraeFpFzxTv8ShF7MBtvSrhDvcED/MTcsjL+bcJBanr9U="
     file: dist/**
     cleanup: false
-    on:
-      tags: true
+    draft: true
+# deploy:
+#   - provider: heroku
+#     api_key:
+#       secure: K6+7IPx2OB7RrN48TLie7mCDLAPn0+N0UhUdHKSl5ItFCf3H6JwuVyzLLSwiL12Zd0OZgtb4RmbroH6quRfOHXTx0Q+ZtbiPlxsqq8THUjuXalKbB1lxOWtprIw7L3r02tmkegXOHDm6/kMQxtiHsyy8M9ifGiDcvixlt55OgM7iR85U110s4AkjG+lOftFAco4uYnTx9hybruas785st3ZUg50mtrmahBw+nNLt00lrTb6vBDNr2bamzaFp98JcXzqvgUh0gRc0VTdmbtJJT01BDIvJNcLvFXt9lq0ucw1hUX1yLDlbteFw4DmF8kLX8oyLp83dCHDPFGVw5iQK6FC2SB3nskUig3ssBED51mTsfT/+bxWXDXkuN2uE6dZVECXvm3mYOFeBuv+v+01XJ6BAmW0vdC8PAvbGiJgapRhmLoPdTEwi/zc5A3BmUL7Vxjopl/DpBOCssPFCB7hkFC+x/mHIIMasU1wRVaPmaIbnHLvjwfcf2Sy8lVBG/bAaRnGm6NQzAXRLD299QU56NXx3mGe8Mz/gBk4jakfoKQbGoI1N/iJJChUVuxlEBLhMO/v+EsAt5vBpxvQFJqVe167VYiYn32lVXo6+OEl7KS3Gsfvq/OPqLESQx4N5AIC20S/Z9Vrl3Zb8sXwakR5E5On5Yr//PkXFNsncdDWjfqY=
+#     app:
+#       prod: genealogy-api
+#   - provider: releases
+#     api_key:
+#       secure: hGfr3p/jnd5KJ/jnZBM8AC9GYDliq20Xqf/yKVEOwU/ADAb0WYKSF6xckD3zn7Qw/97J1J/+GQQwOT1pVMn7IPXXIgZ01jF3+a+GfYuf0c+a+yG5K5Jy32YshuT+wCuHhIEnlQI8TV1UGtDiXNcLtQBDymvFcWpmPP2P7v94sn7vuA6dC9Ug+b5rC6Nq7q49WN8XPEUblK048JdwsyCJOTUQXfhC05mQbrHVCuJDhtHQqgmwmajX8CXrF3ECyEB9EP/j/YwdCKtntTVbRzrzEKoA8Z4Tzt65s5W0e1WfeTTMVEXJTK8tfdaPTVcuRzL8LUWS9jKu9Gw9jTJpVbQqmyYoeE7rsivmvYuTZVGRUXXwIZIlh1hqXZIXtESMU8jQxKiyT0J5wnOcWBq+AjSV/V40bKm8yUMvmpChSfWjcDNo9r+db1LfnF0HGISiLDPiyy8+Enn70sqCV2atuz3HRz0VcT0FXQgm0hGyPGJRKbYT2AwMtixVYaQh51++yS6JHq5yR2xrh90vlQU27Jx/fZtfegOgW6zt0hbSYj1U8D42SusuheqXbaEPNKumtwJVWTBZDOo6FM1btRvp8JhGhWGuiMKHO55f8SYZH+PJk2HDNCBVG9B2OO/blZtstTTC4dEqWrzA3K3DwDH029lVoGrXZvRIun9EAjdGh3TdVAs=
+#     file: dist/**
+#     cleanup: false
+#     on:
+#       tags: true
 script: npm test
 after_success: npm run coverage
