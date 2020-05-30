@@ -9,12 +9,12 @@ env:
   
 before_deploy:
   - cd $TRAVIS_BUILD_DIR/dist/src
-  - tar -zcf genealogy-api-$TRAVIS_BRANCH.tar.gz .
+  - tar -zcf ../genealogy-api-$TRAVIS_BRANCH.tar.gz .
 
 deploy: 
   provider: releases
   api_key: $GITHUB_TOKEN
-  file: genealogy-api-$TRAVIS_BRANCH.tar.gz
+  file: ../genealogy-api-$TRAVIS_BRANCH.tar.gz
   skip_cleanup: true
   on:
     tags: true
