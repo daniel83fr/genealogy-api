@@ -13,7 +13,7 @@ export const memberCollection = 'members';
 export const auditCollection = 'audit';
 export const relationCollection = 'relations';
 export const credentialsCollection = 'credentials';
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 export class MongoConnector {
   async getLastUpdate(db: any, collectionName: string) {
