@@ -31,8 +31,10 @@ export default class PhotoController {
       .catch((err: any) => {
         throw err;
       })
-      .then((res: object) => {
-        res = Object.assign(res);
+      .then((res: any[]) => {
+        res.forEach(element => {
+          element.url = this.adjustImageUrl(element.url);
+        });
         return res;
       });
   }
@@ -79,8 +81,8 @@ export default class PhotoController {
       .catch((err: any) => {
         throw err;
       })
-      .then((res: object) => {
-        res = Object.assign(res);
+      .then((res: any) => {
+        res.url = this.adjustImageUrl(res.url);
         return res;
       });
   }
@@ -91,9 +93,15 @@ export default class PhotoController {
       .catch((err: any) => {
         throw err;
       })
-      .then((res: object) => {
-        res = Object.assign(res);
+      .then((res: any[]) => {
+        res.forEach(element => {
+          element.url = this.adjustImageUrl(element.url);
+        });
         return res;
       });
+  }
+
+  adjustImageUrl(url: string){
+    return url.replace('https://i.imgur.com/', 'https://www.res01.com/images/')
   }
 }

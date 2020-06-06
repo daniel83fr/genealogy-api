@@ -181,7 +181,7 @@ schemaBuilder.addType(`type Token {
 
 
 schemaBuilder.setQueryDescription('Queries definition.');
-
+schemaBuilder.addQuery('version: String', 'Get api version');
 
 schemaBuilder.addQuery('login(login: String!, password: String): Token',
   'Validates user credentials and returns authentication token');

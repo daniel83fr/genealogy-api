@@ -12,6 +12,11 @@ export default class AdminController {
   constructor(connector: MongoConnector) {
     this.connector = connector;
   }
+  
+  getVersion() {
+    this.logger.info('get version');
+    return process.env.VERSION;
+  }
 
   runMassUpdate() {
     this.logger.info('Run mass update');

@@ -25,6 +25,8 @@ export class GraphQLResolver {
   getQuery() {
     return {
 
+      version: () => this.adminController?.getVersion(),
+
       login: (args: any) => this.loginController?.login(args.login, args.password),
       register: (args: any) => this.loginController?.register(args.id, args.login, args.email, args.password),
       me: (args: any, context: any) => this.loginController?.me(context.user),
