@@ -102,6 +102,8 @@ export default class PhotoController {
   }
 
   adjustImageUrl(url: string){
-    return url.replace('https://i.imgur.com/', 'https://www.res01.com/images/')
+    return url
+    .replace('https://i.imgur.com/', 'https://www.res01.com/images/')
+    .replace('.jpg', 'm.jpg')
   }
 }
