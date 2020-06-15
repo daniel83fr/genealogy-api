@@ -9,10 +9,8 @@ env:
   
 before_deploy:
   - cd $TRAVIS_BUILD_DIR/dist
-  - echo -e $TRAVIS_BRANCH > src/.version
-  - ls src/
-  - ls
-  - tar -zcf genealogy-api-$TRAVIS_BRANCH.tar.gz -C src/ .
+  - echo -e $TRAVIS_BRANCH > .version
+  - tar -zcf genealogy-api-$TRAVIS_BRANCH.tar.gz -C . .
 
 deploy: 
   provider: releases

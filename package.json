@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "postinstall": "npx tsc",
+    "postinstall": "npx webpack",
     "start": "node ./dist/src/server.js",
     "dev": "tsc-watch --onSuccess \"node ./dist/src/server.js\"",
     "startPm2": "npx pm2 start pm2.yaml",
