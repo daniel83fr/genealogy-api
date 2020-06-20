@@ -112,6 +112,12 @@ schemaBuilder.addType(`type PublicProfile
   children: [User]
   spouses: [User]
   siblings: [User]
+  grandParents: [User]
+  grandChildren: [User]
+  grandGrandChildren: [User]
+  cousins: [User]
+  niblings: [User]
+  piblings: [User]
   photos: [Photo]
 }`, 'Person public info');
 
