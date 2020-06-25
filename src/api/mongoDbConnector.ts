@@ -137,7 +137,7 @@ export class MongoConnector {
   }
 }
 
-function getConnector() {
+export function getConnector() {
   return new MongoConnector(connectionString);
 }
 
