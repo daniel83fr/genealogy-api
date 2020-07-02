@@ -109,6 +109,7 @@ schemaBuilder.addType(`type PublicProfile
   currentPerson: User
   mother: User
   father: User
+  parents: [User]
   children: [User]
   spouses: [User]
   siblings: [User]
@@ -209,6 +210,7 @@ schemaBuilder.addQuery('getPhotoProfile(_id: String!): Photo');
 schemaBuilder.addQuery('getPhotosById(_id: String!): [Photo]');
 schemaBuilder.addQuery('getPhotosRandom(number: Int!): [Photo]');
 
+schemaBuilder.addQuery('getRelation(_id1: String!,_id2: String!): [String]');
 
 schemaBuilder.addQuery('getTodayBirthdays: [User]');
 schemaBuilder.addQuery('getTodayDeathdays: [User]');

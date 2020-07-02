@@ -43,6 +43,7 @@ export class GraphQLResolver {
       getTodayBirthdays: (args: any, context: any) => this.eventController?.getTodayBirthdays(context.user),
       getTodayDeathdays: (args: any, context: any) => this.eventController?.getTodayDeathdays(context.user),
       getTodayMarriagedays: (args: any, context: any) => this.eventController?.getTodayMarriagedays(context.user),
+      getRelation:(args:any) => this.personController?.getRelation(args._id1, args._id2)
     };
   }
 

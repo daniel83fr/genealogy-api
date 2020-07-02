@@ -1,26 +1,18 @@
 import {
   memberCollection,
   mongoDbDatabase,
-  getParentByIdFromMongoDb,
-  getChildrenByIdFromMongoDb,
-  getSpousesByIdFromMongoDb,
-  getSiblingsByIdFromMongoDb,
-  getGrandParentsByIdFromMongoDb,
-  getGrandChildrenByIdFromMongoDb,
-  getGrandGrandChildrenByIdFromMongoDb,
-  getCousinsByIdFromMongoDb,
-  getPiblingsByIdFromMongoDb,
-  getNiblingsByIdFromMongoDb,
   MongoConnector,
   updatePersonFromMongoDb,
   createPersonFromMongoDb,
   deleteProfileFromMongoDb,
+  relationCollection,
+  getProfileByIdFromMongoDb,
 
 } from './mongoDbConnector';
 
 import LoggerService from '../services/logger_service';
 import LoginController from './loginController';
-import PhotoController from './photoController';
+
 
 const ObjectId = require('mongodb').ObjectID;
 
@@ -53,6 +45,66 @@ export default class PersonController {
       isDead: element?.isDead ?? false,
       profileId: element?.profileId,
     };
+  }
+
+  getNodes(db: any) {
+    this.logger.info('Get person by Id');
+
+    return this.connector.getArrayFromMongoDbAndDb(db, memberCollection, {}, {_id: 1})
+      .catch((err: any) => {
+        throw err;
+      })
+      .then((res: any) => res);
+  }
+
+  getEdges(db: any) {
+    return this.connector.getArrayFromMongoDbAndDb(db, relationCollection, {}, {person1_id: 1,person2_id: 1})
+      .catch((err: any) => {
+        throw err;
+      })
+      .then((res: any) => res);
+  }
+
+
+  async getRelation(_id1: string, _id2: string){
+
+
+    this.logger.info('Dijkstra');
+    const Graph = require('node-dijkstra')
+
+    const route = new Graph()
+
+    const client = await this.connector.initClient();
+    let nodes: any = [];
+    let edges: any = [];
+
+    try {
+      const db = client.db(mongoDbDatabase);
+      let nodes = await this.getNodes(db);
+      let edges = await this.getEdges(db);
+      console.log(nodes.length);
+      console.log(edges.length);
+      client.close();
+
+    } catch(error) {
+      console.log(error);
+      client.close();
+    }
+
+    for(let i = 0;i< nodes.length;i++){
+      let e:any= {};
+      for(let j = 0; j< edges.length; j++){
+        if(edges[j].person1_id.toString() == nodes[i]._id.toString()){
+          e[edges[j].person2_id.toString()] = 1;
+        }
+        if(edges[j].person2_id.toString() == nodes[i]._id.toString()){
+          e[edges[j].person1_id.toString()] = 1;
+        }
+      }
+      route.addNode(nodes[i]._id.toString(), e)
+    }
+
+    return route.path(_id1, _id2)
   }
 
   getPersonList(cacheCount: number, cacheDate: string) {
@@ -101,87 +153,19 @@ export default class PersonController {
   }
 
   async getProfile(_id: string) {
-    console.log(_id);
-
     const client = await this.connector.initClient();
-    const db = client.db(mongoDbDatabase);
-
-    let profileId = await this.getProfileId(_id, db);
-    if (profileId == null) {
-      profileId = _id;
+    try {
+      const db = client.db(mongoDbDatabase);
+      const data: any = await getProfileByIdFromMongoDb(_id, db);
+      client.close();
+      return data;
+    } catch (error) {
+      client.close();
+      console.log(error);
+      return {};
     }
-    const data: any = {};
-    data.currentPerson = await this.getPerson(profileId, db);
-    data.mother = await this.getParent(profileId, 'Female', db);
-    data.father = await this.getParent(profileId, 'Male', db);
-    data.siblings = await this.getSiblings(profileId, db);
-    data.children = await this.getChildren(profileId, db);
-    data.spouses = await this.getSpouses(profileId, db);
-    data.grandParents = await this.getGrandParents(profileId, db);
-    data.grandChildren = await this.getGrandChildren(profileId, db);
-    data.grandGrandChildren = await this.getGrandGrandChildren(profileId, db);
-    data.cousins = await this.getCousins(profileId, db);
-    data.niblings = await this.getNiblings(profileId, db);
-    data.piblings = await this.getPiblings(profileId, db);
-    const photoController = new PhotoController(this.connector);
-    data.photos = await photoController.getPhotosById(profileId, db);
-    client.close();
-    return data;
-  }
-  getGrandParents(profileId: string, db: any) {
-
-    return getGrandParentsByIdFromMongoDb(profileId, db)
-      .catch((err: any) => {
-        throw err;
-      })
-      .then((res: any[]) => res.map(PersonController.mapping))
-      .then((res) => res.sort(PersonController.sortByYearOfBirth));
   }
 
-  getGrandChildren(profileId: string, db: any) {
-    return getGrandChildrenByIdFromMongoDb(profileId, db)
-      .catch((err: any) => {
-        throw err;
-      })
-      .then((res: any[]) => res.map(PersonController.mapping))
-      .then((res) => res.sort(PersonController.sortByYearOfBirth));
-  }
-
-  getGrandGrandChildren(profileId: string, db: any) {
-    return getGrandGrandChildrenByIdFromMongoDb(profileId, db)
-      .catch((err: any) => {
-        throw err;
-      })
-      .then((res: any[]) => res.map(PersonController.mapping))
-      .then((res) => res.sort(PersonController.sortByYearOfBirth));
-  }
-
-  getCousins(profileId: string, db: any) {
-    return getCousinsByIdFromMongoDb(profileId, db)
-      .catch((err: any) => {
-        throw err;
-      })
-      .then((res: any[]) => res.map(PersonController.mapping))
-      .then((res) => res.sort(PersonController.sortByYearOfBirth));
-  }
-
-  getPiblings(profileId: string, db: any) {
-    return getPiblingsByIdFromMongoDb(profileId, db)
-      .catch((err: any) => {
-        throw err;
-      })
-      .then((res: any[]) => res.map(PersonController.mapping))
-      .then((res) => res.sort(PersonController.sortByYearOfBirth));
-  }
-
-  getNiblings(profileId: string, db: any) {
-    return getNiblingsByIdFromMongoDb(profileId, db)
-      .catch((err: any) => {
-        throw err;
-      })
-      .then((res: any[]) => res.map(PersonController.mapping))
-      .then((res) => res.sort(PersonController.sortByYearOfBirth));
-  }
 
   getProfileId(profileId: string, db: any) {
     let query = { 'profileId': `${profileId}` };
@@ -245,36 +229,7 @@ export default class PersonController {
       .then((res: any) => PersonController.mapping(res));
   }
 
-  getParent(_id: string, gender: string, db: any) {
-    this.logger.info(`Get ${gender === 'Male' ? 'Father' : 'Mother'} by id `);
-
-    return getParentByIdFromMongoDb(_id, gender, db)
-      .catch((err: any) => {
-        throw err;
-      })
-      .then((res: object) => PersonController.mapping(res));
-  }
-
-  getChildren(_id: string, db: any) {
-    this.logger.info('Get children by id');
-
-    return getChildrenByIdFromMongoDb(_id, db)
-      .catch((err: any) => {
-        throw err;
-      })
-      .then((res: any[]) => res.map(PersonController.mapping))
-      .then((res) => res.sort(PersonController.sortByYearOfBirth));
-  }
-
-  getSpouses(_id: string, db: any) {
-    this.logger.info('Get spouses by id');
-
-    return getSpousesByIdFromMongoDb(_id, db)
-      .catch((err) => {
-        throw err;
-      })
-      .then((res) => res.map(PersonController.mapping));
-  }
+ 
 
   static sortByYearOfBirth(a: any, b: any) {
     const keyA = new Date(a.yearOfBirth);
@@ -292,16 +247,7 @@ export default class PersonController {
     return 0;
   }
 
-  getSiblings(_id: string, db: any) {
-    this.logger.info('Get siblings by id');
 
-    return getSiblingsByIdFromMongoDb(_id, db)
-      .catch((err) => {
-        throw err;
-      })
-      .then((res) => res.map(PersonController.mapping))
-      .then((res) => res.sort(PersonController.sortByYearOfBirth));
-  }
 
 
 

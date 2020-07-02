@@ -42,6 +42,7 @@
     "graphql": "^15.0.0",
     "jsonwebtoken": "^8.5.1",
     "mongo": "^0.1.0",
+    "node-dijkstra": "^2.5.0",
     "pm2": "^4.4.0",
     "request": "^2.88.2",
     "request-promise": "^4.2.5",

@@ -6,7 +6,6 @@ import cors from 'cors';
 import schema from './api/schema';
 import resolver from './api/graphQLResolver';
 import LoggerService from './services/logger_service';
-import Scrapper from './services/scrapper';
 
 const bodyParser = require('body-parser');
 const jwt = require('express-jwt');
@@ -24,16 +23,6 @@ const loggingMiddleware = (req: { ip: any; }, res: any, next: () => void) => {
 const app = express();
 app.use(loggingMiddleware);
 app.use(cors());
-
-
-
-app.get('/scrapper', (req: any, res: any) => {
-  const scrapper = new Scrapper();
-  res.send({'error': 'you should not be here'});
-  //var res1 = scrapper.BuildCsv();
-  //scrapper.Scrap('https://www.geni.com/api/profile-92995219');
- // res.send(res1);
-});
 
 app.use(
   '/graphql', bodyParser.json(), auth,
@@ -54,8 +43,6 @@ const DATABASE = process.env.MONGODB_DATABASE;
 
 const server = http.createServer(app);
 
-
-
 const logger = new LoggerService('Server');
 server.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}...`);
@@ -72,5 +59,3 @@ process.on('uncaughtException', (e) => {
 process.on('unhandledRejection', (e) => {
   logger.error('unhandledRejection', e);
 });
-
-
