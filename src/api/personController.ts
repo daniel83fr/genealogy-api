@@ -18,7 +18,7 @@ import path from 'path';
 
 const ObjectId = require('mongodb').ObjectID;
 
-export const cacheFolder = '../../../cache';
+export const cacheFolder = '../cache';
 
 export default class PersonController {
 
