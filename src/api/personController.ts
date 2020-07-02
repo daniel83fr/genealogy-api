@@ -160,7 +160,7 @@ export default class PersonController {
 
   async getProfile(_id: string) {
 
-    const cacheFile = path.join(__dirname, `${cacheFolder}/profile_${_id}.json`);
+    const cacheFile = `${cacheFolder}/profile_${_id}.json`;
     if (fs.existsSync(cacheFile)) {
       const cachedProfile = fs.readFileSync(cacheFile, 'utf8');
       return JSON.parse(cachedProfile);
@@ -275,7 +275,7 @@ export default class PersonController {
 
   removeProfile(id: string) {
     this.logger.info('Remove profile');
-    const cacheFile = path.join(__dirname, `${cacheFolder}/profile_${id}.json`);
+    const cacheFile = `${cacheFolder}/profile_${id}.json`;
     if (fs.existsSync(cacheFile)) {
       fs.unlinkSync(cacheFile);
     }
@@ -292,7 +292,7 @@ export default class PersonController {
       return null;
     }
 
-    const cacheFile = path.join(__dirname, `${cacheFolder}/profile_${_id}.json`);
+    const cacheFile = `${cacheFolder}/profile_${_id}.json`;
     if (fs.existsSync(cacheFile)) {
       fs.unlinkSync(cacheFile);
     }
