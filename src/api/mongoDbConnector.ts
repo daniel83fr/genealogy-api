@@ -145,7 +145,7 @@ export async function getTodayBirthdaysFromMongoDb() {
   const connector = getConnector();
   const dateFilter = new Date().toISOString().substring(5, 10);
   return connector.getArrayFromMongoDb(mongoDbDatabase, memberCollection,
-    { birthDate: { $regex: dateFilter } }, {});
+    { birth:{ birthDate: { $regex: dateFilter } }}, {});
 }
 
 export async function getTodayDeathdaysFromMongoDb() {
@@ -399,145 +399,9 @@ export async function addPhotoFromMongoDb(url: string, deleteHash: string, perso
 
 
 
-function mapping(element: any) {
-  const yearOfBirth = element?.birthDate?.substring(0, 4);
-  const yearOfDeath = element?.deathDate?.substring(0, 4);
-  return {
-    _id: element?._id,
-    firstName: element?.firstName,
-    lastName: element?.lastName,
-    maidenName: element?.maidenName,
-    gender: element?.gender,
-    yearOfBirth: yearOfBirth === '0000' ? null : yearOfBirth,
-    yearOfDeath: yearOfDeath === '0000' ? null : yearOfDeath,
-    isDead: element?.isDead ?? false,
-    profileId: element?.profileId,
-  };
-}
-
-
-export async function getProfileByIdFromMongoDb(id: string, db:any) {
-
-  let validGuid = new RegExp("^[0-9a-fA-F]{24}$").test(id);
-  let query = {};
-  if (validGuid)
-  {
-    query = { "$or": [{ "profileId": id }, { "_id": ObjectId(id) }] }
-  }
-  else {
-    query = { "profileId": id }
-  }
-
-  let currentUser = await db.collection(memberCollection).findOne(query);
-  let userId:string = currentUser?._id?.toString();
-
-  let parentLinks = await db.collection(relationCollection).find({ person2_id: ObjectId(userId), type: 'Parent' }).toArray();
-  const parentIds: any = [];
-  parentLinks.forEach((element: { person1_id: string; }) => {
-    parentIds.push(ObjectId(element.person1_id));
-  });
-
-  let siblingsLinks = await db.collection(relationCollection).find( { person1_id: { $in: parentIds }, person2_id: { $nin : [ userId]}, type: 'Parent' }).toArray();
-  const siblingsIds: any = [];
-  siblingsLinks.forEach((element: { person2_id: string; }) => {
-    if(element.person2_id.toString() != userId)
-    {
-      siblingsIds.push(ObjectId(element.person2_id));
-    }
-  });
-
-  let niblingsIds: any[] = []
-  const niblingsLinks = await db.collection(relationCollection).find({ person1_id: { $in: siblingsIds }, type: 'Parent' }).toArray();
-  niblingsLinks.forEach((element: { person2_id: string; }) => {
-    niblingsIds.push(ObjectId(element.person2_id));
-  });
-
-  let childrenLinks = await db.collection(relationCollection).find({ person1_id: ObjectId(userId), type: 'Parent' }).toArray();
-  const childrenIds: any = [];
-  childrenLinks.forEach((element: { person2_id: string; }) => {
-    childrenIds.push(ObjectId(element.person2_id));
-  });
-
-  let grandParentIds: any[] = []
-  const grandParentLinks = await db.collection(relationCollection).find({ person2_id: { $in: parentIds }, type: 'Parent' }).toArray();
-  grandParentLinks.forEach((element: { person1_id: string; }) => {
-    grandParentIds.push(ObjectId(element.person1_id));
-  });
-
-  let piblingsIds: any[] = []
-  const piblingsLinks = await db.collection(relationCollection).find({ person1_id: { $in: grandParentIds }, person2_id: { $nin: parentIds }, type: 'Parent' }).toArray();
-
-  piblingsLinks.forEach((element: { person2_id: string; }) => {
-     piblingsIds.push(ObjectId(element.person2_id));
-  });
 
 
 
-  let cousinsIds: any[] = []
-  const cousinsLinks = await db.collection(relationCollection).find({ person1_id: { $in: piblingsIds }, type: 'Parent' }).toArray();
-  cousinsLinks.forEach((element: { person2_id: string; }) => {
-      cousinsIds.push(ObjectId(element.person2_id));
-    
-  });
-
-  let grandChildrenIds: any[] = []
-  const grandChildrenLinks = await db.collection(relationCollection).find({ person1_id: { $in: childrenIds }, type: 'Parent' }).toArray();
-  grandChildrenLinks.forEach((element: { person2_id: string; }) => {
-    grandChildrenIds.push(ObjectId(element.person2_id));
-  });
-
-  let grandGrandChildrenIds: any[] = []
-  const grandGrandChildrenLinks = await db.collection(relationCollection).find({ person1_id: { $in: grandChildrenIds }, type: 'Parent' }).toArray();
-  grandGrandChildrenLinks.forEach((element: { person2_id: string; }) => {
-    grandGrandChildrenIds.push(ObjectId(element.person2_id));
-  });
-
-  const spouseLinks = await db.collection(relationCollection).find({ type: 'Spouse', $or: [{ person1_id: ObjectId(userId) }, { person2_id: ObjectId(userId) }] }).toArray();
-  const spousesIds: any = [];
-  spouseLinks.forEach((element: { person1_id: string; person2_id: string; }) => {
-    if (element.person1_id.toString() == userId) {
-      spousesIds.push(ObjectId(element.person2_id));
-    } else {
-      spousesIds.push(ObjectId(element.person1_id));
-    }
-  });
-
-  const parents = await db.collection(memberCollection).find( { _id: { $in: parentIds } }).toArray();
-  const children = await db.collection(memberCollection).find( { _id: { $in: childrenIds } }).toArray();
-  const grandParents = await db.collection(memberCollection).find( { _id: { $in: grandParentIds } }).toArray();
-  const grandChildren = await db.collection(memberCollection).find( { _id: { $in: grandChildrenIds } }).toArray();
-  const grandGrandChildren = await db.collection(memberCollection).find( { _id: { $in: grandGrandChildrenIds } }).toArray();
-  const spouses = await db.collection(memberCollection).find( { _id: { $in: spousesIds } }).toArray();
-  const siblings = await db.collection(memberCollection).find( { _id: { $in: siblingsIds } }).toArray();
-  const niblings = await db.collection(memberCollection).find( { _id: { $in: niblingsIds } }).toArray();
-  const piblings = await db.collection(memberCollection).find( { _id: { $in: piblingsIds } }).toArray();
-  const cousins = await db.collection(memberCollection).find( { _id: { $in: cousinsIds } }).toArray();
-  const photos  = await getPhotosByIdFromMongoDb(userId, db)
-  for(let i=0; i<photos.length;i++){
-    photos[i].url =  photos[i].url
-       .replace('https://i.imgur.com/', 'https://www.res01.com/images/')
-       .replace('.jpg', 'm.jpg')
-     }
-  
-  
-
-  return { 
-    currentPerson: mapping(currentUser),
-    parents: parents.map(mapping),
-    children: children.map(mapping),
-    mother: mapping(parents.find((x:any) => x.gender === 'Female')),
-    father: mapping(parents.find((x:any) => x.gender === 'Male')),
-    grandParents : grandParents.map(mapping),
-    grandChildren: grandChildren.map(mapping),
-    grandGrandChildren: grandGrandChildren.map(mapping),
-    spouses: spouses.map(mapping),
-    siblings: siblings.map(mapping),
-    niblings: niblings.map(mapping),
-    piblings: piblings.map(mapping),
-    cousins: cousins.map(mapping),
-    photos: photos
-  };
-}
 
 
 export async function deleteProfileFromMongoDb(id: string) {

@@ -1,3 +1,4 @@
+import fs from 'fs';
 import {
   memberCollection,
   mongoDbDatabase,
@@ -5,20 +6,25 @@ import {
   updatePersonFromMongoDb,
   createPersonFromMongoDb,
   deleteProfileFromMongoDb,
-  relationCollection,
-  getProfileByIdFromMongoDb,
+  relationCollection
 
 } from './mongoDbConnector';
+import ProfileService from '../services/profile_service'
 
 import LoggerService from '../services/logger_service';
 import LoginController from './loginController';
+import path from 'path';
 
 
 const ObjectId = require('mongodb').ObjectID;
 
+export const cacheFolder = '../../../cache';
 
 export default class PersonController {
+
   logger: LoggerService = new LoggerService('personController');
+
+  profileService: ProfileService = new ProfileService();
 
   connector: MongoConnector;
 
@@ -32,8 +38,8 @@ export default class PersonController {
 
 
   static mapping(element: any) {
-    const yearOfBirth = element?.birthDate?.substring(0, 4);
-    const yearOfDeath = element?.deathDate?.substring(0, 4);
+    const yearOfBirth = element?.birth?.year;
+    const yearOfDeath = element?.death?.year;
     return {
       _id: element?._id,
       firstName: element?.firstName,
@@ -117,9 +123,9 @@ export default class PersonController {
       firstName: 1,
       lastName: 1,
       maidenName: 1,
-      birthDate: 1,
+      birth: { year: 1 },
       gender: 1,
-      deathDate: 1,
+      deathDate: { year: 1 },
       isDead: 1,
       profileId: 1,
     };
@@ -153,11 +159,19 @@ export default class PersonController {
   }
 
   async getProfile(_id: string) {
+
+    const cacheFile = path.join(__dirname, `${cacheFolder}/profile_${_id}.json`);
+    if (fs.existsSync(cacheFile)) {
+      const cachedProfile = fs.readFileSync(cacheFile, 'utf8');
+      return JSON.parse(cachedProfile);
+    }
+
     const client = await this.connector.initClient();
     try {
       const db = client.db(mongoDbDatabase);
-      const data: any = await getProfileByIdFromMongoDb(_id, db);
+      const data: any = await this.profileService.getProfileByIdFromMongoDb(_id, db);
       client.close();
+      fs.writeFileSync(cacheFile, JSON.stringify(data));
       return data;
     } catch (error) {
       client.close();
@@ -261,6 +275,10 @@ export default class PersonController {
 
   removeProfile(id: string) {
     this.logger.info('Remove profile');
+    const cacheFile = path.join(__dirname, `${cacheFolder}/profile_${id}.json`);
+    if (fs.existsSync(cacheFile)) {
+      fs.unlinkSync(cacheFile);
+    }
     return deleteProfileFromMongoDb(id)
       .catch((err: any) => {
         throw err;
@@ -273,6 +291,12 @@ export default class PersonController {
     if (patch === {}) {
       return null;
     }
+
+    const cacheFile = path.join(__dirname, `${cacheFolder}/profile_${_id}.json`);
+    if (fs.existsSync(cacheFile)) {
+      fs.unlinkSync(cacheFile);
+    }
+
     this.logger.info('UpdatePersons');
 
     this.logger.info(_id);
