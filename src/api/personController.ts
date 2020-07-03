@@ -212,7 +212,7 @@ export default class PersonController {
         this.logger.info('Get private infos by id');
 
 
-        PersonController.CheckUserAuthenticated(user);
+
         const query = { _id: ObjectId(profile) }
         const projection = {};
         return this.connector.getItemFromMongoDb(mongoDbDatabase, memberCollection, query, projection)
@@ -220,6 +220,9 @@ export default class PersonController {
             throw err;
           })
           .then((res1: any) => {
+            if(!res1.isDead){
+              PersonController.CheckUserAuthenticated(user);
+            }
             return this.mapPrivate(res1);
           });
       });
@@ -343,15 +346,21 @@ export default class PersonController {
 
   mapPrivate(person:any){
     let res1 = person
-    res1.currentLocation = res1?.currentLocation;
     res1.birthDate = res1?.birth?.birthDate;
-    res1.deathDate = res1?.death?.deathDate;
     res1.birthLocation = res1?.birth?.country;
-    res1.deathLocation = res1?.death?.country;
-    if(res1.isDeath === undefined){
-      res1.isDeath = false;
+
+    if(res1.isDead === undefined){
+      res1.isDead = false;
     }
-    res1.email = res1.contacts?.email;
+   
+    if(!res1.isDead){
+      res1.email = res1.contacts?.email;
+      res1.currentLocation = res1?.currentLocation;
+     
+    }
+    res1.deathLocation = res1?.death?.country;
+    res1.deathDate = res1?.death?.deathDate;
+    res1.currentLocation = res1?.currentLocation?.country;
   
     return res1;
   }

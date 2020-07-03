@@ -454,11 +454,28 @@ export async function updatePersonFromMongoDb(id: string, patch: any) {
   }
 
   if (patched.birthDate !== undefined) {
+    if(patched.birth === undefined){
+      patched.birth = {}
+    }
     patched.birth.birthDate = patch.birthDate;
     patched.birth.year = patch.birthDate?.substring(0, 4);
     patched.birth.month = patch.birthDate?.substring(5, 7);
     patched.birth.day = patch.birthDate?.substring(8, 10);
     patched.birthDate = undefined;
+  }
+
+  if(patched.birthLocation !== undefined){
+    if(patched.birth === undefined){
+      patched.birth = {}
+    }
+    patched.birth.country = patch.birthLocation;
+  }
+
+  if(patched.currentLocation !== undefined){
+    if(patched.currentLocation === undefined){
+      patched.currentLocation = {}
+    }
+    patched.currentlocation.country = patch.currentLocation;
   }
 
   // if(patched.currentLocation !== undefined){
@@ -476,6 +493,13 @@ export async function updatePersonFromMongoDb(id: string, patch: any) {
     patched.death.month = patch.deathDate?.substring(5, 7);
     patched.death.day = patch.deathDate?.substring(8, 10);
     patched.deathDate = undefined;
+  }
+
+  if(patched.deathLocation !== undefined){
+    if(patched.death === undefined){
+      patched.death = {}
+    }
+    patched.death.country = patch.deathLocation;
   }
 
   console.log(JSON.stringify(patched));
