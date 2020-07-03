@@ -351,7 +351,7 @@ export default class PersonController {
     if(res1.isDeath === undefined){
       res1.isDeath = false;
     }
-    res1.email = res1.contacts.email;
+    res1.email = res1.contacts?.email;
   
     return res1;
   }
