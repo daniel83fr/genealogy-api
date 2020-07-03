@@ -221,7 +221,7 @@ export default class PersonController {
           })
           .then((res1: any) => {
             if(!res1.isDead){
-              PersonController.CheckUserAuthenticated(user);
+             // PersonController.CheckUserAuthenticated(user);
             }
             return this.mapPrivate(res1);
           });

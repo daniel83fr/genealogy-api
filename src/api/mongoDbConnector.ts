@@ -434,14 +434,21 @@ export async function updatePersonFromMongoDb(id: string, patch: any) {
   const db = client.db(mongoDbDatabase);
   const collection = db.collection(memberCollection);
   let patched = patch;
-  if(patched.version === undefined){
+  if(patched.version === undefined || patched.version == null){
     patched.version = {}
   }
 
-  if(patched.birth === undefined){
+  if(patched.birth === undefined || patched.birth == null){
     patched.birth = {}
   }
 
+  if(patched.death === undefined || patched.death == null){
+    patched.death = {}
+  }
+
+  if(patched.currentLocation === undefined || patched.currentLocation == null){
+    patched.currentLocation = {}
+  }
   
   patched.version.UpdatedAt = new Date().toISOString();
 
@@ -450,56 +457,38 @@ export async function updatePersonFromMongoDb(id: string, patch: any) {
 
   if (patched.updatedBy !== undefined) {
     patched.version.updatedBy = patched.updatedBy;
-    patched.updatedBy = undefined;
+    delete patched.updatedBy;
   }
 
   if (patched.birthDate !== undefined) {
-    if(patched.birth === undefined){
-      patched.birth = {}
-    }
     patched.birth.birthDate = patch.birthDate;
     patched.birth.year = patch.birthDate?.substring(0, 4);
     patched.birth.month = patch.birthDate?.substring(5, 7);
     patched.birth.day = patch.birthDate?.substring(8, 10);
-    patched.birthDate = undefined;
+    delete patched.birthDate;
   }
 
   if(patched.birthLocation !== undefined){
-    if(patched.birth === undefined){
-      patched.birth = {}
-    }
     patched.birth.country = patch.birthLocation;
+    delete patched.birthLocation;
   }
 
   if(patched.currentLocation !== undefined){
-    if(patched.currentLocation === undefined){
-      patched.currentLocation = {}
-    }
-    patched.currentlocation.country = patch.currentLocation;
+    patched.currentlocation.country = patch.birthLocation;
+    delete patched.currentLocation;
   }
 
-  // if(patched.currentLocation !== undefined){
-  //   let location = patched.currentLocation;
-  //   patched.currentLocation = {}
-  //   patched.currentLocation.country = location;
-  // }
-
   if (patched.deathDate !== undefined) {
-    if(patched.death === undefined){
-      patched.death = {}
-    }
     patched.death.deathDate = patch.deathDate;
     patched.death.year = patch.deathDate?.substring(0, 4);
     patched.death.month = patch.deathDate?.substring(5, 7);
     patched.death.day = patch.deathDate?.substring(8, 10);
-    patched.deathDate = undefined;
+    delete patched.deathDate;
   }
 
   if(patched.deathLocation !== undefined){
-    if(patched.death === undefined){
-      patched.death = {}
-    }
     patched.death.country = patch.deathLocation;
+    delete patched.deathLocation;
   }
 
   console.log(JSON.stringify(patched));
