@@ -49,14 +49,12 @@ export class MongoConnector {
 
   setDb(client: any, database: string) {
     if (client != null && database != null) {
-      this.logger.debug('set db');
       return client.db(database);
     }
     return null;
   }
 
   closeDb(client: any) {
-    this.logger.debug('close db');
     if (client != null) {
       client.close();
     }
@@ -436,6 +434,15 @@ export async function updatePersonFromMongoDb(id: string, patch: any) {
   const db = client.db(mongoDbDatabase);
   const collection = db.collection(memberCollection);
   let patched = patch;
+  if(patched.version === undefined){
+    patched.version = {}
+  }
+
+  if(patched.birth === undefined){
+    patched.birth = {}
+  }
+
+  
   patched.version.UpdatedAt = new Date().toISOString();
 
   const query = { _id: ObjectId(id) };
@@ -449,19 +456,29 @@ export async function updatePersonFromMongoDb(id: string, patch: any) {
   if (patched.birthDate !== undefined) {
     patched.birth.birthDate = patch.birthDate;
     patched.birth.year = patch.birthDate?.substring(0, 4);
-    patched.birth.month = patch.birthDate?.substring(5, 2);
-    patched.birth.day = patch.birthDate?.substring(8, 2);
+    patched.birth.month = patch.birthDate?.substring(5, 7);
+    patched.birth.day = patch.birthDate?.substring(8, 10);
     patched.birthDate = undefined;
   }
 
+  // if(patched.currentLocation !== undefined){
+  //   let location = patched.currentLocation;
+  //   patched.currentLocation = {}
+  //   patched.currentLocation.country = location;
+  // }
+
   if (patched.deathDate !== undefined) {
+    if(patched.death === undefined){
+      patched.death = {}
+    }
     patched.death.deathDate = patch.deathDate;
     patched.death.year = patch.deathDate?.substring(0, 4);
-    patched.death.month = patch.deathDate?.substring(5, 2);
-    patched.death.day = patch.deathDate?.substring(8, 2);
+    patched.death.month = patch.deathDate?.substring(5, 7);
+    patched.death.day = patch.deathDate?.substring(8, 10);
     patched.deathDate = undefined;
   }
 
+  console.log(JSON.stringify(patched));
   await collection.updateOne(query, { $set: patched });
 
   const audit = db.collection(auditCollection);
@@ -488,7 +505,7 @@ export async function createPersonFromMongoDb(person: any) {
     timestamp: new Date().toISOString(), type: 'Person', action: 'Person inserted', payload: person, id: ObjectId(res.insertedId),
   });
 
-  const res1 = await collection.findOne({ _id: ObjectId(res.insertedId) });
+  const res1 = await collection.findOne({ _id: ObjectId(res.insertedId), profileId: ObjectId(res.insertedId) });
   client.close();
   return res1;
 }

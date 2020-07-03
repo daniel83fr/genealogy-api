@@ -1,6 +1,7 @@
 import { ObjectId, getPhotosByIdFromMongoDb } from '../api/mongoDbConnector';
 
 export default class ProfileService {
+  
   async getProfileByIdFromMongoDb(id: string, db:any) {
 
     const membersCollection = db.collection('members');

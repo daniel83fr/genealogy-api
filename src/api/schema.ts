@@ -197,10 +197,7 @@ schemaBuilder.addQuery('register(id: String!, login: String!, email: String!, pa
 
 schemaBuilder.addQuery('me: ConnectedUser');
 
-schemaBuilder.addQuery('getPersonList(cacheCount: Int, cacheDate: String): CachedUserList', `Get list of persons. Exisiting cache info can be passed to check if cache needs to be refreshed.
-- cacheCount : number of items in cache
-- cacheDate : Date of cached data
-`);
+schemaBuilder.addQuery('getPersonList: [User]');
 
 schemaBuilder.addQuery('getPrivateProfile(profileId: String!): PrivateProfile');
 schemaBuilder.addQuery('getProfile(profileId:String!): PublicProfile');

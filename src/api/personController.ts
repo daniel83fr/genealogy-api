@@ -113,12 +113,15 @@ export default class PersonController {
     return route.path(_id1, _id2)
   }
 
-  getPersonList(cacheCount: number, cacheDate: string) {
-    this.logger.info('Get person list');
-    this.logger.info(cacheCount?.toString());
-    this.logger.info(JSON.stringify(cacheDate));
+  async getPersonList() {
 
-    const query = {};
+    const cacheFile = `${cacheFolder}/personList.json`;
+    if (fs.existsSync(cacheFile)) {
+      const cachedList = fs.readFileSync(cacheFile, 'utf8');
+      return JSON.parse(cachedList);
+    }
+
+    const client = await this.connector.initClient();
     const projection = {
       firstName: 1,
       lastName: 1,
@@ -130,32 +133,21 @@ export default class PersonController {
       profileId: 1,
     };
 
-    return this.connector.initClient()
-      .then((client) => {
-        const db = client.db(mongoDbDatabase);
+    try {
+      const db = client.db(mongoDbDatabase);
+      const membersCollection = db.collection('members');
 
-        return this.connector.getLastUpdate(db, memberCollection)
-          .then((lastUpdate) => {
-            console.log(`cache: ${cacheDate}, lastUpdate: ${lastUpdate}`);
-            if (lastUpdate > cacheDate || cacheDate == undefined) {
-              return true;
-            }
-
-            return this.connector.getCollectionSize(db, memberCollection)
-              .then((count) => count != cacheCount);
-          })
-          .then((shouldUpdate) => {
-            client.close();
-            if (shouldUpdate == true) {
-              console.log(`should update: ${shouldUpdate}`);
-              return this.connector.getArrayFromMongoDb(mongoDbDatabase, memberCollection, query, projection)
-                .then((res: any[]) => res.map(PersonController.mapping))
-                .then((res) => res.sort(PersonController.sortByName))
-                .then((res) => ({ isUpToDate: false, users: res }));
-            }
-            return { isUpToDate: true };
-          });
-      });
+      let data: any = await membersCollection.find({}, projection).toArray();
+      data = data.map(PersonController.mapping);
+      data = data.sort(PersonController.sortByName);
+      client.close();
+      fs.writeFileSync(cacheFile, JSON.stringify(data));
+      return data;
+    } catch (error) {
+      client.close();
+      console.log(error);
+      return [];
+    }
   }
 
   async getProfile(_id: string) {
@@ -227,7 +219,9 @@ export default class PersonController {
           .catch((err: any) => {
             throw err;
           })
-          .then(res => res);
+          .then((res1: any) => {
+            return this.mapPrivate(res1);
+          });
       });
   }
   getPerson(_id: string, db: any) {
@@ -279,6 +273,10 @@ export default class PersonController {
     if (fs.existsSync(cacheFile)) {
       fs.unlinkSync(cacheFile);
     }
+    const cacheFile2 = `${cacheFolder}/personList.json`;
+    if (fs.existsSync(cacheFile2)) {
+      fs.unlinkSync(cacheFile2);
+    }
     return deleteProfileFromMongoDb(id)
       .catch((err: any) => {
         throw err;
@@ -295,6 +293,10 @@ export default class PersonController {
     const cacheFile = `${cacheFolder}/profile_${_id}.json`;
     if (fs.existsSync(cacheFile)) {
       fs.unlinkSync(cacheFile);
+    }
+    const cacheFile2 = `${cacheFolder}/personList.json`;
+    if (fs.existsSync(cacheFile2)) {
+      fs.unlinkSync(cacheFile2);
     }
 
     this.logger.info('UpdatePersons');
@@ -334,6 +336,23 @@ export default class PersonController {
       .catch((err) => {
         throw err;
       })
-      .then((res: any) => res);
+      .then((res1: any) => {
+        return this.mapPrivate(res1);
+      });
+  }
+
+  mapPrivate(person:any){
+    let res1 = person
+    res1.currentLocation = res1?.currentLocation;
+    res1.birthDate = res1?.birth?.birthDate;
+    res1.deathDate = res1?.death?.deathDate;
+    res1.birthLocation = res1?.birth?.country;
+    res1.deathLocation = res1?.death?.country;
+    if(res1.isDeath === undefined){
+      res1.isDeath = false;
+    }
+    res1.email = res1.contacts.email;
+  
+    return res1;
   }
 }

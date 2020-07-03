@@ -35,7 +35,7 @@ export class GraphQLResolver {
       getPrivateProfile: (args: any, context: any) => this.personController?.getPrivateProfile(args.profileId, context.user),
 
       getAuditLastEntries: (args: any) => this.adminController?.getAuditLastEntries(args.number),
-      getPersonList: (args: any) => this.personController?.getPersonList(args.cacheCount, args.cacheDate),
+      getPersonList: (args: any) => this.personController?.getPersonList(),
   
       getPhotoProfile: (args: any) => this.photoController?.getPhotoProfile(args._id),
       getPhotosRandom: (args: any) => this.photoController?.getPhotosRandom(args.number),
