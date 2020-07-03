@@ -435,11 +435,34 @@ export async function updatePersonFromMongoDb(id: string, patch: any) {
   const client = await connector.initClient();
   const db = client.db(mongoDbDatabase);
   const collection = db.collection(memberCollection);
-  patch.UpdatedAt = new Date().toISOString();
+  let patched = patch;
+  patched.version.UpdatedAt = new Date().toISOString();
 
   const query = { _id: ObjectId(id) };
   console.debug(query);
-  await collection.updateOne(query, { $set: patch });
+
+  if (patched.updatedBy !== undefined) {
+    patched.version.updatedBy = patched.updatedBy;
+    patched.updatedBy = undefined;
+  }
+
+  if (patched.birthDate !== undefined) {
+    patched.birth.birthDate = patch.birthDate;
+    patched.birth.year = patch.birthDate?.substring(0, 4);
+    patched.birth.month = patch.birthDate?.substring(5, 2);
+    patched.birth.day = patch.birthDate?.substring(8, 2);
+    patched.birthDate = undefined;
+  }
+
+  if (patched.deathDate !== undefined) {
+    patched.death.deathDate = patch.deathDate;
+    patched.death.year = patch.deathDate?.substring(0, 4);
+    patched.death.month = patch.deathDate?.substring(5, 2);
+    patched.death.day = patch.deathDate?.substring(8, 2);
+    patched.deathDate = undefined;
+  }
+
+  await collection.updateOne(query, { $set: patched });
 
   const audit = db.collection(auditCollection);
   await audit.insertOne({
