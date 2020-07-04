@@ -73,7 +73,6 @@ export class MongoConnector {
   }
 
   async getArrayFromMongoDbAndDb(db: any, collectionName: string, query: any, projection: any) {
-    this.logger.debug('get array');
     if (db === undefined || db == null) {
       return [];
     }

@@ -41,7 +41,6 @@ export default class AdminController {
   }
 
   getAuditLastEntries(number: number) {
-    this.logger.info('Get Audit');
 
     return this.connector.initClient()
       .then((client) => {

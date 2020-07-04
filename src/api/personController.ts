@@ -318,21 +318,21 @@ export default class PersonController {
   mapPrivate(person: any) {
     let res1 = person
     res1.birthDate = res1?.birth?.birthDate;
-    res1.birthLocation = res1?.birth?.country;
-
+    res1.birthLocationCountry = res1?.birth?.country;
+    res1.birthLocationCity = res1?.birth?.city;
     if (res1.isDead === undefined) {
       res1.isDead = false;
     }
 
     if (!res1.isDead) {
       res1.email = res1.contacts?.email;
-      res1.currentLocation = res1?.currentLocation;
-
+      res1.currentLocationCountry = res1?.currentLocationCountry;
+      res1.currentLocationCity = res1?.currentLocationCity;
     }
     res1.deathLocation = res1?.death?.country;
     res1.deathDate = res1?.death?.deathDate;
-    res1.currentLocation = res1?.currentLocation?.country;
-
+    res1.deathLocationCountry = res1?.death?.country;
+    res1.deathLocationCity = res1?.death?.city;
     return res1;
   }
 }

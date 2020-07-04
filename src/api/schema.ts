@@ -132,9 +132,12 @@ schemaBuilder.addType(`type PrivateProfile {
   birthDate: DateTime,
   deathDate: DateTime,
   isDead: Boolean,
-  currentLocation: String,
-  birthLocation: String,
-  deathLocation: String,
+  currentLocationCountry: String,
+  birthLocationCountry: String,
+  deathLocationCountry: String,
+  currentLocationCity: String,
+  birthLocationCity: String,
+  deathLocationCity: String,
   email: String,
   phone: String
 }`, 'Person private info');
@@ -142,9 +145,12 @@ schemaBuilder.addType(`type PrivateProfile {
 schemaBuilder.addType(`input PrivateProfileChanges{
   birthDate: DateTime
   deathDate: DateTime,
-  currentLocation: String,
-  birthLocation: String,
-  deathLocation: String,
+  currentLocationCountry: String,
+  birthLocationCountry: String,
+  deathLocationCountry: String,
+  currentLocationCity: String,
+  birthLocationCity: String,
+  deathLocationCity: String,
   email: String
   phone: String
   updatedBy: String

@@ -12,7 +12,6 @@ export default class EventController {
   }
 
   getTodayBirthdays(user: any) {
-    this.logger.info("get today's birthdays");
     LoginController.CheckUserAuthenticated(user);
 
     return getTodayBirthdaysFromMongoDb()
@@ -23,7 +22,6 @@ export default class EventController {
   }
 
   getTodayDeathdays(user: any) {
-    this.logger.info("get today's death anniversaries");
     LoginController.CheckUserAuthenticated(user);
 
     return getTodayDeathdaysFromMongoDb()
@@ -34,7 +32,6 @@ export default class EventController {
   }
 
   getTodayMarriagedays(user: any) {
-    this.logger.info("get today's wedding anniversaries");
     LoginController.CheckUserAuthenticated(user);
     return getTodayMarriagedaysFromMongoDb()
       .catch((err: any) => {

@@ -88,7 +88,6 @@ export default class PhotoController {
   }
 
   getPhotosRandom(number: number) {
-    this.logger.info('GetPhotos');
     return getPhotosRandomFromMongoDb(number)
       .catch((err: any) => {
         throw err;
