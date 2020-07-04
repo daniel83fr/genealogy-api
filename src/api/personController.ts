@@ -56,7 +56,7 @@ export default class PersonController {
   getNodes(db: any) {
     this.logger.info('Get person by Id');
 
-    return this.connector.getArrayFromMongoDbAndDb(db, memberCollection, {}, {_id: 1})
+    return this.connector.getArrayFromMongoDbAndDb(db, memberCollection, {}, { _id: 1 })
       .catch((err: any) => {
         throw err;
       })
@@ -64,7 +64,7 @@ export default class PersonController {
   }
 
   getEdges(db: any) {
-    return this.connector.getArrayFromMongoDbAndDb(db, relationCollection, {}, {person1_id: 1,person2_id: 1})
+    return this.connector.getArrayFromMongoDbAndDb(db, relationCollection, {}, { person1_id: 1, person2_id: 1 })
       .catch((err: any) => {
         throw err;
       })
@@ -72,7 +72,7 @@ export default class PersonController {
   }
 
 
-  async getRelation(_id1: string, _id2: string){
+  async getRelation(_id1: string, _id2: string) {
 
 
     this.logger.info('Dijkstra');
@@ -88,22 +88,20 @@ export default class PersonController {
       const db = client.db(mongoDbDatabase);
       let nodes = await this.getNodes(db);
       let edges = await this.getEdges(db);
-      console.log(nodes.length);
-      console.log(edges.length);
       client.close();
 
-    } catch(error) {
-      console.log(error);
+    } catch (err) {
+      console.log(err);
       client.close();
     }
 
-    for(let i = 0;i< nodes.length;i++){
-      let e:any= {};
-      for(let j = 0; j< edges.length; j++){
-        if(edges[j].person1_id.toString() == nodes[i]._id.toString()){
+    for (let i = 0; i < nodes.length; i++) {
+      let e: any = {};
+      for (let j = 0; j < edges.length; j++) {
+        if (edges[j].person1_id.toString() == nodes[i]._id.toString()) {
           e[edges[j].person2_id.toString()] = 1;
         }
-        if(edges[j].person2_id.toString() == nodes[i]._id.toString()){
+        if (edges[j].person2_id.toString() == nodes[i]._id.toString()) {
           e[edges[j].person1_id.toString()] = 1;
         }
       }
@@ -143,9 +141,9 @@ export default class PersonController {
       client.close();
       fs.writeFileSync(cacheFile, JSON.stringify(data));
       return data;
-    } catch (error) {
+    } catch (err) {
       client.close();
-      console.log(error);
+      console.log(err);
       return [];
     }
   }
@@ -164,69 +162,43 @@ export default class PersonController {
       const data: any = await this.profileService.getProfileByIdFromMongoDb(_id, db);
       client.close();
       fs.writeFileSync(cacheFile, JSON.stringify(data));
+      console.log(`Write Cache: ${path.resolve(cacheFile)}`);
       return data;
-    } catch (error) {
+    } catch (err) {
       client.close();
-      console.log(error);
+      console.log(err);
       return {};
     }
-  }
-
-
-  getProfileId(profileId: string, db: any) {
-    let query = { 'profileId': `${profileId}` };
-    return this.connector.getItemFromMongoDbAndDb(db, memberCollection, query, {})
-      .catch(() => {
-        return profileId
-      })
-      .then((res: any) => {
-        console.log(JSON.stringify(res));
-        if (res == null) {
-          return profileId;
-        }
-        return `${res._id}`;
-      });
   }
 
   async getPrivateProfile(_id: string, user: any) {
     const client = await this.connector.initClient();
     const db = client.db(mongoDbDatabase);
+    
+    this.logger.info('Get private infos by id');
 
-    let profileId = await this.getProfileId(_id, db);
-    if (profileId == null) {
-      profileId = _id;
+    const validGuid = new RegExp('^[0-9a-fA-F]{24}$').test(_id);
+    let query = {};
+    if (validGuid) {
+      query = { "$or": [{ "profileId": _id }, { "_id": ObjectId(_id) }] }
+    } else {
+      query = { "profileId": _id }
     }
 
-    console.log(_id)
 
-
-    return this.getProfileId(_id, db)
-      .then((res) => {
-
-        let profile = res;
-
-        if (res == null) {
-          profile = _id;
+    const projection = {};
+    return this.connector.getItemFromMongoDb(mongoDbDatabase, memberCollection, query, projection)
+      .catch((err: any) => {
+        throw err;
+      })
+      .then((res1: any) => {
+        if (!res1.isDead) {
+          PersonController.CheckUserAuthenticated(user);
         }
-
-        this.logger.info('Get private infos by id');
-
-
-
-        const query = { _id: ObjectId(profile) }
-        const projection = {};
-        return this.connector.getItemFromMongoDb(mongoDbDatabase, memberCollection, query, projection)
-          .catch((err: any) => {
-            throw err;
-          })
-          .then((res1: any) => {
-            if(!res1.isDead){
-             // PersonController.CheckUserAuthenticated(user);
-            }
-            return this.mapPrivate(res1);
-          });
+        return this.mapPrivate(res1);
       });
   }
+
   getPerson(_id: string, db: any) {
     this.logger.info('Get person by Id');
 
@@ -240,7 +212,7 @@ export default class PersonController {
       .then((res: any) => PersonController.mapping(res));
   }
 
- 
+
 
   static sortByYearOfBirth(a: any, b: any) {
     const keyA = new Date(a.yearOfBirth);
@@ -295,10 +267,12 @@ export default class PersonController {
 
     const cacheFile = `${cacheFolder}/profile_${_id}.json`;
     if (fs.existsSync(cacheFile)) {
+      console.log(`Remove: ${path.resolve(cacheFile)}`)
       fs.unlinkSync(cacheFile);
     }
     const cacheFile2 = `${cacheFolder}/personList.json`;
     if (fs.existsSync(cacheFile2)) {
+      console.log(`Remove: ${path.resolve(cacheFile2)}`)
       fs.unlinkSync(cacheFile2);
     }
 
@@ -325,10 +299,6 @@ export default class PersonController {
   }
 
   updatePersonPrivateInfo(_id: string, patch: any, user: any) {
-    if (patch === {}) {
-      console.log(patch)
-      return null;
-    }
     LoginController.CheckUserAuthenticated(user);
     this.logger.info('UpdatePersonspivate');
 
@@ -337,6 +307,7 @@ export default class PersonController {
 
     return updatePersonFromMongoDb(_id, patch)
       .catch((err) => {
+        console.log(err);
         throw err;
       })
       .then((res1: any) => {
@@ -344,24 +315,24 @@ export default class PersonController {
       });
   }
 
-  mapPrivate(person:any){
+  mapPrivate(person: any) {
     let res1 = person
     res1.birthDate = res1?.birth?.birthDate;
     res1.birthLocation = res1?.birth?.country;
 
-    if(res1.isDead === undefined){
+    if (res1.isDead === undefined) {
       res1.isDead = false;
     }
-   
-    if(!res1.isDead){
+
+    if (!res1.isDead) {
       res1.email = res1.contacts?.email;
       res1.currentLocation = res1?.currentLocation;
-     
+
     }
     res1.deathLocation = res1?.death?.country;
     res1.deathDate = res1?.death?.deathDate;
     res1.currentLocation = res1?.currentLocation?.country;
-  
+
     return res1;
   }
 }

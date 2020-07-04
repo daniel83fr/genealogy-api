@@ -66,11 +66,6 @@ export default class AdminController {
               items.push(elm);
             });
 
-
-
-
-            console.log(JSON.stringify(users));
-
             return this.connector.getArrayFromMongoDb(mongoDbDatabase, memberCollection, {}, {})
              .then((m: any[]) => {
               let dico:any = {};

@@ -97,18 +97,15 @@ export class MongoConnector {
     const db = this.setDb(client, database);
     const res = await this.getItemFromMongoDbAndDb(db, collectionName, query, projection);
     this.closeDb(client);
-    console.log(JSON.stringify(res))
     return res;
   }
 
   async deleteManyFromMongoDbAndDb(db: any, collectionName: string, query: any) {
-    this.logger.debug('Delete Many');
     const collection = db.collection(collectionName);
     return collection.deleteMany(query);
   }
 
   async getItemFromMongoDbAndDb(db: any, collectionName: string, query: any, projection: any) {
-    this.logger.debug('get item from mongo');
     const collection = db.collection(collectionName);
     let res = {};
     if (projection === {} || projection == null) {
@@ -120,7 +117,6 @@ export class MongoConnector {
   }
 
   async insertItem(db: any, collectionName: string, query: any) {
-    this.logger.debug('insert item');
     const collection = db.collection(collectionName);
     return collection.insertOne(query);
   }
@@ -184,7 +180,6 @@ export async function getPersonByLoginFromMongoDb(login: string) {
 
 export async function setProfilePictureFromMongo(person: string, image: string) {
   const connector = getConnector();
-  console.log(`Set profile pic${image}`);
   const client = await connector.initClient();
   const db = client.db(mongoDbDatabase);
   const collection = db.collection('photoTags');
@@ -211,7 +206,6 @@ export async function addPhotoTagFromMongo(person: string, image: string) {
 
   const collection = db.collection('photoTags');
   const previous = await collection.find({ photo_id: image, person_id: person }).toArray();
-  console.log(JSON.stringify(previous));
   if (previous.length > 0) {
     client.close();
     console.log('already set');
@@ -236,7 +230,6 @@ export async function addPhotoTagFromMongo(person: string, image: string) {
 
 export async function removePhotoTagFromMongo(person: string, image: string) {
   const connector = getConnector();
-  console.log(`Set profile pic${image}`);
   const client = await connector.initClient();
   const db = client.db(mongoDbDatabase);
   const collection = db.collection('photoTags');
@@ -316,9 +309,6 @@ export async function getPhotoProfileFromMongoDb(id: string) {
       person_id: 1,
     }).toArray();
 
-  console.log(res);
-
-
   const items: any = [];
 
   res.forEach((element: { photo_id: string; }) => {
@@ -383,7 +373,6 @@ export async function addPhotoFromMongoDb(url: string, deleteHash: string, perso
 
   const query = { url, deleteHash };
   const res = await photos.insertOne(query);
-  // console.log(JSON.stringify(res))
   const photo_id = res.insertedId.toString();
 
   const collection = db.collection('photoTags');
@@ -429,79 +418,111 @@ export async function deleteProfileFromMongoDb(id: string) {
 
 
 export async function updatePersonFromMongoDb(id: string, patch: any) {
+
   const connector = getConnector();
   const client = await connector.initClient();
-  const db = client.db(mongoDbDatabase);
-  const collection = db.collection(memberCollection);
-  let patched = patch;
-  if(patched.version === undefined || patched.version == null){
+  try{
+    const db = client.db(mongoDbDatabase);
+    const collection = db.collection(memberCollection);
+    let patched:any = {}
+    
     patched.version = {}
-  }
+    patched.version.UpdatedAt = new Date().toISOString();
+    patched.version.updatedBy = patch.updatedBy;
 
-  if(patched.birth === undefined || patched.birth == null){
-    patched.birth = {}
-  }
-
-  if(patched.death === undefined || patched.death == null){
-    patched.death = {}
-  }
-
-  if(patched.currentLocation === undefined || patched.currentLocation == null){
-    patched.currentLocation = {}
-  }
+    const query = { _id: ObjectId(id) };
+    console.debug(query);
   
-  patched.version.UpdatedAt = new Date().toISOString();
+    
+    if (patch.firstName !== undefined) {
+      patched.firstName = patch.firstName;
+    }
 
-  const query = { _id: ObjectId(id) };
-  console.debug(query);
+    if (patch.lastName !== undefined) {
+      patched.lastName = patch.lastName;
+    }
 
-  if (patched.updatedBy !== undefined) {
-    patched.version.updatedBy = patched.updatedBy;
-    delete patched.updatedBy;
+    if (patch.maidenName !== undefined) {
+      patched.maidenName = patch.maidenName;
+    }
+
+    if (patch.birthDate !== undefined) {
+      if(patched.birth === undefined){
+        patched.birth  = {}
+      }
+      patched.birth.birthDate = patch.birthDate;
+      patched.birth.year = patch.birthDate?.substring(0, 4);
+      patched.birth.month = patch.birthDate?.substring(5, 7);
+      patched.birth.day = patch.birthDate?.substring(8, 10);
+    }
+  
+    if(patch.birthLocationCountry !== undefined){
+      if(patched.birth === undefined){
+        patched.birth = {};
+      }
+      patched.birth.country = patch.birthLocationCountry;
+    }
+    if(patch.birthLocationCity !== undefined){
+      if(patched.birth === undefined){
+        patched.birth = {};
+      }
+      patched.birth.city = patch.birthLocationCity;
+    }
+
+    if(patch.currentLocationCountry !== undefined){
+      if(patched.currentLocation === undefined){
+        patched.currentLocation = {};
+      }
+      patched.currentLocation.country = patch.currentLocationCountry;
+    }
+    if(patch.currentLocationCity !== undefined){
+      if(patched.currentLocation === undefined){
+        patched.currentLocation = {};
+      }
+      patched.currentLocation.city = patch.currentLocationCity;
+    }
+  
+    if (patch.deathDate !== undefined) {
+      if(patched.death === undefined){
+        patched.death = {};
+      }
+
+      patched.death.deathDate = patch.deathDate;
+      patched.death.year = patch.deathDate?.substring(0, 4);
+      patched.death.month = patch.deathDate?.substring(5, 7);
+      patched.death.day = patch.deathDate?.substring(8, 10);
+    }
+  
+    if(patch.deathLocationCountry !== undefined){
+      if(patched.death === undefined){
+        patched.death = {};
+      }
+      patched.death.country = patch.deathLocationCountry;
+    }
+
+    if(patch.deathLocationCity !== undefined){
+      if(patched.death === undefined){
+        patched.death = {};
+      }
+      patched.death.city = patch.deathLocationCity;
+    }
+  
+  
+    await collection.updateOne(query, { $set: patched });
+  
+    const audit = db.collection(auditCollection);
+    await audit.insertOne({
+      timestamp: new Date().toISOString(), type: 'Person', action: 'updated profile', payload: patch, id: ObjectId(id),
+    });
+  
+    const res1 = await collection.findOne({ _id: ObjectId(id) });
+    client.close();
+    return res1;
   }
-
-  if (patched.birthDate !== undefined) {
-    patched.birth.birthDate = patch.birthDate;
-    patched.birth.year = patch.birthDate?.substring(0, 4);
-    patched.birth.month = patch.birthDate?.substring(5, 7);
-    patched.birth.day = patch.birthDate?.substring(8, 10);
-    delete patched.birthDate;
+  catch(err){
+    console.log(err);
   }
-
-  if(patched.birthLocation !== undefined){
-    patched.birth.country = patch.birthLocation;
-    delete patched.birthLocation;
-  }
-
-  if(patched.currentLocation !== undefined){
-    patched.currentlocation.country = patch.birthLocation;
-    delete patched.currentLocation;
-  }
-
-  if (patched.deathDate !== undefined) {
-    patched.death.deathDate = patch.deathDate;
-    patched.death.year = patch.deathDate?.substring(0, 4);
-    patched.death.month = patch.deathDate?.substring(5, 7);
-    patched.death.day = patch.deathDate?.substring(8, 10);
-    delete patched.deathDate;
-  }
-
-  if(patched.deathLocation !== undefined){
-    patched.death.country = patch.deathLocation;
-    delete patched.deathLocation;
-  }
-
-  console.log(JSON.stringify(patched));
-  await collection.updateOne(query, { $set: patched });
-
-  const audit = db.collection(auditCollection);
-  await audit.insertOne({
-    timestamp: new Date().toISOString(), type: 'Person', action: 'updated profile', payload: patch, id: ObjectId(id),
-  });
-
-  const res1 = await collection.findOne({ _id: ObjectId(id) });
-  client.close();
-  return res1;
+ 
 }
 
 export async function createPersonFromMongoDb(person: any) {
@@ -546,7 +567,6 @@ export async function checkCredentialsFromMongoDb(login: string, password: strin
 
 export async function createCredentialsFromMongoDb(id: string, login: string, email: string, password: string) {
   const connector = getConnector();
-  console.log('creating credentials');
   const client = await connector.initClient();
   const db = client.db(mongoDbDatabase);
   const collection = db.collection(credentialsCollection);

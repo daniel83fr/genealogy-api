@@ -16,7 +16,6 @@ const auth = jwt({
 });
 
 const loggingMiddleware = (req: { ip: any; }, res: any, next: () => void) => {
-  console.log('ip:', req.ip);
   next();
 };
 

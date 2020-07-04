@@ -48,7 +48,6 @@ export default class LinkController {
         return this.connector.getArrayFromMongoDbAndDb(db, relationCollection, { type: 'Parent', person2_id: objId1 }, {})
           .then((parents) => {
             client.close();
-            console.log(JSON.stringify(parents));
             return parents.forEach((element: { person1_id: any; }) => this.removeLink(element.person1_id.toString(), id2));
           })
           .then(() => `Deleted siblings link between ${id1} and ${id2}`);
