@@ -326,8 +326,8 @@ export default class PersonController {
 
     if (!res1.isDead) {
       res1.email = res1.contacts?.email;
-      res1.currentLocationCountry = res1?.currentLocationCountry;
-      res1.currentLocationCity = res1?.currentLocationCity;
+      res1.currentLocationCountry = res1?.currentLocation?.country;
+      res1.currentLocationCity = res1?.currentLocation?.city;
     }
     res1.deathLocation = res1?.death?.country;
     res1.deathDate = res1?.death?.deathDate;
