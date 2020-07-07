@@ -5,7 +5,7 @@ import schema from '../src/api/schema';
 describe('GraphQLResolver queries', () => {
   it('should implement all methods', async () => {
     const r = new GraphQLResolver();
-    expect(Object.keys(r.getQuery()).length).toEqual(14);
+    expect(Object.keys(r.getQuery()).length).toEqual(15);
   });
 
   it('getAuditLastEntries', async () => {

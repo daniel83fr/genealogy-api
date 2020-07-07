@@ -104,6 +104,14 @@ schemaBuilder.addType(`type User {
   isDead: Boolean
 }`, 'Person public info');
 
+schemaBuilder.addType(`type Event {
+  date: DateTime
+  type: String
+  person: User
+  person2: User,
+  anniversary: Int
+}`, 'Event');
+
 schemaBuilder.addType(`type PublicProfile 
 {
   currentPerson: User
@@ -218,6 +226,7 @@ schemaBuilder.addQuery('getRelation(_id1: String!,_id2: String!): [String]');
 schemaBuilder.addQuery('getTodayBirthdays: [User]');
 schemaBuilder.addQuery('getTodayDeathdays: [User]');
 schemaBuilder.addQuery('getTodayMarriagedays: [User]');
+schemaBuilder.addQuery('getEvents(date1:DateTime!, date2:DateTime):[Event]')
 schemaBuilder.addQuery('getProfileId(_id: String!): String');
 
 schemaBuilder.setMutationDescription('Mutations definition.');

@@ -134,6 +134,14 @@ export function getConnector() {
   return new MongoConnector(connectionString);
 }
 
+export async function getEventsFromMongoDb(date1: Date, date2: Date) {
+  const connector = getConnector();
+  const dateFilter = new Date().toISOString().substring(5, 10);
+  return connector.getArrayFromMongoDb(mongoDbDatabase, memberCollection,
+    { birth:{ birthDate: { $regex: dateFilter } }}, {});
+}
+
+
 export async function getTodayBirthdaysFromMongoDb() {
   const connector = getConnector();
   const dateFilter = new Date().toISOString().substring(5, 10);
