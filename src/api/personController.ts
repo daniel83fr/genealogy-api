@@ -86,6 +86,8 @@ export default class PersonController {
 
   async getRelation(_id1: string, _id2: string) {
 
+    let p1:any;
+    let p2:any;
 
     this.logger.info('Dijkstra');
     const Graph = require('node-dijkstra')
@@ -98,6 +100,26 @@ export default class PersonController {
 
     try {
       const db = client.db(mongoDbDatabase);
+
+     
+      let query = {};
+      const validGuid = new RegExp('^[0-9a-fA-F]{24}$').test(_id1);
+      if (validGuid) {
+        query = { "$or": [{ "profileId": _id1 }, { "_id": ObjectId(_id1) }] }
+      } else {
+        query = { "profileId": _id1 }
+      }
+
+      p1 = await db.collection('members').findOne(query);
+
+      const validGuid1 = new RegExp('^[0-9a-fA-F]{24}$').test(_id2);
+      if (validGuid1) {
+        query = { "$or": [{ "profileId": _id2 }, { "_id": ObjectId(_id2) }] }
+      } else {
+        query = { "profileId": _id2}
+      }
+
+      p2 = await db.collection('members').findOne(query);
 
       this.logger.info("Start")
       nodes = await db.collection('members').find({}, { fields: { '_id': 1 } }).toArray();
@@ -131,7 +153,7 @@ export default class PersonController {
         route.addNode(nodeKey, edgesDico[nodeKey])
       }
     }
-    let route1 = route.path(_id1, _id2)
+    let route1 = route.path(p1._id.toString(), p2._id.toString());
     return route1
   }
 
