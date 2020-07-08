@@ -53,22 +53,34 @@ export default class PersonController {
     };
   }
 
-  getNodes(db: any) {
-    this.logger.info('Get person by Id');
+  async getNodes(db: any) {
+    try {
 
-    return this.connector.getArrayFromMongoDbAndDb(db, memberCollection, {}, { _id: 1 })
-      .catch((err: any) => {
-        throw err;
-      })
-      .then((res: any) => res);
+      const membersCollection = db.collection('members');
+
+      let data: any = await membersCollection.find({}, { "_id": 1 }).toArray();
+
+      console.log(data[0])
+      return data;
+    } catch (err) {
+      console.log(err);
+      throw err;
+    }
   }
 
-  getEdges(db: any) {
-    return this.connector.getArrayFromMongoDbAndDb(db, relationCollection, {}, { person1_id: 1, person2_id: 1 })
-      .catch((err: any) => {
-        throw err;
-      })
-      .then((res: any) => res);
+  async getEdges(db: any) {
+    try {
+
+      const membersCollection = db.collection('members');
+
+      let data: any = await membersCollection.find({}, { person1_id: 1, person2_id: 1 }).toArray();
+
+      console.log(data[0])
+      return data;
+    } catch (err) {
+      console.log(err);
+      throw err;
+    }
   }
 
 
@@ -86,8 +98,11 @@ export default class PersonController {
 
     try {
       const db = client.db(mongoDbDatabase);
-      let nodes = await this.getNodes(db);
-      let edges = await this.getEdges(db);
+
+      this.logger.info("Start")
+      nodes = await db.collection('members').find({}, { fields: { '_id': 1 } }).toArray();
+      edges = await db.collection('relations').find({}, { fields: { person1_id: 1, person2_id: 1 } }).toArray();
+      this.logger.info("End")
       client.close();
 
     } catch (err) {
@@ -95,20 +110,29 @@ export default class PersonController {
       client.close();
     }
 
-    for (let i = 0; i < nodes.length; i++) {
-      let e: any = {};
-      for (let j = 0; j < edges.length; j++) {
-        if (edges[j].person1_id.toString() == nodes[i]._id.toString()) {
-          e[edges[j].person2_id.toString()] = 1;
-        }
-        if (edges[j].person2_id.toString() == nodes[i]._id.toString()) {
-          e[edges[j].person1_id.toString()] = 1;
-        }
+    let edgesDico: any = {}
+    for (let i = 0; i < edges.length; i++) {
+      let key1 = edges[i].person1_id.toString();
+      let key2 = edges[i].person2_id.toString();
+      if (key1 in edgesDico === false) {
+        edgesDico[key1] = {}
       }
-      route.addNode(nodes[i]._id.toString(), e)
+      if (key2 in edgesDico === false) {
+        edgesDico[key2] = {}
+      }
+
+      edgesDico[key1][key2] = 1;
+      edgesDico[key2][key1] = 1;
     }
 
-    return route.path(_id1, _id2)
+    for (let i = 0; i < nodes.length; i++) {
+      let nodeKey = nodes[i]._id.toString();
+      if (edgesDico[nodeKey] != undefined) {
+        route.addNode(nodeKey, edgesDico[nodeKey])
+      }
+    }
+    let route1 = route.path(_id1, _id2)
+    return route1
   }
 
   async getPersonList() {
@@ -174,7 +198,7 @@ export default class PersonController {
   async getPrivateProfile(_id: string, user: any) {
     const client = await this.connector.initClient();
     const db = client.db(mongoDbDatabase);
-    
+
     this.logger.info('Get private infos by id');
 
     const validGuid = new RegExp('^[0-9a-fA-F]{24}$').test(_id);
