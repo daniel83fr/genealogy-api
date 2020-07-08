@@ -135,6 +135,12 @@ schemaBuilder.addType(`type CachedUserList {
   isUpToDate: Boolean
 }`, 'cached user list');
 
+schemaBuilder.addType(`type Relation {
+  person1: User
+  person2: User
+  link: String
+}`);
+
 schemaBuilder.addType(`type PrivateProfile {
   _id: String
   birthDate: DateTime,
@@ -221,7 +227,7 @@ schemaBuilder.addQuery('getPhotoProfile(_id: String!): Photo');
 schemaBuilder.addQuery('getPhotosById(_id: String!): [Photo]');
 schemaBuilder.addQuery('getPhotosRandom(number: Int!): [Photo]');
 
-schemaBuilder.addQuery('getRelation(_id1: String!,_id2: String!): [String]');
+schemaBuilder.addQuery('getRelation(_id1: String!,_id2: String!): [Relation]');
 
 schemaBuilder.addQuery('getTodayBirthdays: [User]');
 schemaBuilder.addQuery('getTodayDeathdays: [User]');
