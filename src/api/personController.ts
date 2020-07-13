@@ -275,18 +275,20 @@ export default class PersonController {
       query = { "profileId": _id }
     }
 
-
     const projection = {};
-    return this.connector.getItemFromMongoDb(mongoDbDatabase, memberCollection, query, projection)
-      .catch((err: any) => {
-        throw err;
-      })
-      .then((res1: any) => {
-        if (!res1.isDead) {
-          PersonController.CheckUserAuthenticated(user);
-        }
-        return this.mapPrivate(res1);
-      });
+
+    let res1:any = await this.connector.getItemFromMongoDb(mongoDbDatabase, memberCollection, query, projection);
+    if (!res1.isDead) {
+      PersonController.CheckUserAuthenticated(user);
+    }
+
+    let r = this.mapPrivate(res1);
+    let spouse = await db.collection('relations').find({$or: [ { person1_id : r._id}, {person2_id: r._id}], type:"Spouse"}).toArray();
+    r.weddingDate = spouse[0]?.wedding?.weddingDate;
+    r.weddingLocationCountry = spouse[0]?.wedding?.country;
+    r.weddingLocationCity = spouse[0]?.wedding?.city;
+    return r;
+
   }
 
   getPerson(_id: string, db: any) {

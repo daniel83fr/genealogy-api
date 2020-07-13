@@ -145,12 +145,15 @@ schemaBuilder.addType(`type PrivateProfile {
   _id: String
   birthDate: DateTime,
   deathDate: DateTime,
+  weddingDate: DateTime
   isDead: Boolean,
   currentLocationCountry: String,
   birthLocationCountry: String,
   deathLocationCountry: String,
+  weddingLocationCountry:String,
   currentLocationCity: String,
   birthLocationCity: String,
+  weddingLocationCity:String,
   deathLocationCity: String,
   email: String,
   phone: String
@@ -159,12 +162,15 @@ schemaBuilder.addType(`type PrivateProfile {
 schemaBuilder.addType(`input PrivateProfileChanges{
   birthDate: DateTime
   deathDate: DateTime,
+  weddingDate: DateTime,
   currentLocationCountry: String,
   birthLocationCountry: String,
   deathLocationCountry: String,
   currentLocationCity: String,
+  weddingLocationCountry:String,
   birthLocationCity: String,
   deathLocationCity: String,
+  weddingLocationCity: String,
   email: String
   phone: String
   updatedBy: String
