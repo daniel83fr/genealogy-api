@@ -1,12 +1,15 @@
 import LoggerService from "../services/logger_service";
 import { MongoConnector, getPhotosRandomFromMongoDb, getPhotoProfileFromMongoDb, deletePhotoFromMongo, removePhotoTagFromMongo, addPhotoTagFromMongo, setProfilePictureFromMongo, getPhotosByIdFromMongoDb, addPhotoFromMongoDb } from "./mongoDbConnector";
 import LoginController from "./loginController";
+import CacheService from '../services/cache_service';
+export const cacheFolder = '../cache';
 
 export default class PhotoController {
   logger: LoggerService = new LoggerService('photoController');
 
-  connector: MongoConnector;
+  cacheService: CacheService = new CacheService(cacheFolder);
 
+  connector: MongoConnector;
   constructor(connector: MongoConnector) {
     this.connector = connector;
   }
@@ -18,6 +21,11 @@ export default class PhotoController {
     if (persons == null || persons.length === 0) {
       throw Error('Need tag at least one person');
     }
+
+    for(let i = 0;i < persons.length; i++){
+      this.cacheService.clearProfileCache(persons[i]);
+    }
+    
     return addPhotoFromMongoDb(url, deleteHash, persons)
       .catch((err: any) => {
         throw err;
@@ -41,6 +49,7 @@ export default class PhotoController {
 
   setProfilePicture(person: string, image: string): Promise<string> {
     this.logger.info('Set profile pic');
+    this.cacheService.clearProfileCache(person);
     return setProfilePictureFromMongo(person, image)
       .catch((err: any) => {
         throw err;
@@ -50,6 +59,7 @@ export default class PhotoController {
 
   addPhotoTag(image: string, person: string): Promise<string> {
     this.logger.info('add photo tag');
+    this.cacheService.clearProfileCache(person);
     return addPhotoTagFromMongo(person, image)
       .catch((err: any) => {
         throw err;
@@ -58,7 +68,9 @@ export default class PhotoController {
   }
 
   removePhotoTag(image: string, person: string): Promise<string> {
+
     this.logger.info('Remove photo tag');
+    this.cacheService.clearProfileCache(person);
     return removePhotoTagFromMongo(person, image)
       .catch((err: any) => {
         throw err;

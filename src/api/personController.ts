@@ -1,4 +1,3 @@
-import fs from 'fs';
 import {
   memberCollection,
   mongoDbDatabase,
@@ -9,12 +8,11 @@ import {
   relationCollection
 
 } from './mongoDbConnector';
-import ProfileService from '../services/profile_service'
+import ProfileService from '../services/profile_service';
+import CacheService from '../services/cache_service';
 
 import LoggerService from '../services/logger_service';
 import LoginController from './loginController';
-import path from 'path';
-
 
 const ObjectId = require('mongodb').ObjectID;
 
@@ -25,6 +23,8 @@ export default class PersonController {
   logger: LoggerService = new LoggerService('personController');
 
   profileService: ProfileService = new ProfileService();
+
+  cacheService: CacheService = new CacheService(cacheFolder);
 
   connector: MongoConnector;
 
@@ -202,11 +202,10 @@ export default class PersonController {
   }
 
   async getPersonList() {
-
-    const cacheFile = `${cacheFolder}/personList.json`;
-    if (fs.existsSync(cacheFile)) {
-      const cachedList = fs.readFileSync(cacheFile, 'utf8');
-      return JSON.parse(cachedList);
+    const cache = this.cacheService.getPersonListCache();
+    if (cache !== undefined) {
+      this.logger.debug('getPersonList from cache');
+      return cache;
     }
 
     const client = await this.connector.initClient();
@@ -229,7 +228,9 @@ export default class PersonController {
       data = data.map(PersonController.mapping);
       data = data.sort(PersonController.sortByName);
       client.close();
-      fs.writeFileSync(cacheFile, JSON.stringify(data));
+      this.cacheService.setPersonListCache(data)
+
+     
       return data;
     } catch (err) {
       client.close();
@@ -237,13 +238,14 @@ export default class PersonController {
       return [];
     }
   }
+  
 
   async getProfile(_id: string) {
 
-    const cacheFile = `${cacheFolder}/profile_${_id}.json`;
-    if (fs.existsSync(cacheFile)) {
-      const cachedProfile = fs.readFileSync(cacheFile, 'utf8');
-      return JSON.parse(cachedProfile);
+    const cache = this.cacheService.getProfileCache(_id);
+    if (cache !== undefined) {
+      this.logger.debug('getProfile from cache');
+      return cache;
     }
 
     const client = await this.connector.initClient();
@@ -251,8 +253,9 @@ export default class PersonController {
       const db = client.db(mongoDbDatabase);
       const data: any = await this.profileService.getProfileByIdFromMongoDb(_id, db);
       client.close();
-      fs.writeFileSync(cacheFile, JSON.stringify(data));
-      console.log(`Write Cache: ${path.resolve(cacheFile)}`);
+
+      this.cacheService.setProfileCache(_id, data);
+      
       return data;
     } catch (err) {
       client.close();
@@ -336,14 +339,9 @@ export default class PersonController {
 
   removeProfile(id: string) {
     this.logger.info('Remove profile');
-    const cacheFile = `${cacheFolder}/profile_${id}.json`;
-    if (fs.existsSync(cacheFile)) {
-      fs.unlinkSync(cacheFile);
-    }
-    const cacheFile2 = `${cacheFolder}/personList.json`;
-    if (fs.existsSync(cacheFile2)) {
-      fs.unlinkSync(cacheFile2);
-    }
+    this.cacheService.clearPersonListCache();
+    this.cacheService.clearProfileCache(id);
+
     return deleteProfileFromMongoDb(id)
       .catch((err: any) => {
         throw err;
@@ -357,16 +355,8 @@ export default class PersonController {
       return null;
     }
 
-    const cacheFile = `${cacheFolder}/profile_${_id}.json`;
-    if (fs.existsSync(cacheFile)) {
-      console.log(`Remove: ${path.resolve(cacheFile)}`)
-      fs.unlinkSync(cacheFile);
-    }
-    const cacheFile2 = `${cacheFolder}/personList.json`;
-    if (fs.existsSync(cacheFile2)) {
-      console.log(`Remove: ${path.resolve(cacheFile2)}`)
-      fs.unlinkSync(cacheFile2);
-    }
+    this.cacheService.clearPersonListCache();
+    this.cacheService.clearProfileCache(_id);
 
     this.logger.info('UpdatePersons');
 
@@ -382,7 +372,7 @@ export default class PersonController {
 
   createPerson(person: any) {
     this.logger.info('Create Person');
-
+    this.cacheService.clearPersonListCache();
     return createPersonFromMongoDb(person)
       .catch((err) => {
         throw err;
