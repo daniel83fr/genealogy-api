@@ -1,7 +1,7 @@
-import AdminController, * as adminController from '../src/api/adminController';
+import AuditController from '../src/api/auditController';
 import * as mongoDbConnector from '../src/api/mongoDbConnector';
 
-describe('adController', () => {
+describe('auditController', () => {
   let connector: mongoDbConnector.MongoConnector;
   const mydb = { name: 'myDb' };
   beforeEach(() => {
@@ -9,4 +9,12 @@ describe('adController', () => {
 
     spyOn(connector, 'initClient').and.returnValue(Promise.resolve({ db: () => mydb, close: () => {} }));
   });
+
+  it('should get last modification audit', async () => {
+    const controller = new AuditController(connector);
+    //const audit = await controller.getAuditLastEntries(5);
+    // expect(audit.toArray().length).toBe(5);
+  });
+
+ 
 });

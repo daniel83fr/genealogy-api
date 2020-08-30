@@ -4,8 +4,11 @@ const dateFormat = () => new Date(Date.now()).toISOString();
 export default class LoggerService {
   cls: string;
 
-  constructor(cls: string) {
+  mode: string;
+
+  constructor(cls: string, mode: string = '') {
     this.cls = cls;
+    this.mode = mode;
   }
 
   private logToConsole(message: string, level: string) {
@@ -17,7 +20,9 @@ export default class LoggerService {
   }
 
   debug(message: string, obj: any = null) {
-    this.logToConsole(`${message} ${obj == null ? '' : JSON.stringify(obj)}`, 'debug');
+    if (this.mode === 'debug') {
+      this.logToConsole(`${message} ${obj == null ? '' : JSON.stringify(obj)}`, 'debug');
+    }
   }
 
   error(message: string, obj: any = null) {

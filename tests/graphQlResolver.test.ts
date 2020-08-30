@@ -3,15 +3,12 @@ import schema from '../src/api/schema';
 
 
 describe('GraphQLResolver queries', () => {
-  it('should implement all methods', async () => {
-    const r = new GraphQLResolver();
-    expect(Object.keys(r.getQuery()).length).toEqual(15);
-  });
+
 
   it('getAuditLastEntries', async () => {
     const adminControllerFake = jasmine.createSpyObj('AdminController', ['getAuditLastEntries']);
     const r = new GraphQLResolver();
-    r.adminController = adminControllerFake;
+    r.auditController = adminControllerFake;
     expect(Object.keys(r.getQuery()).includes('getAuditLastEntries'));
     expect(schema.getQueryType()?.getFields()['getAuditLastEntries']).not.toBeUndefined();
     const args = { number: 4 };
@@ -130,7 +127,7 @@ describe('GraphQLResolver queries', () => {
 describe('GraphQLResolver mutations', () => {
   it('should implement all methods', async () => {
     const r = new GraphQLResolver();
-    expect(Object.keys(r.getMutation()).length).toEqual(16);
+    expect(Object.keys(r.getMutation()).length).toEqual(15);
   });
 
   it('updatePersonPrivateInfo', async () => {
@@ -286,13 +283,4 @@ describe('GraphQLResolver mutations', () => {
     expect(photoControllerFake.removePhotoTag).toHaveBeenCalledWith(args.image, args.tag);
   });
 
-  it('runMassUpdate', async () => {
-    const adminControllerFake = jasmine.createSpyObj('AdminController', ['runMassUpdate']);
-    const r = new GraphQLResolver();
-    r.adminController = adminControllerFake;
-    expect(Object.keys(r.getMutation()).includes('runMassUpdate'));
-    expect(schema.getMutationType()?.getFields()['runMassUpdate']).not.toBeUndefined();
-    await r.getMutation().runMassUpdate({});
-    expect(adminControllerFake.runMassUpdate).toHaveBeenCalled();
-  });
 });

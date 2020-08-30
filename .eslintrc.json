@@ -25,7 +25,7 @@
     "rules": {
         "linebreak-style": ["error", "windows"],
         "no-underscore-dangle": "off",
-
+        "max-len":"off",
         "func-names": "off",
         "import/no-unresolved": 0,
         "import/extensions": ["error", "ignorePackages", {

@@ -238,8 +238,10 @@ schemaBuilder.addQuery('getRelation(_id1: String!,_id2: String!): [Relation]');
 schemaBuilder.addQuery('getTodayBirthdays: [User]');
 schemaBuilder.addQuery('getTodayDeathdays: [User]');
 schemaBuilder.addQuery('getTodayMarriagedays: [User]');
-schemaBuilder.addQuery('getEvents(date1:String!, date2:String):[Event]')
+schemaBuilder.addQuery('getEvents(date1:String!, date2:String):[Event]');
 schemaBuilder.addQuery('getProfileId(_id: String!): String');
+schemaBuilder.addQuery('searchPerson(filter: String!, page: Int, pageSize: Int): [User]');
+
 
 schemaBuilder.setMutationDescription('Mutations definition.');
 schemaBuilder.addMutation('removeLink(_id1: String!, _id2: String!): String');

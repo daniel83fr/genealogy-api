@@ -1,11 +1,13 @@
 import fs from 'fs';
 import path from 'path';
+import LoggerService from '../services/logger_service';
 
 export default class CacheService {
-
   cacheFolder: string;
 
   personListCache: string;
+
+  logger: LoggerService = new LoggerService('CacheService');
 
   constructor(cacheFolder: string) {
     this.cacheFolder = cacheFolder;
@@ -19,16 +21,16 @@ export default class CacheService {
         return JSON.parse(cachedList);
       }
     } catch (error) {
-      console.error(error);
+      this.logger.error(error);
     }
     return undefined;
   }
 
   setPersonListCache(data: any) {
     try {
-      fs.writeFileSync(this.personListCache, JSON.stringify(data));
+      fs.writeFileSync(this.personListCache, JSON.stringify(data, null, 4));
     } catch (error) {
-      console.error(error);
+      this.logger.error(error);
     }
   }
 
@@ -38,7 +40,7 @@ export default class CacheService {
         fs.unlinkSync(this.personListCache);
       }
     } catch (error) {
-      console.error(error);
+      this.logger.error(error);
     }
   }
 
@@ -54,7 +56,7 @@ export default class CacheService {
         return JSON.parse(cachedProfile);
       }
     } catch (error) {
-      console.error(error);
+      this.logger.error(error);
     }
     return undefined;
   }
@@ -62,10 +64,10 @@ export default class CacheService {
   setProfileCache(_id: string, data: any) {
     try {
       const cacheFile = this.getProfileCacheFile(_id);
-      console.log(`Write Cache: ${path.resolve(cacheFile)}`);
+      this.logger.debug(`Write Cache: ${path.resolve(cacheFile)}`);
       fs.writeFileSync(cacheFile, JSON.stringify(data));
     } catch (error) {
-      console.error(error);
+      this.logger.error(error);
     }
   }
 
@@ -76,7 +78,7 @@ export default class CacheService {
         fs.unlinkSync(cacheFile);
       }
     } catch (error) {
-      console.error(error);
+      this.logger.error(error);
     }
   }
 }

@@ -1,47 +1,27 @@
 import LoggerService from '../services/logger_service';
 import {
-  MongoConnector, mongoDbDatabase, auditCollection, memberCollection, credentialsCollection,
+  MongoConnector,
+  mongoDbDatabase,
+  auditCollection,
+  memberCollection,
 } from './mongoDbConnector';
+
 export const ObjectId = require('mongodb').ObjectID;
 
-export default class AdminController {
-  logger: LoggerService = new LoggerService('adminController');
+export default class AuditController {
+  logger: LoggerService = new LoggerService('auditController');
 
   connector: MongoConnector;
 
   constructor(connector: MongoConnector) {
     this.connector = connector;
   }
-  
-  getVersion() {
-    this.logger.info('get version');
-    return process.env.VERSION;
-  }
 
-  runMassUpdate() {
-    this.logger.info('Run mass update');
-    return;
-    return this.connector.initClient()
-      .then((client) => {
-        const db = client.db(mongoDbDatabase);
-        const members = db.collection(memberCollection);
-        const credentials = db.collection(credentialsCollection);
-        credentials.find({}).toArray().then(
-          (res: any[]) => {
-            res.forEach((element) => {
-              members.updateOne({ _id: ObjectId(element.id) }, { $set: { profileId: element.login } });
-            });
-          },
-        );
-
-
-        return 'Done';
-      })
-      .catch((err) => { throw err; });
-  }
-
-  getAuditLastEntries(number: number) {
-
+  getAuditLastEntries(number: number) : Promise<any> {
+    // Get Last updates:
+    // - profiles
+    // - links
+    // - photos
     return this.connector.initClient()
       .then((client) => {
         const db = client.db(mongoDbDatabase);
@@ -68,19 +48,16 @@ export default class AdminController {
             return this.connector.getArrayFromMongoDb(mongoDbDatabase, memberCollection, {}, {})
              .then((m: any[]) => {
               let dico:any = {};
-              
                 m.forEach(i=>{
                   let id1 = i._id.toString();
                   dico[id1] = i.firstName;
 
                 });
-              
                 items.forEach((x:any)=> {
-                  x.user =dico[x.user];
-                  x.id =dico[x.id];
+                  x.user = dico[x.user];
+                  x.id = dico[x.id];
                 });
                 return items;
-               
               });
           });
       })
