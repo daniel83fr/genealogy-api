@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 
 module.exports = {
   target: 'node',
@@ -15,4 +16,7 @@ module.exports = {
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
   },
+  plugins: [
+    new webpack.IgnorePlugin(/^pg-native$/),
+  ]
 };

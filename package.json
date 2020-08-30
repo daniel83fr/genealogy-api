@@ -43,6 +43,7 @@
     "graphql": "^15.0.0",
     "jsonwebtoken": "^8.5.1",
     "mongo": "^0.1.0",
+    "mongodb-client-encryption": "^1.1.0",
     "node-dijkstra": "^2.5.0",
     "node-postgres": "^0.6.2",
     "pg": "^8.3.3",
@@ -54,7 +55,7 @@
     "ts-loader": "^7.0.5",
     "tsc-watch": "^4.2.3",
     "typescript": "^3.9.3",
-    "webpack": "^4.43.0",
+    "webpack": "^4.44.1",
     "winston": "^3.2.1",
     "yamljs": "^0.3.0"
   },
