@@ -102,6 +102,7 @@ schemaBuilder.addType(`type User {
   yearOfBirth : String
   yearOfDeath: String
   isDead: Boolean
+  image: String
 }`, 'Person public info');
 
 schemaBuilder.addType(`type Event {

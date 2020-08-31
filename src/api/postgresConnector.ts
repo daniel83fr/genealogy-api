@@ -35,7 +35,7 @@ export class PostgresConnector {
       .then((client: any) => {
 
 
-        let query = `select  profiles.*, nickname as profile_id, event_b.year as year_of_birth, event_d.year as year_of_death, event_d.is_dead, , images.url as profile_picture
+        let query = `select  profiles.*, nickname as profile_id, event_b.year as year_of_birth, event_d.year as year_of_death, event_d.is_dead, images.url as profile_picture
         from profiles
         left join nicknames on  profiles.id = nicknames.id and nicknames .is_active  = true
         left join events event_b on event_b.person1 = profiles.id and event_b.type = 'Birth'

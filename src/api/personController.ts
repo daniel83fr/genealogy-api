@@ -72,6 +72,7 @@ export default class PersonController {
       yearOfDeath: row.year_of_death,
       isDead: row.is_dead ?? false,
       profileId: row.profile_id ?? row.id,
+      image: row.profile_picture,
     };
   }
 
