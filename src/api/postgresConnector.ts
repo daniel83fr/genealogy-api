@@ -35,10 +35,14 @@ export class PostgresConnector {
       .then((client: any) => {
 
 
-        let query = `select  profiles.*, nickname as profile_id, event_b.year as year_of_birth, event_d.year as year_of_death, event_d.is_dead from profiles
+        let query = `select  profiles.*, nickname as profile_id, event_b.year as year_of_birth, event_d.year as year_of_death, event_d.is_dead, , images.url as profile_picture
+        from profiles
         left join nicknames on  profiles.id = nicknames.id and nicknames .is_active  = true
         left join events event_b on event_b.person1 = profiles.id and event_b.type = 'Birth'
-        left join events event_d on event_d.person1 = profiles.id and event_d.type = 'Death'`;
+        left join events event_d on event_d.person1 = profiles.id and event_d.type = 'Death'
+        left join tags on tags.person = profiles.id and tags.is_profile  = true 
+        left join images on tags.photo  = images.id
+        `;
 
         if(filter!= ''){
           query = query + ` where LOWER(profiles.first_name || profiles.last_name  || profiles.maiden_name || profiles.first_name || profiles.last_name  || profiles.maiden_name)  
