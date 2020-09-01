@@ -41,7 +41,7 @@ export class PostgresConnector {
         left join events event_b on event_b.person1 = profiles.id and event_b.type = 'Birth'
         left join events event_d on event_d.person1 = profiles.id and event_d.type = 'Death'
         left join tags on tags.person = profiles.id and tags.is_profile  = true 
-        left join images on tags.photo  = images.id
+        left join images on tags.photo_id  = images.photo_id
         `;
 
         if(filter!= ''){
@@ -90,10 +90,10 @@ export class PostgresConnector {
       .then((client: any) => {
 
         for (let i = 0; i < data.length; i++) {
-          const query = `INSERT INTO public.events ("type", "day", "month", "year",  person1, is_dead) 
-          VALUES('Death', ${data[i].dayOfDeath ?? 0}, ${data[i].monthOfDeath ?? 0}, ${data[i].yearOfDeath ?? 0}, '${data[i]._id}', '${data[i].isDead}') on conflict do nothing;
+          const query = `INSERT INTO public.relations ("person1", "person2", "type") 
+          VALUES('${data[i].person1_id.toString()}', '${data[i].person2_id.toString()}', '${data[i].type }') on conflict do nothing;
           `
-          // const query = `update profiles set gender = '${data[i].gender}', maiden_name = '${data[i].maidenName}' where id =  '${data[i]._id.toString()}';`;
+          // const query = `update profiles set gender = '${data[i].gender}', maiden_name = '${data[i].maide'nName}' where id =  '${data[i]._id.toString()}';`;
           console.log(query);
 
           client.query(query).then((res: any) => {

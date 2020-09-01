@@ -96,7 +96,37 @@ export default class PersonController {
     }
   }
 
+  async updateData() {
+
+    const client = await this.connector.initClient();
+    try {
+      const db = client.db(mongoDbDatabase);
+      const data: any[] = await db.collection('relations').find({}).toArray();
+      console.log(data.length)
+
+      client.close();
+
+      try {
+        const connector = new PostgresConnector();
+        return connector.InitDatabase2(data);
+          
+      } catch (err) {
+        console.log(err);
+        return [];
+      }
+    } catch (err) {
+      client.close();
+      console.log(err);
+      return {};
+    }
+
+
+    
+  }
   getPersonList() {
+
+    //  this.updateData();
+    //  return [];
     const cache = this.cacheService.getPersonListCache();
     if (cache !== undefined) {
       this.logger.debug('getPersonList from cache');
