@@ -48,11 +48,8 @@ export class GraphQLResolver {
       getPhotoProfile: (args: any) => this.photoController?.getPhotoProfile(args._id),
       getPhotosRandom: (args: any) => this.photoController?.getPhotosRandom(args.number),
 
-      getEvents: (args:any) => this.eventController?.getEvents(args.date1, args.date2),
-      getTodayBirthdays: (args: any, context: any) => this.eventController?.getTodayBirthdays(context.user),
-      getTodayDeathdays: (args: any, context: any) => this.eventController?.getTodayDeathdays(context.user),
-      getTodayMarriagedays: (args: any, context: any) => this.eventController?.getTodayMarriagedays(context.user),
-      getRelation:(args:any) => this.relationController?.getRelation(args._id1, args._id2),
+      getEvents: (args:any) => this.eventController?.getEvents(args.date),
+      getRelation: (args:any) => this.relationController?.getRelation(args._id1, args._id2),
 
       
     };

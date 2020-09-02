@@ -90,38 +90,7 @@ describe('GraphQLResolver queries', () => {
     expect(photoControllerFake.getPhotosRandom).toHaveBeenCalledWith(args.number);
   });
 
-  it('getTodayBirthdays', async () => {
-    const eventControllerFake = jasmine.createSpyObj('eventController', ['getTodayBirthdays']);
-    const r = new GraphQLResolver();
-    r.eventController = eventControllerFake;
-    expect(Object.keys(r.getQuery()).includes('getTodayBirthdays'));
-    const args = {};
-    const context = { user: 'Daniel' };
-    await r.getQuery().getTodayBirthdays(args, context);
-    expect(eventControllerFake.getTodayBirthdays).toHaveBeenCalledWith(context.user);
-  });
 
-  it('getTodayDeathdays', async () => {
-    const eventControllerFake = jasmine.createSpyObj('eventController', ['getTodayDeathdays']);
-    const r = new GraphQLResolver();
-    r.eventController = eventControllerFake;
-    expect(Object.keys(r.getQuery()).includes('getTodayDeathdays'));
-    const args = {};
-    const context = { user: 'Daniel' };
-    await r.getQuery().getTodayDeathdays(args, context);
-    expect(eventControllerFake.getTodayDeathdays).toHaveBeenCalledWith(context.user);
-  });
-
-  it('getTodayMarriagedays', async () => {
-    const eventControllerFake = jasmine.createSpyObj('eventController', ['getTodayMarriagedays']);
-    const r = new GraphQLResolver();
-    r.eventController = eventControllerFake;
-    expect(Object.keys(r.getQuery()).includes('getTodayMarriagedays'));
-    const args = {};
-    const context = { user: 'Daniel' };
-    await r.getQuery().getTodayMarriagedays(args, context);
-    expect(eventControllerFake.getTodayMarriagedays).toHaveBeenCalledWith(context.user);
-  });
 });
 
 describe('GraphQLResolver mutations', () => {

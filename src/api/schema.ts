@@ -106,11 +106,13 @@ schemaBuilder.addType(`type User {
 }`, 'Person public info');
 
 schemaBuilder.addType(`type Event {
-  date: DateTime
+  day: Int
+  month: Int
+  year: Int
   type: String
-  person: User
-  person2: User,
-  anniversary: Int
+  profileId: String
+  firstName: String
+  lastName: String
 }`, 'Event');
 
 schemaBuilder.addType(`type PublicProfile 
@@ -239,7 +241,7 @@ schemaBuilder.addQuery('getRelation(_id1: String!,_id2: String!): [Relation]');
 schemaBuilder.addQuery('getTodayBirthdays: [User]');
 schemaBuilder.addQuery('getTodayDeathdays: [User]');
 schemaBuilder.addQuery('getTodayMarriagedays: [User]');
-schemaBuilder.addQuery('getEvents(date1:String!, date2:String):[Event]');
+schemaBuilder.addQuery('getEvents(date:String!):[Event]');
 schemaBuilder.addQuery('getProfileId(_id: String!): String');
 schemaBuilder.addQuery('searchPerson(filter: String!, page: Int, pageSize: Int): [User]');
 

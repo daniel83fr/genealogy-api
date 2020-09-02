@@ -67,7 +67,34 @@ export class PostgresConnector {
       });
   }
 
+  GetEvents(date: Date): Promise<any[]> {
 
+    this.pool.on('error', (err: any, client: any) => {
+      console.error('Error:', err);
+    });
+
+    return this.pool.connect()
+      .then((client: any) => {
+
+
+        let query = `select type, year, month, day, profiles.first_name,profiles.last_name, profiles.id from events 
+        join profiles on profiles.id = events.person1 or profiles.id = events.person2
+        where day = ${date.getDate()} and month = ${date.getMonth() + 1}
+        `;
+
+        console.log(query);
+        return client.query(query).then((res: any) => {
+          console.log(res.rows.length)
+          return res.rows;
+        })
+          .catch((err: any) => {
+            console.error(err);
+          })
+      })
+      .catch((err: any) => {
+        console.error(err);
+      });
+  }
 
 
   InitDatabase2(data: any[]) {
