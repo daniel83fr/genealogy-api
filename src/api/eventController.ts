@@ -1,30 +1,17 @@
-import LoggerService from "../services/logger_service";
-import { MongoConnector, getTodayBirthdaysFromMongoDb, getTodayDeathdaysFromMongoDb, getTodayMarriagedaysFromMongoDb, getEventsFromMongoDb, mongoDbDatabase } from "./mongoDbConnector";
-import LoginController from "./loginController";
-import { PostgresConnector } from "./postgresConnector";
+import LoggerService from '../services/logger_service';
+import { PostgresConnector } from './postgresConnector';
 
 export default class EventController {
   logger: LoggerService = new LoggerService('eventController');
 
-  connector: MongoConnector;
-
-  constructor(connector: MongoConnector) {
-    this.connector = connector;
-  }
-
   async getEvents(date: string) {
-    console.log(date)
-
-    var from = new Date(date);
-    console.log(from.toString())
+    const from = new Date(date);
     this.logger.debug('getEvents');
     try {
       const connector = new PostgresConnector();
       return connector.GetEvents(from)
         .then((res: any) => {
-          let dataNew = res.map(EventController.mappingFromDb);
-         
-          return dataNew;
+          return res.map(EventController.mappingFromDb);
         })
         .catch((err: any) => {
           console.error(err);
@@ -34,10 +21,8 @@ export default class EventController {
       console.log(err);
       return [];
     }
-
- 
-
   }
+
   static mappingFromDb(row: any) {
     return {
       _id: row.id,

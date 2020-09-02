@@ -4,7 +4,7 @@ export default class SettingController {
   logger: LoggerService = new LoggerService('settingController');
 
   getVersion() {
-    this.logger.info('get version'); 
+    this.logger.info('get version');
     return process.env.VERSION;
   }
 }

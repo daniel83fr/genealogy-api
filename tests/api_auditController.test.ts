@@ -10,11 +10,6 @@ describe('auditController', () => {
     spyOn(connector, 'initClient').and.returnValue(Promise.resolve({ db: () => mydb, close: () => {} }));
   });
 
-  it('should get last modification audit', async () => {
-    const controller = new AuditController(connector);
-    //const audit = await controller.getAuditLastEntries(5);
-    // expect(audit.toArray().length).toBe(5);
-  });
 
  
 });
