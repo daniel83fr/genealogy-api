@@ -43,9 +43,11 @@ export class PostgresConnector {
         console.log(query);
         return client.query(query).then((res: any) => {
           console.log(res.rows.length)
+          client.release();
           return res.rows;
         })
           .catch((err: any) => {
+            client.release();
             console.error(err);
           })
       })
@@ -85,9 +87,11 @@ export class PostgresConnector {
         console.log(query);
         return client.query(query).then((res: any) => {
           console.log(res.rows.length)
+          client.release();
           return res.rows;
         })
           .catch((err: any) => {
+            client.release();
             console.error(err);
           })
       })
@@ -114,9 +118,11 @@ export class PostgresConnector {
         console.log(query);
         return client.query(query).then((res: any) => {
           console.log(res.rows.length)
+          client.release();
           return res.rows;
         })
           .catch((err: any) => {
+            client.release();
             console.error(err);
           })
       })
