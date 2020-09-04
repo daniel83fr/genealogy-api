@@ -4,10 +4,16 @@ import LoggerService from '../services/logger_service';
 import fs from 'fs';
 import { Console } from 'console';
 import { Pool } from 'pg';
+import PersonController from './personController';
 
 dotenv.config();
 
 export class PostgresConnector {
+ 
+ 
+ 
+
+  
 
   logger: LoggerService;
   pool: Pool;
@@ -15,6 +21,7 @@ export class PostgresConnector {
 
   constructor() {
     this.logger = new LoggerService('PostgresConnector');
+    process.setMaxListeners(0);
     this.pool = new Pool({
       user: process.env.PG_USER,
       host: process.env.PG_HOST,
@@ -54,6 +61,110 @@ export class PostgresConnector {
       .catch((err: any) => {
         console.error(err);
       });
+  }
+
+  async getIdFromProfile(id: string) {
+    let query = `select id from nicknames 
+    where id = '${id}' or nickname = '${id}'`;
+
+    const data = await this.ExecuteQuery(query, (x:any)=>x.id);
+    if(data.length  > 0 )
+      return data[0]
+    return id;
+
+  }
+
+  GetPersons(ids: string[]) {
+
+    if(ids == undefined){
+      return [];
+    }
+    let idList = ids.join("','")
+    let query = `select  profiles.*, nickname as profile_id, event_b.year as year_of_birth, event_d.year as year_of_death, event_d.is_dead, images.url as profile_picture
+    from profiles
+    left join nicknames on  profiles.id = nicknames.id and nicknames .is_active  = true
+    left join events event_b on event_b.person1 = profiles.id and event_b.type = 'Birth'
+    left join events event_d on event_d.person1 = profiles.id and event_d.type = 'Death'
+    left join tags on tags.person = profiles.id and tags.is_profile  = true 
+    left join images on tags.photo_id  = images.photo_id
+    where profiles.id in ('${idList}')
+    `;
+
+    return this.ExecuteQuery(query, PersonController.mappingFromDb)
+   
+  }
+
+
+
+  ExecuteQuery(query: string, mapper: any): Promise<any[]> {
+    this.pool.on('error', (err: any, client: any) => {
+      console.error('Error:', err);
+    });
+
+    return this.pool.connect()
+      .then((client: any) => {
+
+        
+        return client.query(query).then((res: any) => {
+         
+          client.release();
+          return res.rows.map(mapper);
+        })
+          .catch((err: any) => {
+            client.release();
+            console.error(err);
+          })
+      })
+      .catch((err: any) => {
+        console.error(err);
+      });
+  }
+
+  GetParentIds(ids: string[]): any[] | Promise<any[]> {
+    let idList= ids.join("','");
+    let query = `select relations.person1 from relations
+        where person2 in( '${idList}')
+        and type = 'Parent'
+        `;
+    let mapper = (x:any) =>x.person1;
+    return this.ExecuteQuery(query, mapper);
+  }
+
+  GetChildrenIds(ids: string[]): any[] | Promise<any[]> {
+    let idList= ids.join("','");
+    let query = `select relations.person2 from relations
+        where person1 in ( '${idList}')
+        and type = 'Parent'
+        `;
+    let mapper = (x:any) =>x.person2;
+    return this.ExecuteQuery(query, mapper);
+  }
+
+  GetSpouseIds(id: string): any[] | Promise<any[]> {
+    let query = `select relations.person1, relations.person2 from relations
+        where (person1 = '${id}' or person2 = '${id}')
+        and type = 'Spouse'
+        `;
+    let mapper = (x:any) => x.person1 == id ? x.person2 : x.person1;
+    return this.ExecuteQuery(query, mapper);
+  }
+
+  GetPhotos(id: string): any[] | Promise<any[]> {
+    let query = `select images.photo_id, url from images
+    left join tags on tags.photo_id  = images .photo_id 
+    where person = '${id}'
+        `;
+    
+
+    return this.ExecuteQuery(query, this.photoMapper);
+  }
+
+  photoMapper(row: any) {
+
+    return {
+      _id: row.photo_id,
+      url: row.url,
+    };
   }
 
   GetPersonList(filter: string = '', page: number = 1, pageSize: number = 20): Promise<any[]> {

@@ -1,140 +1,54 @@
-import { ObjectId, getPhotosByIdFromMongoDb } from '../api/mongoDbConnector';
+import { PostgresConnector } from '../api/postgresConnector';
+import LoggerService from './logger_service';
 
 export default class ProfileService {
-  
-  async getProfileByIdFromMongoDb(id: string, db:any) {
+  logger: LoggerService = new LoggerService('ProfileService');
 
-    const membersCollection = db.collection('members');
-    const relationsCollection = db.collection('relations');
+  async getProfileById(id: string) {
+    this.logger.debug(`GetProfileById ${id}`);
+    const connector = new PostgresConnector();
 
-    const validGuid = new RegExp('^[0-9a-fA-F]{24}$').test(id);
-    let query = {};
-    if (validGuid) {
-      query = { "$or": [{ "profileId": id }, { "_id": ObjectId(id) }] }
-    } else {
-      query = { "profileId": id }
-    }
+    const idNew = await connector.getIdFromProfile(id);
+    const spouseIdsNew = await connector.GetSpouseIds(idNew);
+    const parentIdsNew:any[] = await connector.GetParentIds([idNew]);
+    let siblingsIdsNew = await connector.GetChildrenIds(parentIdsNew);
+    siblingsIdsNew = siblingsIdsNew.filter((x:any) => x !== idNew);
+    const childrenIdsNew = await connector.GetChildrenIds([idNew]);
+    const grandparentIdsNew:any[] = await connector.GetParentIds(parentIdsNew);
+    let piblingsIdsNew = await connector.GetChildrenIds(grandparentIdsNew);
+    piblingsIdsNew = piblingsIdsNew.filter((x:any)=> !parentIdsNew.includes(x));
+    const cousinsIdsNew = await connector.GetChildrenIds(piblingsIdsNew);
+    const niblingsIdsNew = await connector.GetChildrenIds(siblingsIdsNew);
+    const grandchildrenIdsNew = await connector.GetChildrenIds(childrenIdsNew);
+    const grandgrandchildrenIdsNew = await connector.GetChildrenIds(grandchildrenIdsNew);
 
-    const currentUser = await membersCollection.findOne(query);
-    const userId:string = currentUser?._id?.toString();
+    const persons = await connector.GetPersons([idNew]
+      .concat(spouseIdsNew, parentIdsNew, siblingsIdsNew, childrenIdsNew, grandparentIdsNew,
+        piblingsIdsNew, cousinsIdsNew, niblingsIdsNew, grandgrandchildrenIdsNew, grandchildrenIdsNew));
 
-    const parentLinks = await relationsCollection.find({ person2_id: ObjectId(userId), type: 'Parent' }).toArray();
-    const parentIds: any = [];
-    parentLinks.forEach((element: { person1_id: string; }) => {
-      parentIds.push(ObjectId(element.person1_id));
-    });
+    const photos = await connector.GetPhotos(idNew);
 
-    const siblingsLinks = await relationsCollection.find( { person1_id: { $in: parentIds }, person2_id: { $nin : [ userId]}, type: 'Parent' }).toArray();
-    const siblingsIds: any = [];
-    siblingsLinks.forEach((element: { person2_id: string; }) => {
-      if (element.person2_id.toString() != userId) {
-        siblingsIds.push(ObjectId(element.person2_id));
-      }
-    });
-
-    const niblingsIds: any[] = []
-    const niblingsLinks = await relationsCollection.find({ person1_id: { $in: siblingsIds }, type: 'Parent' }).toArray();
-    niblingsLinks.forEach((element: { person2_id: string; }) => {
-      niblingsIds.push(ObjectId(element.person2_id));
-    });
-
-    const childrenLinks = await relationsCollection.find({ person1_id: ObjectId(userId), type: 'Parent' }).toArray();
-    const childrenIds: any = [];
-    childrenLinks.forEach((element: { person2_id: string; }) => {
-      childrenIds.push(ObjectId(element.person2_id));
-    });
-
-    const grandParentIds: any[] = [];
-    const grandParentLinks = await relationsCollection.find({ person2_id: { $in: parentIds }, type: 'Parent' }).toArray();
-    grandParentLinks.forEach((element: { person1_id: string; }) => {
-      grandParentIds.push(ObjectId(element.person1_id));
-    });
-
-    const piblingsIds: any[] = [];
-    const piblingsLinks = await relationsCollection.find({ person1_id: { $in: grandParentIds }, person2_id: { $nin: parentIds }, type: 'Parent' }).toArray();
-
-    piblingsLinks.forEach((element: { person2_id: string; }) => {
-      piblingsIds.push(ObjectId(element.person2_id));
-    });
-
-    const cousinsIds: any[] = [];
-    const cousinsLinks = await relationsCollection.find({ person1_id: { $in: piblingsIds }, type: 'Parent' }).toArray();
-    cousinsLinks.forEach((element: { person2_id: string; }) => {
-      cousinsIds.push(ObjectId(element.person2_id));
-    });
-
-    const grandChildrenIds: any[] = [];
-    const grandChildrenLinks = await relationsCollection.find({ person1_id: { $in: childrenIds }, type: 'Parent' }).toArray();
-    grandChildrenLinks.forEach((element: { person2_id: string; }) => {
-      grandChildrenIds.push(ObjectId(element.person2_id));
-    });
-
-    const grandGrandChildrenIds: any[] = [];
-    const grandGrandChildrenLinks = await relationsCollection.find({ person1_id: { $in: grandChildrenIds }, type: 'Parent' }).toArray();
-    grandGrandChildrenLinks.forEach((element: { person2_id: string; }) => {
-      grandGrandChildrenIds.push(ObjectId(element.person2_id));
-    });
-
-    const spouseLinks = await relationsCollection.find({ type: 'Spouse', $or: [{ person1_id: ObjectId(userId) }, { person2_id: ObjectId(userId) }] }).toArray();
-    const spousesIds: any = [];
-    spouseLinks.forEach((element: { person1_id: string; person2_id: string; }) => {
-      if (element.person1_id.toString() == userId) {
-        spousesIds.push(ObjectId(element.person2_id));
-      } else {
-        spousesIds.push(ObjectId(element.person1_id));
-      }
-    });
-
-    const parents = await membersCollection.find( { _id: { $in: parentIds } }).toArray();
-    const children = await membersCollection.find( { _id: { $in: childrenIds } }).toArray();
-    const grandParents = await membersCollection.find( { _id: { $in: grandParentIds } }).toArray();
-    const grandChildren = await membersCollection.find( { _id: { $in: grandChildrenIds } }).toArray();
-    const grandGrandChildren = await membersCollection.find( { _id: { $in: grandGrandChildrenIds } }).toArray();
-    const spouses = await membersCollection.find( { _id: { $in: spousesIds } }).toArray();
-    const siblings = await membersCollection.find( { _id: { $in: siblingsIds } }).toArray();
-    const niblings = await membersCollection.find( { _id: { $in: niblingsIds } }).toArray();
-    const piblings = await membersCollection.find( { _id: { $in: piblingsIds } }).toArray();
-    const cousins = await membersCollection.find( { _id: { $in: cousinsIds } }).toArray();
-    const photos = await getPhotosByIdFromMongoDb(userId, db);
-    
-    for (let i = 0; i < photos.length; i++ ) {
+    for (let i = 0; i < photos.length; i++) {
       photos[i].url = photos[i].url
         .replace('https://i.imgur.com/', 'https://www.res01.com/images/')
         .replace('.jpg', 'm.jpg');
     }
 
     return {
-      currentPerson: this.mapping(currentUser),
-      parents: parents.map(this.mapping),
-      children: children.map(this.mapping).sort(ProfileService.sortByYearOfBirth),
-      mother: this.mapping(parents.find((x:any) => x.gender === 'Female')),
-      father: this.mapping(parents.find((x:any) => x.gender === 'Male')),
-      grandParents: grandParents.map(this.mapping),
-      grandChildren: grandChildren.map(this.mapping).sort(ProfileService.sortByYearOfBirth),
-      grandGrandChildren: grandGrandChildren.map(this.mapping).sort(ProfileService.sortByYearOfBirth),
-      spouses: spouses.map(this.mapping),
-      siblings: siblings.map(this.mapping).sort(ProfileService.sortByYearOfBirth),
-      niblings: niblings.map(this.mapping).sort(ProfileService.sortByYearOfBirth),
-      piblings: piblings.map(this.mapping).sort(ProfileService.sortByYearOfBirth),
-      cousins: cousins.map(this.mapping).sort(ProfileService.sortByYearOfBirth),
+      currentPerson: persons.find(x => x._id == idNew),
+      parents: persons.filter(x => parentIdsNew.includes(x._id)),
+      children: persons.filter(x => childrenIdsNew.includes(x._id)).sort(ProfileService.sortByYearOfBirth),
+      mother: persons.filter(x => parentIdsNew.includes(x._id)).find((x:any) => x.gender === 'Female'),
+      father: persons.filter(x => parentIdsNew.includes(x._id)).find((x:any) => x.gender === 'Male'),
+      grandParents: persons.filter(x=> grandparentIdsNew.includes(x._id)),
+      grandChildren: persons.filter(x=> grandchildrenIdsNew.includes(x._id)).sort(ProfileService.sortByYearOfBirth),
+      grandGrandChildren: persons.filter(x=> grandgrandchildrenIdsNew.includes(x._id)).sort(ProfileService.sortByYearOfBirth),
+      spouses: persons.filter(x=> spouseIdsNew.includes(x._id)),
+      siblings: persons.filter(x=> siblingsIdsNew.includes(x._id)).sort(ProfileService.sortByYearOfBirth),
+      niblings: persons.filter(x=> niblingsIdsNew.includes(x._id)).sort(ProfileService.sortByYearOfBirth),
+      piblings: persons.filter(x=> piblingsIdsNew.includes(x._id)).sort(ProfileService.sortByYearOfBirth),
+      cousins: persons.filter(x=> cousinsIdsNew.includes(x._id)).sort(ProfileService.sortByYearOfBirth),
       photos: photos,
-    };
-  }
-  
-  mapping(element: any) {
-    const yearOfBirth = element?.birth?.year;
-    const yearOfDeath = element?.death?.year;
-
-    return {
-      _id: element?._id,
-      firstName: element?.firstName,
-      lastName: element?.lastName,
-      maidenName: element?.maidenName,
-      gender: element?.gender,
-      yearOfBirth: yearOfBirth === '0000' ? null : yearOfBirth,
-      yearOfDeath: yearOfDeath === '0000' ? null : yearOfDeath,
-      isDead: element?.isDead ?? false,
-      profileId: element?.profileId,
     };
   }
 

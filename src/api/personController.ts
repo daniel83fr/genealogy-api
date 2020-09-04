@@ -40,6 +40,89 @@ export default class PersonController {
     }
   }
 
+  searchPerson(filter: string, page: number = 1, pageSize: number = 20) {
+    this.logger.debug('searchPerson');
+    try {
+      const connector = new PostgresConnector();
+      return connector.GetPersonList(filter, page, pageSize)
+        .then((res: any) => {
+          let dataNew = res.map(PersonController.mappingFromDb);
+          dataNew = dataNew.sort(PersonController.sortByName);
+          return dataNew;
+        })
+        .catch((err: any) => {
+          console.error(err);
+          return [];
+        });
+    } catch (err) {
+      console.log(err);
+      return [];
+    }
+  }
+
+  getPersonList() {
+
+    //  this.updateData();
+    //  return [];
+    const cache = this.cacheService.getPersonListCache();
+    if (cache !== undefined) {
+      this.logger.debug('getPersonList from cache');
+      return cache;
+    }
+
+    try {
+      const connector = new PostgresConnector();
+
+      return connector.GetPersonList()
+        .then((res: any) => {
+          let dataNew = res.map(PersonController.mappingFromDb);
+          dataNew = dataNew.sort(PersonController.sortByName);
+          this.cacheService.setPersonListCache(dataNew);
+          return dataNew;
+        })
+        .catch((err: any) => {
+          console.error(err);
+          return [];
+        });
+    } catch (err) {
+      console.log(err);
+      return [];
+    }
+  }
+
+
+
+  async getProfile(_id: string) {
+
+    const cache = this.cacheService.getProfileCache(_id);
+    if (cache !== undefined) {
+      this.logger.debug('getProfile from cache');
+      return cache;
+    }
+
+
+    try {
+      const data: any = await this.profileService.getProfileById(_id);
+      this.cacheService.setProfileCache(_id, data);
+
+      return data;
+    } catch (err) {
+      console.log(err);
+      return {};
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
   static mapping(element: any) {
     const yearOfBirth = element?.birth?.year;
     const yearOfDeath = element?.death?.year;
@@ -76,25 +159,7 @@ export default class PersonController {
     };
   }
 
-  searchPerson(filter: string, page: number = 1, pageSize: number = 20) {
-    this.logger.debug('searchPerson');
-    try {
-      const connector = new PostgresConnector();
-      return connector.GetPersonList(filter, page, pageSize)
-        .then((res: any) => {
-          let dataNew = res.map(PersonController.mappingFromDb);
-          dataNew = dataNew.sort(PersonController.sortByName);
-          return dataNew;
-        })
-        .catch((err: any) => {
-          console.error(err);
-          return [];
-        });
-    } catch (err) {
-      console.log(err);
-      return [];
-    }
-  }
+
 
   async updateData() {
 
@@ -123,59 +188,9 @@ export default class PersonController {
 
     
   }
-  getPersonList() {
+  
 
-    //  this.updateData();
-    //  return [];
-    const cache = this.cacheService.getPersonListCache();
-    if (cache !== undefined) {
-      this.logger.debug('getPersonList from cache');
-      return cache;
-    }
-
-    try {
-      const connector = new PostgresConnector();
-
-      return connector.GetPersonList()
-        .then((res: any) => {
-          let dataNew = res.map(PersonController.mappingFromDb);
-          dataNew = dataNew.sort(PersonController.sortByName);
-          this.cacheService.setPersonListCache(dataNew);
-          return dataNew;
-        })
-        .catch((err: any) => {
-          console.error(err);
-          return [];
-        });
-    } catch (err) {
-      console.log(err);
-      return [];
-    }
-  }
-
-  async getProfile(_id: string) {
-
-    const cache = this.cacheService.getProfileCache(_id);
-    if (cache !== undefined) {
-      this.logger.debug('getProfile from cache');
-      return cache;
-    }
-
-    const client = await this.connector.initClient();
-    try {
-      const db = client.db(mongoDbDatabase);
-      const data: any = await this.profileService.getProfileByIdFromMongoDb(_id, db);
-      client.close();
-
-      this.cacheService.setProfileCache(_id, data);
-
-      return data;
-    } catch (err) {
-      client.close();
-      console.log(err);
-      return {};
-    }
-  }
+ 
 
   async getPrivateProfile(_id: string, user: any) {
     const client = await this.connector.initClient();

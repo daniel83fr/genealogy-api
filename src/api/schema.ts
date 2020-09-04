@@ -217,6 +217,8 @@ schemaBuilder.addType(`type Token {
 
 
 schemaBuilder.setQueryDescription('Queries definition.');
+
+
 schemaBuilder.addQuery('version: String', 'Get api version');
 
 schemaBuilder.addQuery('login(login: String!, password: String): Token',
@@ -238,9 +240,6 @@ schemaBuilder.addQuery('getPhotosRandom(number: Int!): [Photo]');
 
 schemaBuilder.addQuery('getRelation(_id1: String!,_id2: String!): [Relation]');
 
-schemaBuilder.addQuery('getTodayBirthdays: [User]');
-schemaBuilder.addQuery('getTodayDeathdays: [User]');
-schemaBuilder.addQuery('getTodayMarriagedays: [User]');
 schemaBuilder.addQuery('getEvents(date:String!):[Event]');
 schemaBuilder.addQuery('getProfileId(_id: String!): String');
 schemaBuilder.addQuery('searchPerson(filter: String!, page: Int, pageSize: Int): [User]');
