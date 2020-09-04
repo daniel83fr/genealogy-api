@@ -1,14 +1,115 @@
 import dotenv from 'dotenv';
-import LoggerService from '../services/logger_service';
-
-import fs from 'fs';
-import { Console } from 'console';
 import { Pool } from 'pg';
+import LoggerService from '../services/logger_service';
 import PersonController from './personController';
 
 dotenv.config();
+const bcrypt = require('bcryptjs');
 
 export class PostgresConnector {
+  CreateCredentials(id: string, login: string, email: string, password: string) {
+
+
+    login = login.toLowerCase();
+  
+    return this.pool.connect()
+    .then((client: any) => {
+
+      const hash = bcrypt.hashSync(password, 10);
+      let query = `insert into credentials(login, password, id) values('${login}', '${hash}', '${id}')`;
+
+      console.log(query);
+      return client.query(query).then((res: any) => {
+        client.release();
+
+        return "Account created"
+      })
+        .catch((err: any) => {
+          client.release();
+          return "Account creation failed"
+          console.error(err);
+        })
+    })
+    .catch((err: any) => {
+      console.error(err);
+      return "Account creation failed"
+    });
+  }
+
+  GetPersonByLogin(login: string) {
+    this.pool.on('error', (err: any, client: any) => {
+      console.error('Error:', err);
+    });
+
+    return this.pool.connect()
+      .then((client: any) => {
+
+
+        let query = `select id, login from credentials where login= '${login}'`;
+
+        console.log(query);
+        return client.query(query).then((res: any) => {
+          client.release();
+
+          console.log(JSON.stringify(res.rows))
+          if(res.rows.length>0){
+            console.log(res.rows.length)
+            return res.rows.map(this.mapLogin)[0];
+          }
+          else{
+            return null;
+          }
+        })
+          .catch((err: any) => {
+            client.release();
+            console.error(err);
+          })
+      })
+      .catch((err: any) => {
+        console.error(err);
+      });
+  }
+
+  mapLogin(r:any){
+    return {
+      id: r.id,
+      login: r.login
+    }
+  }
+
+  RemoveProfile(id: string) {
+    this.pool.on('error', (err: any, client: any) => {
+      console.error('Error:', err);
+    });
+
+    return this.pool.connect()
+      .then((client: any) => {
+
+
+        let query = `update profiles set is_deleted = true, profiles.update_date = CURRENT_TIMESTAMP
+        where profiles.id in (select profiles.id from profiles 
+          left join nicknames on nicknames.id = profiles.id 
+          where nicknames.nickname  = '${id}')
+        `;
+
+
+
+
+        console.log(query);
+        return client.query(query).then((res: any) => {
+          console.log(res.rows.length)
+          client.release();
+          return res.rows;
+        })
+          .catch((err: any) => {
+            client.release();
+            console.error(err);
+          })
+      })
+      .catch((err: any) => {
+        console.error(err);
+      });
+  }
  
  
  
@@ -87,7 +188,7 @@ export class PostgresConnector {
     left join events event_d on event_d.person1 = profiles.id and event_d.type = 'Death'
     left join tags on tags.person = profiles.id and tags.is_profile  = true 
     left join images on tags.photo_id  = images.photo_id
-    where profiles.id in ('${idList}')
+    where profiles.id in ('${idList}') and profiles.is_deleted = false
     `;
 
     return this.ExecuteQuery(query, PersonController.mappingFromDb)
@@ -184,10 +285,12 @@ export class PostgresConnector {
         left join events event_d on event_d.person1 = profiles.id and event_d.type = 'Death'
         left join tags on tags.person = profiles.id and tags.is_profile  = true 
         left join images on tags.photo_id  = images.photo_id
+
+        where profiles.is_deleted = false
         `;
 
         if(filter!= ''){
-          query = query + ` where LOWER(profiles.first_name || profiles.last_name  || profiles.maiden_name || profiles.first_name || profiles.last_name  || profiles.maiden_name)  
+          query = query + ` and LOWER(profiles.first_name || profiles.last_name  || profiles.maiden_name || profiles.first_name || profiles.last_name  || profiles.maiden_name)  
           like '%${filter.toLowerCase().replace(' ', '%')}%'
           limit ${pageSize} offset ${(page -1) * pageSize}
           `;
@@ -223,7 +326,7 @@ export class PostgresConnector {
 
         let query = `select type, year, month, day, profiles.first_name,profiles.last_name, profiles.id from events 
         join profiles on profiles.id = events.person1 or profiles.id = events.person2
-        where day = ${date.getDate()} and month = ${date.getMonth() + 1}
+        where day = ${date.getDate()} and month = ${date.getMonth() + 1} and profiles.is_deleted = false
         `;
 
         console.log(query);

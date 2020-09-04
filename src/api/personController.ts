@@ -4,7 +4,6 @@ import {
   MongoConnector,
   updatePersonFromMongoDb,
   createPersonFromMongoDb,
-  deleteProfileFromMongoDb,
 
 } from './mongoDbConnector';
 import ProfileService from '../services/profile_service';
@@ -47,7 +46,6 @@ export default class PersonController {
       return connector.GetPersonList(filter, page, pageSize)
         .then((res: any) => {
           let dataNew = res.map(PersonController.mappingFromDb);
-          dataNew = dataNew.sort(PersonController.sortByName);
           return dataNew;
         })
         .catch((err: any) => {
@@ -76,7 +74,6 @@ export default class PersonController {
       return connector.GetPersonList()
         .then((res: any) => {
           let dataNew = res.map(PersonController.mappingFromDb);
-          dataNew = dataNew.sort(PersonController.sortByName);
           this.cacheService.setPersonListCache(dataNew);
           return dataNew;
         })
@@ -112,7 +109,26 @@ export default class PersonController {
     }
   }
 
+  removeProfile(id: string) {
+    this.logger.info('Remove profile');
+    this.cacheService.clearPersonListCache();
+    this.cacheService.clearProfileCache(id);
 
+    try {
+      const connector = new PostgresConnector();
+
+      return connector.RemoveProfile(id)
+        .then((res: any) => {
+          return true;
+        })
+        .catch((err: any) => {
+          console.error(err);
+          return false;
+        });
+    } catch (err) {
+      console.log(err);
+      return false }
+  }
 
 
 
@@ -161,34 +177,7 @@ export default class PersonController {
 
 
 
-  async updateData() {
-
-    const client = await this.connector.initClient();
-    try {
-      const db = client.db(mongoDbDatabase);
-      const data: any[] = await db.collection('relations').find({}).toArray();
-      console.log(data.length)
-
-      client.close();
-
-      try {
-        const connector = new PostgresConnector();
-        return connector.InitDatabase2(data);
-          
-      } catch (err) {
-        console.log(err);
-        return [];
-      }
-    } catch (err) {
-      client.close();
-      console.log(err);
-      return {};
-    }
-
-
-    
-  }
-  
+ 
 
  
 
@@ -222,21 +211,6 @@ export default class PersonController {
 
   }
 
-  getPerson(_id: string, db: any) {
-    this.logger.info('Get person by Id');
-
-    const query = { _id: ObjectId(_id) };
-    const projection = {};
-
-    return this.connector.getItemFromMongoDbAndDb(db, memberCollection, query, projection)
-      .catch((err: any) => {
-        throw err;
-      })
-      .then((res: any) => PersonController.mapping(res));
-  }
-
-
-
   static sortByYearOfBirth(a: any, b: any) {
     const keyA = new Date(a.yearOfBirth);
     const keyB = new Date(b.yearOfBirth);
@@ -245,37 +219,13 @@ export default class PersonController {
     return 0;
   }
 
-  static sortByName(a: any, b: any) {
-    const keyA = `${a.lastName ?? ''} ${a.firstName ?? ''}`;
-    const keyB = `${b.lastName ?? ''} ${b.firstName ?? ''}`;
-    if (keyA < keyB) return -1;
-    if (keyA > keyB) return 1;
-    return 0;
-  }
-
-
-
-
-
-
-
   static CheckUserAuthenticated(user: any) {
     if (!user) {
       throw Error('Not authenticated, please login first');
     }
   }
 
-  removeProfile(id: string) {
-    this.logger.info('Remove profile');
-    this.cacheService.clearPersonListCache();
-    this.cacheService.clearProfileCache(id);
-
-    return deleteProfileFromMongoDb(id)
-      .catch((err: any) => {
-        throw err;
-      })
-      .then((res: any) => res);
-  }
+ 
 
 
   updatePerson(_id: string, patch: any) {
@@ -345,4 +295,30 @@ export default class PersonController {
     res1.deathLocationCity = res1?.death?.city;
     return res1;
   }
+
+  async updateData() {
+
+    const client = await this.connector.initClient();
+    try {
+      const db = client.db(mongoDbDatabase);
+      const data: any[] = await db.collection('relations').find({}).toArray();
+      console.log(data.length)
+
+      client.close();
+
+      try {
+        const connector = new PostgresConnector();
+        return connector.InitDatabase2(data);
+          
+      } catch (err) {
+        console.log(err);
+        return [];
+      }
+    } catch (err) {
+      client.close();
+      console.log(err);
+      return {};
+    }
+  }
+  
 }

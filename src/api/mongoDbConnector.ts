@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import LoggerService from '../services/logger_service';
+import { PostgresConnector } from './postgresConnector';
 
 dotenv.config();
 
@@ -30,10 +31,12 @@ export class MongoConnector {
   connectionString = '';
 
   logger: LoggerService;
+  connector: PostgresConnector;
 
   constructor(cstr: string) {
     this.connectionString = cstr;
     this.logger = new LoggerService('MongoConnector');
+    this.connector = new PostgresConnector();
   }
 
   async initClient() {
@@ -141,49 +144,6 @@ export async function getEventsFromMongoDb(date1: Date, date2: Date) {
     { birth:{ birthDate: { $regex: dateFilter } }}, {});
 }
 
-
-export async function getTodayBirthdaysFromMongoDb() {
-  const connector = getConnector();
-  const dateFilter = new Date().toISOString().substring(5, 10);
-  return connector.getArrayFromMongoDb(mongoDbDatabase, memberCollection,
-    { birth:{ birthDate: { $regex: dateFilter } }}, {});
-}
-
-export async function getTodayDeathdaysFromMongoDb() {
-  const connector = getConnector();
-  const dateFilter = new Date().toISOString().substring(5, 10);
-  return connector.getArrayFromMongoDb(mongoDbDatabase, memberCollection, { death: { $regex: dateFilter } }, {});
-}
-
-export async function getTodayMarriagedaysFromMongoDb() {
-  const connector = getConnector();
-  const client = await connector.initClient();
-  const db = client.db(mongoDbDatabase);
-  const collection = db.collection(relationCollection);
-  const dateFilter = new Date().toISOString().substring(5, 10);
-  const res = await collection.find({ marriage_date: { $regex: dateFilter } }).toArray();
-  const items: string[] = [];
-  res.forEach((element: { person1_id: string; person2_id: string; }) => {
-    items.push(ObjectId(element.person1_id));
-    items.push(ObjectId(element.person2_id));
-  });
-
-  const query = { _id: { $in: items } };
-  const res2 = await db.collection(memberCollection).find(query).toArray();
-  connector.closeDb(client);
-  return res2;
-}
-
-
-export async function getPersonByLoginFromMongoDb(login: string) {
-  const connector = getConnector();
-  const client = await connector.initClient();
-  const db = client.db(mongoDbDatabase);
-  const collection = db.collection('credentials');
-  const res = await collection.findOne({ login }, { login: 1, id: 1 });
-  connector.closeDb(client);
-  return res;
-}
 
 export async function setProfilePictureFromMongo(person: string, image: string) {
   const connector = getConnector();
@@ -572,28 +532,3 @@ export async function checkCredentialsFromMongoDb(login: string, password: strin
   };
 }
 
-export async function createCredentialsFromMongoDb(id: string, login: string, email: string, password: string) {
-  const connector = getConnector();
-  const client = await connector.initClient();
-  const db = client.db(mongoDbDatabase);
-  const collection = db.collection(credentialsCollection);
-  login = login.toLowerCase();
-
-  const members = db.collection(memberCollection);
-  const query = { profileId: login };
-  const res = await members.findOne(query);
-  if (res != null) {
-    client.close();
-    throw Error('login already exist');
-  }
-
-
-  const hash = bcrypt.hashSync(password, 10);
-  const document = { id, password: hash };
-  await collection.insertOne(document);
-  await members.updateOne({ _id: ObjectId(id) }, { $set: { email, profileId: login, UpdatedAt: new Date().toISOString() } });
-
-
-  client.close();
-  return 'Account created';
-}
