@@ -65,11 +65,12 @@ export class GraphQLResolver {
       removeProfile: (args: any) => this.personController?.removeProfile(args._id),
 
       removeLink: (args: any) => this.linkController?.removeLink(args._id1, args._id2),
-      removeSiblingLink: (args: any) => this.linkController?.removeSiblingLink(args._id1, args._id2),
+
+
       addParentLink: (args: any) => this.linkController?.addParentLink(args._id, args._parentId),
       addChildLink: (args: any) => this.linkController?.addParentLink(args._childId, args._id),
       addSpouseLink: (args: any) => this.linkController?.addSpouseLink(args._id1, args._id2),
-      addSiblingLink: (args: any) => this.linkController?.addSiblingLink(args._id1, args._id2),
+
 
       setProfilePicture: (args: any, context: any) => this.photoController?.setProfilePicture(args.person, args.image),
       deletePhoto: (args: any, context: any) => this.photoController?.deletePhoto(args.image),
@@ -90,7 +91,7 @@ const connector = new MongoConnector(process.env.MONGODB ?? '');
 
 const resolver = new GraphQLResolver();
 resolver.personController = new PersonController(connector);
-resolver.linkController = new LinkController(connector);
+resolver.linkController = new LinkController();
 resolver.auditController = new AuditController();
 resolver.photoController = new PhotoController(connector);
 resolver.loginController = new LoginController(connector);

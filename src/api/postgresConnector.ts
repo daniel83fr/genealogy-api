@@ -133,6 +133,106 @@ export class PostgresConnector {
 
   }
 
+
+
+  addParentLink(person1:string, person2: string){
+    this.pool.on('error', (err: any, client: any) => {
+      console.error('Error:', err);
+    });
+
+    return this.pool.connect()
+      .then((client: any) => {
+
+
+        let query = `insert into relations(person1, person2, type) values('${person2}', '${person1}', 'Parent')
+        `;
+
+
+        console.log(query);
+        return client.query(query).then((res: any) => {
+          console.log(res.rows.length)
+          client.release();
+          return 'Done';
+        })
+          .catch((err: any) => {
+            client.release();
+            console.error(err);
+            return '';
+          })
+      })
+      .catch((err: any) => {
+        console.error(err);
+        return ''
+      });
+  }
+
+  addSpouseLink(person1:string, person2: string){
+    this.pool.on('error', (err: any, client: any) => {
+      console.error('Error:', err);
+    });
+
+    return this.pool.connect()
+      .then((client: any) => {
+
+
+        let query = `insert into relations(person1, person2, type) values('${person1> person2? person1: person2}', '${person1> person2? person2: person1}', 'Spouse')
+        `;
+
+
+        console.log(query);
+        return client.query(query).then((res: any) => {
+          console.log(res.rows.length)
+          client.release();
+          return 'Done';
+        })
+          .catch((err: any) => {
+            client.release();
+            console.error(err);
+            return '';
+          })
+      })
+      .catch((err: any) => {
+        console.error(err);
+        return ''
+      });
+  }
+
+
+  removeLink(person1:string, person2: string){
+    this.pool.on('error', (err: any, client: any) => {
+      console.error('Error:', err);
+    });
+
+    return this.pool.connect()
+      .then((client: any) => {
+
+
+        let query = `update relations set is_deleted = true, relations.update_date = CURRENT_TIMESTAMP
+        where (relations.person1 = '${person1}' and relations.person2 = '${person2}')
+        or (relations.person1 = '${person2}' and relations.person2 = '${person1}')
+        `;
+
+
+        console.log(query);
+        return client.query(query).then((res: any) => {
+          console.log(res.rows.length)
+          client.release();
+          return 'Done';
+        })
+          .catch((err: any) => {
+            client.release();
+            console.error(err);
+            return '';
+          })
+      })
+      .catch((err: any) => {
+        console.error(err);
+        return ''
+      });
+  }
+
+
+
   getAuditEntries(number: number): Promise<any[]> {
 
     this.pool.on('error', (err: any, client: any) => {
@@ -225,6 +325,7 @@ export class PostgresConnector {
     let idList= ids.join("','");
     let query = `select relations.person1 from relations
         where person2 in( '${idList}')
+        and is_deleted = false
         and type = 'Parent'
         `;
     let mapper = (x:any) =>x.person1;
@@ -235,6 +336,7 @@ export class PostgresConnector {
     let idList= ids.join("','");
     let query = `select relations.person2 from relations
         where person1 in ( '${idList}')
+        and is_deleted = false
         and type = 'Parent'
         `;
     let mapper = (x:any) =>x.person2;
@@ -244,6 +346,7 @@ export class PostgresConnector {
   GetSpouseIds(id: string): any[] | Promise<any[]> {
     let query = `select relations.person1, relations.person2 from relations
         where (person1 = '${id}' or person2 = '${id}')
+        and is_deleted = false
         and type = 'Spouse'
         `;
     let mapper = (x:any) => x.person1 == id ? x.person2 : x.person1;
@@ -253,6 +356,7 @@ export class PostgresConnector {
   GetPhotos(id: string): any[] | Promise<any[]> {
     let query = `select images.photo_id, url from images
     left join tags on tags.photo_id  = images .photo_id 
+    
     where person = '${id}'
         `;
     

@@ -131,15 +131,7 @@ describe('GraphQLResolver mutations', () => {
     expect(controllerFake.removeLink).toHaveBeenCalledWith(args._id1, args._id2);
   });
 
-  it('removeSiblingLink', async () => {
-    const controllerFake = jasmine.createSpyObj('LinkController', ['removeSiblingLink']);
-    const r = new GraphQLResolver();
-    r.linkController = controllerFake;
-    expect(Object.keys(r.getMutation()).includes('removeSiblingLink'));
-    const args = { _id1: 'id1', _id2: 'id2' };
-    await r.getMutation().removeSiblingLink(args);
-    expect(controllerFake.removeSiblingLink).toHaveBeenCalledWith(args._id1, args._id2);
-  });
+  
 
   it('addParentLink', async () => {
     const controllerFake = jasmine.createSpyObj('LinkController', ['addParentLink']);
@@ -171,15 +163,6 @@ describe('GraphQLResolver mutations', () => {
     expect(controllerFake.addSpouseLink).toHaveBeenCalledWith(args._id1, args._id2);
   });
 
-  it('addSiblingLink', async () => {
-    const controllerFake = jasmine.createSpyObj('LinkController', ['addSiblingLink']);
-    const r = new GraphQLResolver();
-    r.linkController = controllerFake;
-    expect(Object.keys(r.getMutation()).includes('addSiblingLink'));
-    const args = { _id1: 'id1', _id2: 'id2' };
-    await r.getMutation().addSiblingLink(args);
-    expect(controllerFake.addSiblingLink).toHaveBeenCalledWith(args._id1, args._id2);
-  });
 
   it('createPerson', async () => {
     const controllerFake = jasmine.createSpyObj('PersonController', ['createPerson']);
