@@ -96,6 +96,6 @@ resolver.auditController = new AuditController();
 resolver.photoController = new PhotoController(connector);
 resolver.loginController = new LoginController();
 resolver.eventController = new EventController();
-resolver.relationController = new RelationController(connector);
+resolver.relationController = new RelationController();
 resolver.settingController = new SettingController();
 export default resolver.getResolver();

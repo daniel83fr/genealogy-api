@@ -276,7 +276,67 @@ export class PostgresConnector {
       });
   }
 
+  getAllLinks(): Promise<any[]> {
 
+    this.pool.on('error', (err: any, client: any) => {
+      console.error('Error:', err);
+    });
+
+    return this.pool.connect()
+      .then((client: any) => {
+
+
+        let query = `select person1, person2, type from relations
+        `;
+
+
+
+        console.log(query);
+        return client.query(query).then((res: any) => {
+          console.log(res.rows.length)
+          client.release();
+          return res.rows;
+        })
+          .catch((err: any) => {
+            client.release();
+            console.error(err);
+          })
+      })
+      .catch((err: any) => {
+        console.error(err);
+      });
+  }
+
+  getAllProfileIds(): Promise<any[]> {
+
+    this.pool.on('error', (err: any, client: any) => {
+      console.error('Error:', err);
+    });
+
+    return this.pool.connect()
+      .then((client: any) => {
+
+
+        let query = `select id, first_name, last_name from profiles
+        `;
+
+
+
+        console.log(query);
+        return client.query(query).then((res: any) => {
+          console.log(res.rows.length)
+          client.release();
+          return res.rows;
+        })
+          .catch((err: any) => {
+            client.release();
+            console.error(err);
+          })
+      })
+      .catch((err: any) => {
+        console.error(err);
+      });
+  }
 
   getAuditEntries(number: number): Promise<any[]> {
 
