@@ -8,50 +8,47 @@ const bcrypt = require('bcryptjs');
 
 export class PostgresConnector {
 
-  CheckCredentials(login: string, password: string){
-
-
+  CheckCredentials(login: string, password: string) {
     return this.pool.connect()
-    .then((client: any) => {
+      .then((client: any) => {
+        let query = `select login, password from credentials where login= '${login}'`;
 
-
-      let query = `select login, password from credentials where login= '${login}'`;
-
-      console.log(query);
-      return client.query(query).then((res: any) => {
-        client.release();
-
-        console.log(JSON.stringify(res.rows))
-        if(res.rows.length>0){
-
-          return {
-            success: bcrypt.compareSync(password, res[0].password),
-            profileId: res.id,
-          };
-        }
-        else{
-          return {
-            success: false,
-            profileId: null,
-          };
-        }
-      })
-        .catch((err: any) => {
+        console.log(query);
+        return client.query(query).then((res: any) => {
+         
+          const pwd = res.rows[0].password
           client.release();
-          console.error(err);
-          return {
-            success: false,
-            profileId: null,
-          };
+
+          if (res.rows.length > 0) {
+
+            return {
+              success: bcrypt.compareSync(password, pwd),
+              profileId: res.id,
+            };
+          }
+          else {
+            return {
+              success: false,
+              profileId: null,
+            };
+          }
         })
-    })
-    .catch((err: any) => {
-      console.error(err);
-      return {
-        success: false,
-        profileId: null,
-      };
-    });
+          .catch((err: any) => {
+            client.release();
+            console.error(err);
+            return {
+              success: false,
+              profileId: null,
+            };
+          })
+      })
+      .catch((err: any) => {
+        console.error(err);
+        return {
+          success: false,
+          profileId: null,
+        };
+      });
 
   }
 
@@ -59,29 +56,29 @@ export class PostgresConnector {
 
 
     login = login.toLowerCase();
-  
+
     return this.pool.connect()
-    .then((client: any) => {
+      .then((client: any) => {
 
-      const hash = bcrypt.hashSync(password, 10);
-      let query = `insert into credentials(login, password, id) values('${login}', '${hash}', '${id}')`;
+        const hash = bcrypt.hashSync(password, 10);
+        let query = `insert into credentials(login, password, id) values('${login}', '${hash}', '${id}')`;
 
-      console.log(query);
-      return client.query(query).then((res: any) => {
-        client.release();
-
-        return "Account created"
-      })
-        .catch((err: any) => {
+        console.log(query);
+        return client.query(query).then((res: any) => {
           client.release();
-          return "Account creation failed"
-          console.error(err);
+
+          return "Account created"
         })
-    })
-    .catch((err: any) => {
-      console.error(err);
-      return "Account creation failed"
-    });
+          .catch((err: any) => {
+            client.release();
+            return "Account creation failed"
+            console.error(err);
+          })
+      })
+      .catch((err: any) => {
+        console.error(err);
+        return "Account creation failed"
+      });
   }
 
   GetPersonByLogin(login: string) {
@@ -100,11 +97,11 @@ export class PostgresConnector {
           client.release();
 
           console.log(JSON.stringify(res.rows))
-          if(res.rows.length>0){
+          if (res.rows.length > 0) {
             console.log(res.rows.length)
             return res.rows.map(this.mapLogin)[0];
           }
-          else{
+          else {
             return null;
           }
         })
@@ -118,7 +115,7 @@ export class PostgresConnector {
       });
   }
 
-  mapLogin(r:any){
+  mapLogin(r: any) {
     return {
       id: r.id,
       login: r.login
@@ -158,11 +155,11 @@ export class PostgresConnector {
         console.error(err);
       });
   }
- 
- 
- 
 
-  
+
+
+
+
 
   logger: LoggerService;
   pool: Pool;
@@ -183,7 +180,7 @@ export class PostgresConnector {
 
 
 
-  addParentLink(person1:string, person2: string){
+  addParentLink(person1: string, person2: string) {
     this.pool.on('error', (err: any, client: any) => {
       console.error('Error:', err);
     });
@@ -214,7 +211,7 @@ export class PostgresConnector {
       });
   }
 
-  addSpouseLink(person1:string, person2: string){
+  addSpouseLink(person1: string, person2: string) {
     this.pool.on('error', (err: any, client: any) => {
       console.error('Error:', err);
     });
@@ -223,7 +220,7 @@ export class PostgresConnector {
       .then((client: any) => {
 
 
-        let query = `insert into relations(person1, person2, type) values('${person1> person2? person1: person2}', '${person1> person2? person2: person1}', 'Spouse')
+        let query = `insert into relations(person1, person2, type) values('${person1 > person2 ? person1 : person2}', '${person1 > person2 ? person2 : person1}', 'Spouse')
         `;
 
 
@@ -246,7 +243,7 @@ export class PostgresConnector {
   }
 
 
-  removeLink(person1:string, person2: string){
+  removeLink(person1: string, person2: string) {
     this.pool.on('error', (err: any, client: any) => {
       console.error('Error:', err);
     });
@@ -294,7 +291,7 @@ export class PostgresConnector {
         let query = `select * from audit fetch first ${number} rows only
         `;
 
-        
+
 
         console.log(query);
         return client.query(query).then((res: any) => {
@@ -316,8 +313,8 @@ export class PostgresConnector {
     let query = `select id from nicknames 
     where id = '${id}' or nickname = '${id}'`;
 
-    const data = await this.ExecuteQuery(query, (x:any)=>x.id);
-    if(data.length  > 0 )
+    const data = await this.ExecuteQuery(query, (x: any) => x.id);
+    if (data.length > 0)
       return data[0]
     return id;
 
@@ -325,7 +322,7 @@ export class PostgresConnector {
 
   GetPersons(ids: string[]) {
 
-    if(ids == undefined){
+    if (ids == undefined) {
       return [];
     }
     let idList = ids.join("','")
@@ -340,7 +337,7 @@ export class PostgresConnector {
     `;
 
     return this.ExecuteQuery(query, PersonController.mappingFromDb)
-   
+
   }
 
 
@@ -353,9 +350,9 @@ export class PostgresConnector {
     return this.pool.connect()
       .then((client: any) => {
 
-        
+
         return client.query(query).then((res: any) => {
-         
+
           client.release();
           return res.rows.map(mapper);
         })
@@ -370,24 +367,24 @@ export class PostgresConnector {
   }
 
   GetParentIds(ids: string[]): any[] | Promise<any[]> {
-    let idList= ids.join("','");
+    let idList = ids.join("','");
     let query = `select relations.person1 from relations
         where person2 in( '${idList}')
         and is_deleted = false
         and type = 'Parent'
         `;
-    let mapper = (x:any) =>x.person1;
+    let mapper = (x: any) => x.person1;
     return this.ExecuteQuery(query, mapper);
   }
 
   GetChildrenIds(ids: string[]): any[] | Promise<any[]> {
-    let idList= ids.join("','");
+    let idList = ids.join("','");
     let query = `select relations.person2 from relations
         where person1 in ( '${idList}')
         and is_deleted = false
         and type = 'Parent'
         `;
-    let mapper = (x:any) =>x.person2;
+    let mapper = (x: any) => x.person2;
     return this.ExecuteQuery(query, mapper);
   }
 
@@ -397,7 +394,7 @@ export class PostgresConnector {
         and is_deleted = false
         and type = 'Spouse'
         `;
-    let mapper = (x:any) => x.person1 == id ? x.person2 : x.person1;
+    let mapper = (x: any) => x.person1 == id ? x.person2 : x.person1;
     return this.ExecuteQuery(query, mapper);
   }
 
@@ -407,7 +404,7 @@ export class PostgresConnector {
     
     where person = '${id}'
         `;
-    
+
 
     return this.ExecuteQuery(query, this.photoMapper);
   }
@@ -441,10 +438,10 @@ export class PostgresConnector {
         where profiles.is_deleted = false
         `;
 
-        if(filter!= ''){
+        if (filter != '') {
           query = query + ` and LOWER(profiles.first_name || profiles.last_name  || profiles.maiden_name || profiles.first_name || profiles.last_name  || profiles.maiden_name)  
           like '%${filter.toLowerCase().replace(' ', '%')}%'
-          limit ${pageSize} offset ${(page -1) * pageSize}
+          limit ${pageSize} offset ${(page - 1) * pageSize}
           `;
         }
 
@@ -519,7 +516,7 @@ export class PostgresConnector {
 
         for (let i = 0; i < data.length; i++) {
           const query = `INSERT INTO public.relations ("person1", "person2", "type") 
-          VALUES('${data[i].person1_id.toString()}', '${data[i].person2_id.toString()}', '${data[i].type }') on conflict do nothing;
+          VALUES('${data[i].person1_id.toString()}', '${data[i].person2_id.toString()}', '${data[i].type}') on conflict do nothing;
           `
           // const query = `update profiles set gender = '${data[i].gender}', maiden_name = '${data[i].maide'nName}' where id =  '${data[i]._id.toString()}';`;
           console.log(query);
