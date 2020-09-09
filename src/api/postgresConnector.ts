@@ -7,6 +7,54 @@ dotenv.config();
 const bcrypt = require('bcryptjs');
 
 export class PostgresConnector {
+
+  CheckCredentials(login: string, password: string){
+
+
+    return this.pool.connect()
+    .then((client: any) => {
+
+
+      let query = `select login, password from credentials where login= '${login}'`;
+
+      console.log(query);
+      return client.query(query).then((res: any) => {
+        client.release();
+
+        console.log(JSON.stringify(res.rows))
+        if(res.rows.length>0){
+
+          return {
+            success: bcrypt.compareSync(password, res[0].password),
+            profileId: res.id,
+          };
+        }
+        else{
+          return {
+            success: false,
+            profileId: null,
+          };
+        }
+      })
+        .catch((err: any) => {
+          client.release();
+          console.error(err);
+          return {
+            success: false,
+            profileId: null,
+          };
+        })
+    })
+    .catch((err: any) => {
+      console.error(err);
+      return {
+        success: false,
+        profileId: null,
+      };
+    });
+
+  }
+
   CreateCredentials(id: string, login: string, email: string, password: string) {
 
 
