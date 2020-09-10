@@ -7,6 +7,291 @@ dotenv.config();
 const bcrypt = require('bcryptjs');
 
 export class PostgresConnector {
+  SetProfilePhoto(image: string, person: string) {
+    this.pool.on('error', (err: any, client: any) => {
+      console.error('Error:', err);
+    });
+
+    return this.pool.connect()
+      .then((client: any) => {
+
+
+
+        let query = `update tags set is_profile = false
+        where tags.photo_id <> '${image} and tags.person= '${person}')
+        `;
+
+        let query2 = `update tags set is_profile= true
+        where tags.photo_id = '${image} and tags.person= '${person}')
+        `;
+   
+        console.log(query);
+    
+        return client.query(query).then((res: any) => {
+          return client.query(query2).then((res: any) => {
+            console.log(res.rows.length)
+            client.release();
+            return "Done";
+          })
+        })
+          .catch((err: any) => {
+            client.release();
+            throw err;
+          })
+      })
+      .catch((err: any) => {
+        throw err;
+      });
+  }
+  AddPhoto(url: string, persons: string[], deleteHash: string) {
+    this.pool.on('error', (err: any, client: any) => {
+      console.error('Error:', err);
+    });
+
+    return this.pool.connect()
+      .then((client: any) => {
+
+
+        let query = `insert into images(url, delete_hash) values ('${url}', '${deleteHash}')
+        `;
+
+
+   
+        console.log(query);
+    
+
+          return client.query(query).then((res: any) => {
+            console.log(res.rows.length)
+            client.release();
+            return res.rows;
+          })
+
+          .catch((err: any) => {
+            client.release();
+            console.error(err);
+          })
+      })
+      .catch((err: any) => {
+        console.error(err);
+      });
+  }
+
+
+  AddTagPhoto(image: string, person: string) {
+    this.pool.on('error', (err: any, client: any) => {
+      console.error('Error:', err);
+    });
+
+    return this.pool.connect()
+      .then((client: any) => {
+
+
+
+        let query = `insert into tags(photo_id, person) values('${image}','${person}')
+        `;
+
+   
+        console.log(query);
+    
+
+          return client.query(query).then((res: any) => {
+            console.log(res.rows.length)
+            client.release();
+            return "Done";
+          })
+          .catch((err: any) => {
+            client.release();
+            throw err;
+          })
+      })
+      .catch((err: any) => {
+        throw err;
+      });
+  }
+
+
+  DeleteTagPhoto(image: string, person: string) {
+    this.pool.on('error', (err: any, client: any) => {
+      console.error('Error:', err);
+    });
+
+    return this.pool.connect()
+      .then((client: any) => {
+
+
+
+        let query = `update tags set is_deleted = true
+        where tags.photo_id = '${image} and tags.person= '${person}')
+        `;
+
+   
+        console.log(query);
+    
+
+          return client.query(query).then((res: any) => {
+            console.log(res.rows.length)
+            client.release();
+            return "Done";
+          })
+          .catch((err: any) => {
+            client.release();
+            throw err;
+          })
+      })
+      .catch((err: any) => {
+        throw err;
+      });
+  }
+  DeletePhoto(image: string) {
+    this.pool.on('error', (err: any, client: any) => {
+      console.error('Error:', err);
+    });
+
+    return this.pool.connect()
+      .then((client: any) => {
+
+
+        let query = `update images set is_deleted = true
+        where images.photo_id = '${image}')
+        `;
+
+        let query2 = `update tags set is_deleted = true
+        where tags.photo_id = '${image}')
+        `;
+
+   
+        console.log(query);
+        return client.query(query).then(() => {
+
+          return client.query(query2).then((res: any) => {
+            console.log(res.rows.length)
+            client.release();
+            return res.rows;
+          })
+
+          
+        })
+          .catch((err: any) => {
+            client.release();
+            console.error(err);
+          })
+      })
+      .catch((err: any) => {
+        console.error(err);
+      });
+  }
+  GetRandomPhotos(number: number) {
+    this.pool.on('error', (err: any, client: any) => {
+      console.error('Error:', err);
+    });
+
+    return this.pool.connect()
+      .then((client: any) => {
+
+
+        let query = `select person, url from tags
+left join images on tags.photo_id = images.photo_id 
+order by random()
+limit ${number}`;
+
+        console.log(query);
+        return client.query(query).then((res: any) => {
+          client.release();
+
+
+          console.log(res.rows.length)
+          return res.rows.map(this.mapImage);
+
+        })
+          .catch((err: any) => {
+            client.release();
+            console.error(err);
+            return []
+          })
+      })
+      .catch((err: any) => {
+        console.error(err);
+        return [];
+      });
+  }
+
+
+
+  GetProfilePhotoByPersonId(personId: string) {
+
+
+
+
+    this.pool.on('error', (err: any, client: any) => {
+      console.error('Error:', err);
+    });
+
+    return this.pool.connect()
+      .then((client: any) => {
+
+
+        let query = `select person, url from tags
+    left join images on tags.photo_id = images.photo_id 
+    where tags.person = '${personId}' and is_profile`;
+
+        console.log(query);
+        return client.query(query).then((res: any) => {
+          client.release();
+
+
+          console.log(res.rows.length)
+          if (res.rows.length == 0) {
+            return null;
+          }
+          return res.rows.map(this.mapImage)[0];
+
+        })
+          .catch((err: any) => {
+            client.release();
+            console.error(err);
+            return null
+          })
+      })
+      .catch((err: any) => {
+        console.error(err);
+        return null;
+      });
+  }
+
+
+  GetPhotoByPersonId(personId: string) {
+    this.pool.on('error', (err: any, client: any) => {
+      console.error('Error:', err);
+    });
+
+    return this.pool.connect()
+      .then((client: any) => {
+
+
+        let query = `select person, url from tags
+left join images on tags.photo_id = images.photo_id 
+where tags.person = '${personId}'`;
+
+        console.log(query);
+        return client.query(query).then((res: any) => {
+          client.release();
+
+
+          console.log(res.rows.length)
+          return res.rows.map(this.mapImage);
+
+        })
+          .catch((err: any) => {
+            client.release();
+            console.error(err);
+            return []
+          })
+      })
+      .catch((err: any) => {
+        console.error(err);
+        return [];
+      });
+  }
 
   CheckCredentials(login: string, password: string) {
     return this.pool.connect()
@@ -15,7 +300,7 @@ export class PostgresConnector {
 
         console.log(query);
         return client.query(query).then((res: any) => {
-         
+
           const pwd = res.rows[0].password
           client.release();
 
@@ -119,6 +404,13 @@ export class PostgresConnector {
     return {
       id: r.id,
       login: r.login
+    }
+  }
+
+  mapImage(r: any) {
+    return {
+      _id: r.person,
+      url: r.url
     }
   }
 

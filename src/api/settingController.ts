@@ -7,4 +7,13 @@ export default class SettingController {
     this.logger.info('get version');
     return process.env.VERSION;
   }
+
+  about() {
+    this.logger.info('about');
+    return {
+      version: this.getVersion(),
+      name: 'Genealogy Api',
+      date: new Date()
+    }
+  }
 }

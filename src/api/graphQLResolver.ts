@@ -5,7 +5,6 @@ import AuditController from './auditController';
 import PhotoController from './photoController';
 import LoginController from './loginController';
 import EventController from './eventController';
-import { MongoConnector } from './mongoDbConnector';
 import RelationController from './relationController';
 import SettingController from './settingController';
 
@@ -30,6 +29,10 @@ export class GraphQLResolver {
 
   getQuery() {
     return {
+
+      about: () => this.settingController?.about(),
+
+
       getPersonList: (args: any) => this.personController?.getPersonList(),
       searchPerson: (args: any) => this.personController?.searchPerson(args.filter, args.page, args.pageSize),
  
@@ -40,28 +43,24 @@ export class GraphQLResolver {
       me: (args: any, context: any) => this.loginController?.me(context.user),
 
       getProfile: (args: any) => this.personController?.getProfile(args.profileId),
-      getPrivateProfile: (args: any, context: any) => this.personController?.getPrivateProfile(args.profileId, context.user),
+      // getPrivateProfile: (args: any, context: any) => this.personController?.getPrivateProfile(args.profileId, context.user),
 
       getAuditLastEntries: (args: any) => this.auditController?.getAuditLastEntries(args.number),
-      
-
       getPhotoProfile: (args: any) => this.photoController?.getPhotoProfile(args._id),
       getPhotosRandom: (args: any) => this.photoController?.getPhotosRandom(args.number),
 
       getEvents: (args:any) => this.eventController?.getEvents(args.date),
       getRelation: (args:any) => this.relationController?.getRelation(args._id1, args._id2),
-
-      
     };
   }
 
   getMutation() {
     return {
 
-      updatePersonPrivateInfo: (args: any, context: any) => this.personController?.updatePersonPrivateInfo(args._id, args.patch, context.user),
+//updatePersonPrivateInfo: (args: any, context: any) => this.personController?.updatePersonPrivateInfo(args._id, args.patch, context.user),
       addPhoto: (args: any, context: any) => this.photoController?.addPhoto(args.url, args.deleteHash, args.persons, context.user),
-      createPerson: (args: any) => this.personController?.createPerson(args.person),
-      updatePerson: (args: any) => this.personController?.updatePerson(args._id, args.patch),
+   //   createPerson: (args: any) => this.personController?.createPerson(args.person),
+   //   updatePerson: (args: any) => this.personController?.updatePerson(args._id, args.patch),
       removeProfile: (args: any) => this.personController?.removeProfile(args._id),
 
       removeLink: (args: any) => this.linkController?.removeLink(args._id1, args._id2),
@@ -87,13 +86,11 @@ export class GraphQLResolver {
   }
 }
 
-const connector = new MongoConnector(process.env.MONGODB ?? '');
-
 const resolver = new GraphQLResolver();
-resolver.personController = new PersonController(connector);
+resolver.personController = new PersonController();
 resolver.linkController = new LinkController();
 resolver.auditController = new AuditController();
-resolver.photoController = new PhotoController(connector);
+resolver.photoController = new PhotoController();
 resolver.loginController = new LoginController();
 resolver.eventController = new EventController();
 resolver.relationController = new RelationController();

@@ -215,9 +215,16 @@ schemaBuilder.addType(`type Token {
   token: String
 }`);
 
+/* New types */
+schemaBuilder.addType(`type Info {
+  version: String,
+  name: String, 
+  date: DateTime
+}`);
+
 
 schemaBuilder.setQueryDescription('Queries definition.');
-
+schemaBuilder.addQuery('about: Info', 'Get Info about the api');
 
 schemaBuilder.addQuery('version: String', 'Get api version');
 

@@ -38,7 +38,6 @@ app.use(
 
 const { PORT } = process.env;
 const { NODE_ENV } = process.env;
-const DATABASE = process.env.MONGODB_DATABASE;
 
 const server = http.createServer(app);
 
@@ -47,7 +46,6 @@ server.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}...`);
   logger.info(`Server address: ${server.address()}`);
   logger.info(`Env: ${NODE_ENV}`);
-  logger.info(`Database: ${DATABASE}`);
 });
 
 process.on('uncaughtException', (e) => {
