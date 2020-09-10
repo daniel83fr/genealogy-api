@@ -13,46 +13,38 @@ export default class LoginController {
   }
 
   login(login: string, password: string): any {
-    this.logger.info('Login');
-    const jwtMW = exjwt({
-      secret: process.env.SECRET,
-    });
+    const connector = new PostgresConnector();
+    return connector.CheckCredentials(login, password)
+      .then((res: any) => {
+        if (res.success === true) {
+          const token = jwt.sign(
+            {
+              login,
+              profile: res.profileId,
+            }, process.env.SECRET, { expiresIn: 129600 },
+          );
 
-
-    try {
-      const connector = new PostgresConnector();
-      return connector.CheckCredentials(login, password)
-        .then((res: any) => {
-          if (res.success === true) {
-            const token = jwt.sign(
-              {
-                login,
-                profile: res.profileId,
-              }, process.env.SECRET, { expiresIn: 129600 },
-            );
-            return {
-              success: true,
-              token,
-              error: '',
-            };
-          }
-        })
-        .catch((err: any) => {
-          console.error(err);
           return {
-            success: false,
-            token: '',
-            error: 'Username or password is incorrect',
+            success: true,
+            token,
+            error: '',
           };
-        });
-    } catch (err) {
-      console.log(err);
-      return {
-        success: false,
-        token: '',
-        error: 'Username or password is incorrect',
-      };
-    }
+        }
+
+        return {
+          success: false,
+          token: null,
+          error: 'Username or password is incorrect',
+        };
+      })
+      .catch((err: any) => {
+        this.logger.error(err);
+        return {
+          success: false,
+          token: null,
+          error: 'Something went wrong when login',
+        }
+      });
   }
 
   register(id: string, login: string, email: string, password: string): any {
@@ -63,7 +55,7 @@ export default class LoginController {
       return connector.CreateCredentials(id, login, email, password)
         .then((res: any) => {
           console.log(JSON.stringify(res));
-          return 'login created';
+          return res.message;
         })
         .catch((err: any) => {
           console.error(err);
@@ -75,6 +67,46 @@ export default class LoginController {
     }
 
 
+  }
+
+  updateAccount(id: string, login: string, email: string, password: string): any {
+    this.logger.info('Update account');
+
+    try {
+      const connector = new PostgresConnector();
+      return connector.UpdateCredentials(id, login, email, password)
+        .then((res: any) => {
+          console.log(JSON.stringify(res));
+          return res.message;
+        })
+        .catch((err: any) => {
+          console.error(err);
+          return 'registration failed';
+        });
+    } catch (err) {
+      console.log(err);
+      return 'registration failed';
+    }
+  }
+
+  deleteAccount(login: string, password: string): any {
+    this.logger.info('Delete account');
+
+    try {
+      const connector = new PostgresConnector();
+      return connector.DeleteCredentials(login, password)
+        .then((res: any) => {
+          console.log(JSON.stringify(res));
+          return res.message;
+        })
+        .catch((err: any) => {
+          console.error(err);
+          return 'account deletion failed';
+        });
+    } catch (err) {
+      console.log(err);
+      return 'account deletion failed';
+    }
   }
 
   me(user: any) {

@@ -13,6 +13,7 @@ const jwt = require('express-jwt');
 const auth = jwt({
   secret: process.env.SECRET,
   credentialsRequired: false,
+  algorithms: ['RS256']
 });
 
 const loggingMiddleware = (req: { ip: any; }, res: any, next: () => void) => {

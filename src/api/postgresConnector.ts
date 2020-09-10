@@ -294,24 +294,26 @@ where tags.person = '${personId}'`;
   }
 
   CheckCredentials(login: string, password: string) {
+
     return this.pool.connect()
       .then((client: any) => {
-        let query = `select login, password from credentials where login= '${login}'`;
+        let query = `select login, password from credentials where login= '${login}' and is_deleted=false`;
 
-        console.log(query);
         return client.query(query).then((res: any) => {
 
-          const pwd = res.rows[0].password
-          client.release();
+      
+        
 
           if (res.rows.length > 0) {
-
+            const pwd = res.rows[0].password
+            client.release();
             return {
               success: bcrypt.compareSync(password, pwd),
               profileId: res.id,
             };
           }
           else {
+            client.release();
             return {
               success: false,
               profileId: null,
@@ -352,17 +354,96 @@ where tags.person = '${personId}'`;
         return client.query(query).then((res: any) => {
           client.release();
 
-          return "Account created"
+          return ({
+            message: "Account created",
+            success: true
+          }) 
         })
           .catch((err: any) => {
             client.release();
-            return "Account creation failed"
-            console.error(err);
+           return ({
+              message: "Account creation failed",
+              success: false
+            });
           })
       })
       .catch((err: any) => {
-        console.error(err);
-        return "Account creation failed"
+        return ({
+          message: "Account creation failed",
+          success: false
+        });
+      });
+  }
+
+  UpdateCredentials(id: string, login: string, email: string, password: string) {
+
+
+    login = login.toLowerCase();
+
+    return this.pool.connect()
+      .then((client: any) => {
+
+        const hash = bcrypt.hashSync(password, 10);
+        let query = `update credentials set password = '${hash}', email='${email}' where login= '${login}'`;
+
+        console.log(query);
+        return client.query(query).then((res: any) => {
+          client.release();
+
+          return ({
+            message: "Account updated",
+            success: true
+          }) 
+        })
+          .catch((err: any) => {
+            client.release();
+           return ({
+              message: "Account udate failed",
+              success: false
+            });
+          })
+      })
+      .catch((err: any) => {
+        return ({
+          message: "Account update failed",
+          success: false
+        });
+      });
+  }
+
+  DeleteCredentials(login: string, password: string) {
+
+
+    login = login.toLowerCase();
+
+    return this.pool.connect()
+      .then((client: any) => {
+
+        const hash = bcrypt.hashSync(password, 10);
+        let query = `update credentials set is_deleted = true where login= '${login}'`;
+
+        console.log(query);
+        return client.query(query).then((res: any) => {
+          client.release();
+
+          return ({
+            message: "Account deleted",
+            success: true
+          }) 
+        })
+          .catch((err: any) => {
+            client.release();
+           return ({
+              message: "Account delete failed",
+              success: false
+            });
+          })
+      })
+      .catch((err: any) => {
+        return ({
+          message: "Account delete failed",
+          success: false
+        });
       });
   }
 

@@ -216,25 +216,27 @@ schemaBuilder.addType(`type Token {
 }`);
 
 /* New types */
-schemaBuilder.addType(`type Info {
+schemaBuilder.addType(`type ServiceInfo {
   version: String,
   name: String, 
-  date: DateTime
+  date: DateTime,
+  author: String,
+  contact: String
 }`);
 
 
 schemaBuilder.setQueryDescription('Queries definition.');
-schemaBuilder.addQuery('about: Info', 'Get Info about the api');
 
-schemaBuilder.addQuery('version: String', 'Get api version');
+/* Service Infos */
+schemaBuilder.addQuery('about: ServiceInfo', 'Get Info about the api');
 
+/* Account */
 schemaBuilder.addQuery('login(login: String!, password: String): Token',
   'Validates user credentials and returns authentication token');
-schemaBuilder.addQuery('register(id: String!, login: String!, email: String!, password: String!): String',
-  'Validates user credentials and returns authentication token');
 
-schemaBuilder.addQuery('me: ConnectedUser');
+schemaBuilder.addQuery('connectedUser: ConnectedUser', 'Returns connected user');
 
+/* Profiles */
 schemaBuilder.addQuery('getPersonList: [User]');
 
 schemaBuilder.addQuery('getPrivateProfile(profileId: String!): PrivateProfile');
@@ -251,8 +253,18 @@ schemaBuilder.addQuery('getEvents(date:String!):[Event]');
 schemaBuilder.addQuery('getProfileId(_id: String!): String');
 schemaBuilder.addQuery('searchPerson(filter: String!, page: Int, pageSize: Int): [User]');
 
-
 schemaBuilder.setMutationDescription('Mutations definition.');
+
+/* Account */
+schemaBuilder.addMutation('accountCreate(id: String!, login: String!, email: String!, password: String!): String',
+  'Create account');
+
+schemaBuilder.addMutation('accountUpdate(id: String!, login: String!, email: String!, password: String!): String',
+  'Update account info');
+
+schemaBuilder.addMutation('accountDelete(login: String!, password: String!): String',
+  'Delete account');
+
 schemaBuilder.addMutation('removeLink(_id1: String!, _id2: String!): String');
 schemaBuilder.addMutation('removeSiblingLink(_id1: String!, _id2: String!): String');
 schemaBuilder.addMutation('removeProfile(_id: String!): String');

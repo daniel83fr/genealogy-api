@@ -32,16 +32,12 @@ export class GraphQLResolver {
 
       about: () => this.settingController?.about(),
 
+      login: (args: any) => this.loginController?.login(args.login, args.password),
+      connectedUser: (args: any, context: any) => this.loginController?.me(context.user),
 
       getPersonList: (args: any) => this.personController?.getPersonList(),
       searchPerson: (args: any) => this.personController?.searchPerson(args.filter, args.page, args.pageSize),
  
-      version: () => this.settingController?.getVersion(),
-
-      login: (args: any) => this.loginController?.login(args.login, args.password),
-      register: (args: any) => this.loginController?.register(args.id, args.login, args.email, args.password),
-      me: (args: any, context: any) => this.loginController?.me(context.user),
-
       getProfile: (args: any) => this.personController?.getProfile(args.profileId),
       // getPrivateProfile: (args: any, context: any) => this.personController?.getPrivateProfile(args.profileId, context.user),
 
@@ -56,6 +52,11 @@ export class GraphQLResolver {
 
   getMutation() {
     return {
+
+      accountCreate: (args: any) => this.loginController?.register(args.id, args.login, args.email, args.password),
+      accountUpdate: (args: any) => this.loginController?.updateAccount(args.id, args.login, args.email, args.password),
+      accountDelete: (args: any) => this.loginController?.deleteAccount(args.login, args.password),
+     
 
 //updatePersonPrivateInfo: (args: any, context: any) => this.personController?.updatePersonPrivateInfo(args._id, args.patch, context.user),
       addPhoto: (args: any, context: any) => this.photoController?.addPhoto(args.url, args.deleteHash, args.persons, context.user),
