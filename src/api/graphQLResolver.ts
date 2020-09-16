@@ -53,7 +53,7 @@ export class GraphQLResolver {
   getMutation() {
     return {
 
-      accountCreate: (args: any) => this.loginController?.register(args.id, args.login, args.email, args.password),
+      accountCreate: (args: any) => this.loginController?.register(args.email, args.password),
       accountUpdate: (args: any) => this.loginController?.updateAccount(args.id, args.login, args.email, args.password),
       accountDelete: (args: any) => this.loginController?.deleteAccount(args.login, args.password),
      

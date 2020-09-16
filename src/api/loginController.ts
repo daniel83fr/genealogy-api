@@ -1,12 +1,14 @@
-import LoggerService from '../services/logger_service';
 import { PostgresConnector } from './postgresConnector';
-const exjwt = require('express-jwt');
+import LoggerService from '../services/logger_service';
+
+
 const jwt = require('jsonwebtoken');
 
 export default class LoginController {
   logger: LoggerService = new LoggerService('loginController');
 
   static CheckUserAuthenticated(user: any) {
+    console.log("check rights")
     if (!user) {
       throw Error('Not authenticated, please login first');
     }
@@ -30,12 +32,15 @@ export default class LoginController {
             error: '',
           };
         }
+        else{
+          return {
+            success: false,
+            token: null,
+            error: 'Username or password is incorrect',
+          };
+        }
 
-        return {
-          success: false,
-          token: null,
-          error: 'Username or password is incorrect',
-        };
+       
       })
       .catch((err: any) => {
         this.logger.error(err);
@@ -47,12 +52,12 @@ export default class LoginController {
       });
   }
 
-  register(id: string, login: string, email: string, password: string): any {
+  register(email: string, password: string): any {
     this.logger.info('Register');
 
     try {
       const connector = new PostgresConnector();
-      return connector.CreateCredentials(id, login, email, password)
+      return connector.CreateCredentials(email, password)
         .then((res: any) => {
           console.log(JSON.stringify(res));
           return res.message;
@@ -110,8 +115,9 @@ export default class LoginController {
   }
 
   me(user: any) {
-    LoginController.CheckUserAuthenticated(user);
     this.logger.debug('me');
+    LoginController.CheckUserAuthenticated(user);
+   
     try {
       const connector = new PostgresConnector();
       return connector.GetPersonByLogin(user.login)

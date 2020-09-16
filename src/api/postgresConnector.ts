@@ -7,6 +7,7 @@ dotenv.config();
 const bcrypt = require('bcryptjs');
 
 export class PostgresConnector {
+
   SetProfilePhoto(image: string, person: string) {
     this.pool.on('error', (err: any, client: any) => {
       console.error('Error:', err);
@@ -15,8 +16,6 @@ export class PostgresConnector {
     return this.pool.connect()
       .then((client: any) => {
 
-
-
         let query = `update tags set is_profile = false
         where tags.photo_id <> '${image} and tags.person= '${person}')
         `;
@@ -24,9 +23,9 @@ export class PostgresConnector {
         let query2 = `update tags set is_profile= true
         where tags.photo_id = '${image} and tags.person= '${person}')
         `;
-   
+
         console.log(query);
-    
+
         return client.query(query).then((res: any) => {
           return client.query(query2).then((res: any) => {
             console.log(res.rows.length)
@@ -56,15 +55,15 @@ export class PostgresConnector {
         `;
 
 
-   
-        console.log(query);
-    
 
-          return client.query(query).then((res: any) => {
-            console.log(res.rows.length)
-            client.release();
-            return res.rows;
-          })
+        console.log(query);
+
+
+        return client.query(query).then((res: any) => {
+          console.log(res.rows.length)
+          client.release();
+          return res.rows;
+        })
 
           .catch((err: any) => {
             client.release();
@@ -90,15 +89,15 @@ export class PostgresConnector {
         let query = `insert into tags(photo_id, person) values('${image}','${person}')
         `;
 
-   
-        console.log(query);
-    
 
-          return client.query(query).then((res: any) => {
-            console.log(res.rows.length)
-            client.release();
-            return "Done";
-          })
+        console.log(query);
+
+
+        return client.query(query).then((res: any) => {
+          console.log(res.rows.length)
+          client.release();
+          return "Done";
+        })
           .catch((err: any) => {
             client.release();
             throw err;
@@ -124,15 +123,15 @@ export class PostgresConnector {
         where tags.photo_id = '${image} and tags.person= '${person}')
         `;
 
-   
-        console.log(query);
-    
 
-          return client.query(query).then((res: any) => {
-            console.log(res.rows.length)
-            client.release();
-            return "Done";
-          })
+        console.log(query);
+
+
+        return client.query(query).then((res: any) => {
+          console.log(res.rows.length)
+          client.release();
+          return "Done";
+        })
           .catch((err: any) => {
             client.release();
             throw err;
@@ -159,7 +158,7 @@ export class PostgresConnector {
         where tags.photo_id = '${image}')
         `;
 
-   
+
         console.log(query);
         return client.query(query).then(() => {
 
@@ -169,7 +168,7 @@ export class PostgresConnector {
             return res.rows;
           })
 
-          
+
         })
           .catch((err: any) => {
             client.release();
@@ -297,12 +296,12 @@ where tags.person = '${personId}'`;
 
     return this.pool.connect()
       .then((client: any) => {
-        let query = `select login, password from credentials where login= '${login}' and is_deleted=false`;
+        let query = `select login, password from credentials where email= '${login}' and is_deleted = false`;
 
         return client.query(query).then((res: any) => {
 
-      
-        
+
+
 
           if (res.rows.length > 0) {
             const pwd = res.rows[0].password
@@ -339,16 +338,16 @@ where tags.person = '${personId}'`;
 
   }
 
-  CreateCredentials(id: string, login: string, email: string, password: string) {
+  CreateCredentials(email: string, password: string) {
 
 
-    login = login.toLowerCase();
+    email = email.toLowerCase();
 
     return this.pool.connect()
       .then((client: any) => {
 
         const hash = bcrypt.hashSync(password, 10);
-        let query = `insert into credentials(login, password, id) values('${login}', '${hash}', '${id}')`;
+        let query = `insert into credentials(email, password) values('${email}', '${hash}')`;
 
         console.log(query);
         return client.query(query).then((res: any) => {
@@ -357,11 +356,11 @@ where tags.person = '${personId}'`;
           return ({
             message: "Account created",
             success: true
-          }) 
+          })
         })
           .catch((err: any) => {
             client.release();
-           return ({
+            return ({
               message: "Account creation failed",
               success: false
             });
@@ -393,11 +392,11 @@ where tags.person = '${personId}'`;
           return ({
             message: "Account updated",
             success: true
-          }) 
+          })
         })
           .catch((err: any) => {
             client.release();
-           return ({
+            return ({
               message: "Account udate failed",
               success: false
             });
@@ -429,11 +428,11 @@ where tags.person = '${personId}'`;
           return ({
             message: "Account deleted",
             success: true
-          }) 
+          })
         })
           .catch((err: any) => {
             client.release();
-           return ({
+            return ({
               message: "Account delete failed",
               success: false
             });

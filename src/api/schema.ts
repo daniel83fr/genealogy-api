@@ -1,4 +1,5 @@
-import { GraphQLList, GraphQLString, buildSchema } from 'graphql';
+// import fs from 'fs';
+import { buildSchema } from 'graphql';
 
 const graphql = require('graphql');
 
@@ -236,9 +237,15 @@ schemaBuilder.addQuery('login(login: String!, password: String): Token',
 
 schemaBuilder.addQuery('connectedUser: ConnectedUser', 'Returns connected user');
 
-/* Profiles */
-schemaBuilder.addQuery('getPersonList: [User]');
+/* Search */
+schemaBuilder.addQuery('searchPerson(filter: String!, page: Int, pageSize: Int): [User]');
+// User: ProfileSummary
 
+// Profile: Private + Public profile
+
+
+/* to remove */
+schemaBuilder.addQuery('getPersonList: [User]');
 schemaBuilder.addQuery('getPrivateProfile(profileId: String!): PrivateProfile');
 schemaBuilder.addQuery('getProfile(profileId:String!): PublicProfile');
 
@@ -251,12 +258,12 @@ schemaBuilder.addQuery('getRelation(_id1: String!,_id2: String!): [Relation]');
 
 schemaBuilder.addQuery('getEvents(date:String!):[Event]');
 schemaBuilder.addQuery('getProfileId(_id: String!): String');
-schemaBuilder.addQuery('searchPerson(filter: String!, page: Int, pageSize: Int): [User]');
+
 
 schemaBuilder.setMutationDescription('Mutations definition.');
 
 /* Account */
-schemaBuilder.addMutation('accountCreate(id: String!, login: String!, email: String!, password: String!): String',
+schemaBuilder.addMutation('accountCreate(email: String!, password: String!): String',
   'Create account');
 
 schemaBuilder.addMutation('accountUpdate(id: String!, login: String!, email: String!, password: String!): String',
@@ -282,5 +289,10 @@ schemaBuilder.addMutation('addPhotoTag(image: String!, tag: String!): String');
 schemaBuilder.addMutation('removePhotoTag(image: String!, tag: String!): String');
 schemaBuilder.addMutation('runMassUpdate: String', 'should not be used');
 const schema = buildSchema(schemaBuilder.build());
+// try {
+//   fs.writeFileSync('schema.txt', schemaBuilder.build());
+// } catch (error) {
+//  console.log(error);
+// }
 
 export default schema;
