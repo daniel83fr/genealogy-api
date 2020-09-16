@@ -59,16 +59,22 @@ export default class LoginController {
       const connector = new PostgresConnector();
       return connector.CreateCredentials(email, password)
         .then((res: any) => {
-          console.log(JSON.stringify(res));
-          return res.message;
+          return res;
         })
         .catch((err: any) => {
           console.error(err);
-          return 'registration failed';
+
+          return {
+            message: 'registration failed',
+            success: false
+          };
         });
     } catch (err) {
       console.log(err);
-      return 'registration failed';
+      return {
+        message: 'registration failed',
+        success: false
+      };
     }
 
 

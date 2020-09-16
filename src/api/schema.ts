@@ -202,6 +202,11 @@ schemaBuilder.addType(`type Photo {
   persons: [User]
 }`);
 
+schemaBuilder.addType(`type Status {
+  success: Boolean
+  message: String
+}`);
+
 schemaBuilder.addType(`type AuditEntry{
   timestamp: DateTime,
   type: String,
@@ -263,7 +268,7 @@ schemaBuilder.addQuery('getProfileId(_id: String!): String');
 schemaBuilder.setMutationDescription('Mutations definition.');
 
 /* Account */
-schemaBuilder.addMutation('accountCreate(email: String!, password: String!): String',
+schemaBuilder.addMutation('accountCreate(email: String!, password: String!): Status',
   'Create account');
 
 schemaBuilder.addMutation('accountUpdate(id: String!, login: String!, email: String!, password: String!): String',

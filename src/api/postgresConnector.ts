@@ -361,14 +361,14 @@ where tags.person = '${personId}'`;
           .catch((err: any) => {
             client.release();
             return ({
-              message: "Account creation failed",
+              message: "Account creation failed: email already in use.",
               success: false
             });
           })
       })
       .catch((err: any) => {
         return ({
-          message: "Account creation failed",
+          message: "Account creation failed: email already in use.",
           success: false
         });
       });
