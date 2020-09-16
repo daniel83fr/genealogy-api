@@ -271,10 +271,10 @@ schemaBuilder.setMutationDescription('Mutations definition.');
 schemaBuilder.addMutation('accountCreate(email: String!, password: String!): Status',
   'Create account');
 
-schemaBuilder.addMutation('accountUpdate(id: String!, login: String!, email: String!, password: String!): String',
+schemaBuilder.addMutation('accountUpdate(email: String!, password: String!, new_email: String, new_password: String): Status',
   'Update account info');
 
-schemaBuilder.addMutation('accountDelete(login: String!, password: String!): String',
+schemaBuilder.addMutation('accountDelete(email: String!, password: String!): Status',
   'Delete account');
 
 schemaBuilder.addMutation('removeLink(_id1: String!, _id2: String!): String');

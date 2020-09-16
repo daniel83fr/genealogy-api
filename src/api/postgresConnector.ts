@@ -374,16 +374,25 @@ where tags.person = '${personId}'`;
       });
   }
 
-  UpdateCredentials(id: string, login: string, email: string, password: string) {
+  UpdateCredentials(email: string, password: string, newEmail: string, newPassword: string) {
 
 
-    login = login.toLowerCase();
+    email = email.toLowerCase();
+    if(newEmail == null || newEmail == ''){
+      newEmail =email;
+    }
+    if(newPassword == null || newPassword == ''){
+      newPassword = password;
+    }
+    newEmail = newEmail.toLowerCase();
+    
 
     return this.pool.connect()
       .then((client: any) => {
 
         const hash = bcrypt.hashSync(password, 10);
-        let query = `update credentials set password = '${hash}', email='${email}' where login= '${login}'`;
+        const newHash = bcrypt.hashSync(newPassword, 10);
+        let query = `update credentials set password = '${newHash}', email='${newEmail}' where email= '${email}'`;
 
         console.log(query);
         return client.query(query).then((res: any) => {
@@ -410,16 +419,16 @@ where tags.person = '${personId}'`;
       });
   }
 
-  DeleteCredentials(login: string, password: string) {
+  DeleteCredentials(email: string, password: string) {
 
 
-    login = login.toLowerCase();
+    email = email.toLowerCase();
 
     return this.pool.connect()
       .then((client: any) => {
 
         const hash = bcrypt.hashSync(password, 10);
-        let query = `update credentials set is_deleted = true where login= '${login}'`;
+        let query = `update credentials set is_deleted = true where email= '${email}'`;
 
         console.log(query);
         return client.query(query).then((res: any) => {

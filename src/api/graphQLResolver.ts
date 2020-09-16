@@ -54,8 +54,8 @@ export class GraphQLResolver {
     return {
 
       accountCreate: (args: any) => this.loginController?.register(args.email, args.password),
-      accountUpdate: (args: any) => this.loginController?.updateAccount(args.id, args.login, args.email, args.password),
-      accountDelete: (args: any) => this.loginController?.deleteAccount(args.login, args.password),
+      accountUpdate: (args: any) => this.loginController?.updateAccount(args.email, args.password, args.email, args.password),
+      accountDelete: (args: any) => this.loginController?.deleteAccount(args.email, args.password),
      
 
 //updatePersonPrivateInfo: (args: any, context: any) => this.personController?.updatePersonPrivateInfo(args._id, args.patch, context.user),

@@ -80,43 +80,56 @@ export default class LoginController {
 
   }
 
-  updateAccount(id: string, login: string, email: string, password: string): any {
+  updateAccount(email: string, password: string, newEmail: string, newPassword: string): any {
     this.logger.info('Update account');
 
     try {
       const connector = new PostgresConnector();
-      return connector.UpdateCredentials(id, login, email, password)
+      return connector.UpdateCredentials(email, password, newEmail, newPassword)
         .then((res: any) => {
           console.log(JSON.stringify(res));
-          return res.message;
+          return res;
         })
         .catch((err: any) => {
           console.error(err);
-          return 'registration failed';
+          return {
+            message: 'update failed',
+            success: false
+          };
+        
         });
     } catch (err) {
       console.log(err);
-      return 'registration failed';
+      return {
+        message: 'update failed',
+        success: false
+      };
     }
   }
 
-  deleteAccount(login: string, password: string): any {
+  deleteAccount(email: string, password: string): any {
     this.logger.info('Delete account');
 
     try {
       const connector = new PostgresConnector();
-      return connector.DeleteCredentials(login, password)
+      return connector.DeleteCredentials(email, password)
         .then((res: any) => {
           console.log(JSON.stringify(res));
-          return res.message;
+          return res;
         })
         .catch((err: any) => {
           console.error(err);
-          return 'account deletion failed';
+          return {
+            message: 'account deletion failed',
+            success: false
+          };
         });
     } catch (err) {
       console.log(err);
-      return 'account deletion failed';
+      return {
+        message: 'account deletion failed',
+        success: false
+      };
     }
   }
 
