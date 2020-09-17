@@ -23,11 +23,11 @@ export default class PersonController {
     }
   }
 
-  searchPerson(filter: string, page: number = 1, pageSize: number = 20) {
+  searchPerson(filter: string, page: number = 1, pageSize: number = 20, type: 'all') {
     this.logger.debug('searchPerson');
     try {
       const connector = new PostgresConnector();
-      return connector.GetPersonList(filter, page, pageSize)
+      return connector.GetPersonList(filter, page, pageSize, type)
         .then((res: any) => {
           let dataNew = res.map(PersonController.mappingFromDb);
           return dataNew;

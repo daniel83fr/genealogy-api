@@ -243,7 +243,7 @@ schemaBuilder.addQuery('login(login: String!, password: String): Token',
 schemaBuilder.addQuery('connectedUser: ConnectedUser', 'Returns connected user');
 
 /* Search */
-schemaBuilder.addQuery('searchPerson(filter: String!, page: Int, pageSize: Int): [User]');
+schemaBuilder.addQuery('searchPerson(filter: String!, page: Int, pageSize: Int, type: String): [User]');
 // User: ProfileSummary
 
 // Profile: Private + Public profile

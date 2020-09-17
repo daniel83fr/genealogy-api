@@ -858,7 +858,7 @@ where tags.person = '${personId}'`;
     };
   }
 
-  GetPersonList(filter: string = '', page: number = 1, pageSize: number = 20): Promise<any[]> {
+  GetPersonList(filter: string = '', page: number = 1, pageSize: number = 20, type: string= 'all'): Promise<any[]> {
 
     this.pool.on('error', (err: any, client: any) => {
       console.error('Error:', err);
@@ -876,12 +876,20 @@ where tags.person = '${personId}'`;
         left join tags on tags.person = profiles.id and tags.is_profile  = true 
         left join images on tags.photo_id  = images.photo_id
 
-        where profiles.is_deleted = false
+        where profiles.is_deleted <> true
         `;
 
-        if (filter != '') {
+        if (filter != '' && type == 'all') {
           query = query + ` and LOWER(profiles.first_name || profiles.last_name  || profiles.maiden_name || profiles.first_name || profiles.last_name  || profiles.maiden_name)  
           like '%${filter.toLowerCase().replace(' ', '%')}%'
+          limit ${pageSize} offset ${(page - 1) * pageSize}
+          `;
+        }
+
+        if (filter != '' && type == 'startWith') {
+          query = query + ` and (LOWER(profiles.first_name) like '${filter.toLowerCase().replace(' ', '%')}%' OR
+          LOWER(profiles.maiden_name) like '${filter.toLowerCase().replace(' ', '%')}%' OR
+          LOWER(profiles.last_name) like '${filter.toLowerCase().replace(' ', '%')}%')
           limit ${pageSize} offset ${(page - 1) * pageSize}
           `;
         }

@@ -36,7 +36,7 @@ export class GraphQLResolver {
       connectedUser: (args: any, context: any) => this.loginController?.me(context.user),
 
       getPersonList: (args: any) => this.personController?.getPersonList(),
-      searchPerson: (args: any) => this.personController?.searchPerson(args.filter, args.page, args.pageSize),
+      searchPerson: (args: any) => this.personController?.searchPerson(args.filter, args.page, args.pageSize, args.type),
  
       getProfile: (args: any) => this.personController?.getProfile(args.profileId),
       // getPrivateProfile: (args: any, context: any) => this.personController?.getPrivateProfile(args.profileId, context.user),
