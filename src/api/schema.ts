@@ -192,8 +192,9 @@ schemaBuilder.addType(`input ProfileChanges {
 }`);
 
 schemaBuilder.addType(`type ConnectedUser {
-  login: String,
-  id: String
+  email: String,
+  profileId: String, 
+  nickname: String
 }`);
 
 schemaBuilder.addType(`type Photo {
@@ -242,6 +243,9 @@ schemaBuilder.addQuery('login(login: String!, password: String): Token',
 
 schemaBuilder.addQuery('connectedUser: ConnectedUser', 'Returns connected user');
 
+schemaBuilder.addQuery('nickname(email: String!): String', 'returns nickname associated to an email');
+schemaBuilder.addQuery('profile(email: String!): String', 'returns nickname associated to an email');
+
 /* Search */
 schemaBuilder.addQuery('searchPerson(filter: String!, page: Int, pageSize: Int, type: String): [User]');
 // User: ProfileSummary
@@ -276,6 +280,12 @@ schemaBuilder.addMutation('accountUpdate(email: String!, password: String!, new_
 
 schemaBuilder.addMutation('accountDelete(email: String!, password: String!): Status',
   'Delete account');
+
+schemaBuilder.addMutation('attachedProfileUpdate(email: String!,  profile_id: String): Status',
+  'claim/unclaim profile');
+
+schemaBuilder.addMutation('nicknameUpdate(email: String!,  nickname: String): Status',
+  'Set/Unset nickname');
 
 schemaBuilder.addMutation('removeLink(_id1: String!, _id2: String!): String');
 schemaBuilder.addMutation('removeSiblingLink(_id1: String!, _id2: String!): String');

@@ -7,6 +7,80 @@ dotenv.config();
 const bcrypt = require('bcryptjs');
 
 export class PostgresConnector {
+  ClaimProfile(email: string, id: string) {
+    this.pool.on('error', (err: any, client: any) => {
+      console.error('Error:', err);
+    });
+
+    return this.pool.connect()
+      .then((client: any) => {
+
+
+        let query = `update credentials set id = '${id}' 
+          where email  = '${email}'
+        `;
+
+        console.log(query);
+        return client.query(query).then((res: any) => {
+          client.release();
+          return {
+            success: true,
+            message: 'Profile updated'
+          };
+        })
+          .catch((err: any) => {
+            client.release();
+            return {
+              success: false,
+              message: 'Profile not updated'
+            };
+          })
+      })
+      .catch((err: any) => {
+        console.error(err);
+        return {
+          success: true,
+          message: 'Profile updated'
+        };
+      });
+  }
+  SetNickname(email: string, nickname: string) {
+    this.pool.on('error', (err: any, client: any) => {
+      console.error('Error:', err);
+    });
+
+    return this.pool.connect()
+      .then((client: any) => {
+
+
+        let query = `update nicknames set nickname = '${nickname}' 
+          where id  in (select id from credentials where email = '${email}')
+        `;
+
+        console.log(query);
+        return client.query(query).then((res: any) => {
+          client.release();
+          return {
+            success: true,
+            message: 'Profile updated'
+          };
+        })
+          .catch((err: any) => {
+            client.release();
+            return {
+              success: false,
+              message: 'Profile not updated'
+            };
+          })
+      })
+      .catch((err: any) => {
+        console.error(err);
+        return {
+          success: true,
+          message: 'Profile updated'
+        };
+      });
+  }
 
   SetProfilePhoto(image: string, person: string) {
     this.pool.on('error', (err: any, client: any) => {
@@ -292,11 +366,13 @@ where tags.person = '${personId}'`;
       });
   }
 
-  CheckCredentials(login: string, password: string) {
+  CheckCredentials(email: string, password: string) {
 
     return this.pool.connect()
       .then((client: any) => {
-        let query = `select login, password from credentials where email= '${login}' and is_deleted = false`;
+        let query = `select credentials.id, nickname, email, password from credentials 
+        left join nicknames on nicknames.id = credentials.id
+        where email= '${email}' and is_deleted = false`;
 
         return client.query(query).then((res: any) => {
 
@@ -308,14 +384,18 @@ where tags.person = '${personId}'`;
             client.release();
             return {
               success: bcrypt.compareSync(password, pwd),
+              email: res.email,
               profileId: res.id,
+              profileName: res.nickname
             };
           }
           else {
             client.release();
             return {
               success: false,
+              email: null,
               profileId: null,
+              profileName: null
             };
           }
         })
@@ -324,7 +404,9 @@ where tags.person = '${personId}'`;
             console.error(err);
             return {
               success: false,
+              email: null,
               profileId: null,
+              profileName: null
             };
           })
       })
@@ -332,7 +414,9 @@ where tags.person = '${personId}'`;
         console.error(err);
         return {
           success: false,
+          email: null,
           profileId: null,
+          profileName: null
         };
       });
 
@@ -455,7 +539,7 @@ where tags.person = '${personId}'`;
       });
   }
 
-  GetPersonByLogin(login: string) {
+  GetPersonByLogin(email: string) {
     this.pool.on('error', (err: any, client: any) => {
       console.error('Error:', err);
     });
@@ -464,7 +548,9 @@ where tags.person = '${personId}'`;
       .then((client: any) => {
 
 
-        let query = `select id, login from credentials where login= '${login}'`;
+        let query = `select credentials.id, nickname, email from credentials 
+        left join nicknames on nicknames.id = credentials.id
+        where email= '${email}' and is_deleted = false`;
 
         console.log(query);
         return client.query(query).then((res: any) => {
@@ -491,8 +577,9 @@ where tags.person = '${personId}'`;
 
   mapLogin(r: any) {
     return {
-      id: r.id,
-      login: r.login
+      profileId: r.id,
+      email: r.email,
+      nickname: r.nickname
     }
   }
 

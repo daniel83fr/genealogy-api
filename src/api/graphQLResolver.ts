@@ -34,6 +34,8 @@ export class GraphQLResolver {
 
       login: (args: any) => this.loginController?.login(args.login, args.password),
       connectedUser: (args: any, context: any) => this.loginController?.me(context.user),
+      nickname: (args: any) => this.loginController?.getNickname(args.email),
+      profile: (args: any) => this.loginController?.getProfileId(args.email),
 
       getPersonList: (args: any) => this.personController?.getPersonList(),
       searchPerson: (args: any) => this.personController?.searchPerson(args.filter, args.page, args.pageSize, args.type),
@@ -56,7 +58,8 @@ export class GraphQLResolver {
       accountCreate: (args: any) => this.loginController?.register(args.email, args.password),
       accountUpdate: (args: any) => this.loginController?.updateAccount(args.email, args.password, args.email, args.password),
       accountDelete: (args: any) => this.loginController?.deleteAccount(args.email, args.password),
-     
+      attachedProfileUpdate: (args: any) => this.loginController?.claimProfile(args.email, args.profile_id),
+      nicknameUpdate: (args: any) => this.loginController?.updateNickname(args.email, args.nickname),
 
 //updatePersonPrivateInfo: (args: any, context: any) => this.personController?.updatePersonPrivateInfo(args._id, args.patch, context.user),
       addPhoto: (args: any, context: any) => this.photoController?.addPhoto(args.url, args.deleteHash, args.persons, context.user),

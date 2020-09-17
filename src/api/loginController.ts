@@ -23,6 +23,7 @@ export default class LoginController {
             {
               login,
               profile: res.profileId,
+              
             }, process.env.SECRET, { expiresIn: 129600 },
           );
 
@@ -133,6 +134,58 @@ export default class LoginController {
     }
   }
 
+  updateNickname(email: string, nickname: string): any {
+    this.logger.info('Claim profile');
+
+    try {
+      const connector = new PostgresConnector();
+      return connector.SetNickname(email, nickname)
+        .then((res: any) => {
+          console.log(JSON.stringify(res));
+          return res;
+        })
+        .catch((err: any) => {
+          console.error(err);
+          return {
+            message: 'set nickname failed',
+            success: false
+          };
+        });
+    } catch (err) {
+      console.log(err);
+      return {
+        message: 'set nickname failed',
+        success: false
+      };
+    }
+  }
+
+  claimProfile(email: string, id: string): any {
+    this.logger.info('Claim profile');
+
+    try {
+      const connector = new PostgresConnector();
+      return connector.ClaimProfile(email, id)
+        .then((res: any) => {
+          console.log(JSON.stringify(res));
+          return res;
+        })
+        .catch((err: any) => {
+          console.error(err);
+          return {
+            message: 'profile claim failed',
+            success: false
+          };
+        });
+    } catch (err) {
+      console.log(err);
+      return {
+        message: 'profile claim failed',
+        success: false
+      };
+    }
+  }
+
   me(user: any) {
     this.logger.debug('me');
     LoginController.CheckUserAuthenticated(user);
@@ -150,4 +203,42 @@ export default class LoginController {
       return [];
     }
   }
+
+  getNickname(email: any) {
+    this.logger.debug('test');
+    this.logger.debug('me');
+   // LoginController.CheckUserAuthenticated(user);
+   console.debug(email);
+    try {
+      const connector = new PostgresConnector();
+      return connector.GetPersonByLogin(email)
+        .then((res: any) => res.nickname)
+        .catch((err: any) => {
+          console.error(err);
+          return null;
+        });
+    } catch (err) {
+      console.log(err);
+      return null;
+    }
+  }
+
+  getProfileId(email: any) {
+    this.logger.debug('me');
+   // LoginController.CheckUserAuthenticated(user);
+   console.debug(email);
+    try {
+      const connector = new PostgresConnector();
+      return connector.GetPersonByLogin(email)
+        .then((res: any) => res.profileId)
+        .catch((err: any) => {
+          console.error(err);
+          return null;
+        });
+    } catch (err) {
+      console.log(err);
+      return null;
+    }
+  }
+
 }
