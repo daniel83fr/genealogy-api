@@ -205,14 +205,13 @@ export default class LoginController {
   }
 
   getNickname(email: any) {
-    this.logger.debug('test');
-    this.logger.debug('me');
-   // LoginController.CheckUserAuthenticated(user);
-   console.debug(email);
+    this.logger.debug('nickname');
     try {
       const connector = new PostgresConnector();
       return connector.GetPersonByLogin(email)
-        .then((res: any) => res.nickname)
+        .then((res: any) => {
+          return res.nickname ?? res.profileId;
+        })
         .catch((err: any) => {
           console.error(err);
           return null;
@@ -224,9 +223,6 @@ export default class LoginController {
   }
 
   getProfileId(email: any) {
-    this.logger.debug('me');
-   // LoginController.CheckUserAuthenticated(user);
-   console.debug(email);
     try {
       const connector = new PostgresConnector();
       return connector.GetPersonByLogin(email)
